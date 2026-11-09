@@ -1,0 +1,255 @@
+\chapter{RESULTADOS PRELIMINARES}
+
+\section{Hexápodo primario}
+
+El ensamblaje mecánico del hexápodo primario se ejecutó sobre la arquitectura modificada de código abierto \textit{Chipo}~\cite{MakeYourPetHexapod}, integrando los 18 servomotores de engranaje metálico MG996R en las cadenas articulares de coxa, fémur y tibia, como documentan las etapas de avance de las Figuras~\ref{fig:Chipo50} y~\ref{fig:Chipo90}. Durante el montaje inicial y las primeras pruebas de movimiento en banco se presentaron fisuras en alojamientos impresos en PLA sometidos a tracción de pernos. Estas roturas respondieron a la combinación de pares dinámicos durante las transiciones articulares y a la fatiga local acumulada tras repetidos ciclos de apriete y desmontaje de la tornillería M3 durante el ajuste mecánico, lo que llevó a reforzar los perímetros en las piezas de reemplazo.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/Chipo50.png} 
+    \caption{Avance del ensamblaje mecánico del hexápodo primario al 50\%.}
+    \label{fig:Chipo50}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/Chipo90.png} 
+    \caption{Avance del ensamblaje mecánico del hexápodo primario al 80\%.}
+    \label{fig:Chipo90}
+\end{figure}
+
+Antes de incorporar el controlador definitivo de servomotores, se evaluó una electrónica provisional conformada por un módulo ESP32 DevKit V1 enlazado por bus $\text{I}^2\text{C}$ a dos placas expansoras PWM PCA9685, junto con una interfaz gráfica propia de prueba mostrada en las Figuras~\ref{fig:HexapodoPrimarioconDrivers} y~\ref{fig:InterfazPropia}. Los ensayos con esta configuración resultaron insatisfactorios: el robot no conseguía sostener su propio peso en postura erguida y describía movimientos descoordinados. La inspección eléctrica reveló fluctuaciones severas en el ancho de pulso (\textit{jitter}) de los PCA9685 y caídas de tensión bajo carga simultánea, lo que provocaba vibración continua en los MG996R e impedía alcanzar los ángulos articulares comandados.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/HexapodoPrimarioconDrivers.jpeg} 
+    \caption{Configuración preliminar del hexápodo primario empleando módulos expansores PCA9685.}
+    \label{fig:HexapodoPrimarioconDrivers}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/InterfazPropia.jpeg} 
+    \caption{Interfaz preliminar desarrollada para prueba de servomotores MG996R.}
+    \label{fig:InterfazPropia}
+\end{figure}
+
+La sustitución de ambos módulos PCA9685 por el controlador dedicado Pololu Mini Maestro de 18 canales suprimió las oscilaciones parásitas del pulso PWM (Figura~\ref{fig:HexapodoPrimarioconPololu}). Para las pruebas de calibración se separó el esquema de suministro eléctrico según el nivel de carga: el ajuste individual por extremidad se alimentó desde una fuente regulable de laboratorio, mientras que las pruebas de cuerpo completo con las seis patas activas se ejecutaron con una fuente dedicada de mayor entrega de corriente a $6.0\text{ V}$. A través del software Pololu Maestro Control Center (Figura~\ref{fig:InterfazPololu}) se determinaron los centros mecánicos, límites de recorrido y anchos de pulso en microsegundos de las 18 articulaciones.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/HexapodoPrimarioconPololu.png} 
+    \caption{Integración del controlador dedicado Pololu Mini Maestro en el hexápodo primario.}
+    \label{fig:HexapodoPrimarioconPololu}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/InterfazPololu.jpeg} 
+    \caption{Calibración de pulsos y secuencias articulares en la interfaz Pololu Maestro Control Center.}
+    \label{fig:InterfazPololu}
+\end{figure}
+
+Con los rangos articulares calibrados, se programaron y verificaron experimentalmente cuatro cuadros posturales base: una posición de reposo con las seis patas extendidas y el vientre apoyado (Figura~\ref{fig:ChipoAcostado}); una postura de sustentación estática de pie capaz de elevar y sostener el chasis sin caída de tensión ni temblor articular (Figura~\ref{fig:ChipodePie}); y dos subfases alternadas de avance en trípode (\textit{tripod gait}). En estas dos últimas secuencias, tres extremidades ejecutan la transferencia aérea mientras el triplete opuesto conserva el polígono triangular de soporte sobre el piso.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/ChipoAcostado.jpeg} 
+    \caption{Postura calibrada de reposo pasivo del hexápodo primario.}
+    \label{fig:ChipoAcostado}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/ChipodePie.jpeg} 
+    \caption{Postura de sustentación estática (de pie) del hexápodo primario bajo carga completa.}
+    \label{fig:ChipodePie}
+\end{figure}
+
+
+\section{Hexápodo secundario}
+
+\subsection{Diseño mecánico}
+
+La primera iteración estructural del hexápodo secundario se construyó como banco mecánico de validación para una extremidad aislada y su bastidor base (Figura~\ref{fig:V1Hexapodo}). Los ensayos de carga sobre este primer prototipo dejaron en evidencia dos debilidades constructivas: la carcasa prismática de la reductora N20 sufría cabeceo dentro de su alojamiento bajo pares alternados, y el apoyo en voladizo simple sobre el eje de salida en ``D'' inducía flexión visible entre eslabones. Para corregir ambos efectos en la versión rediseñada, se incorporaron cunas envolventes con apriete por brida a lo largo del cuerpo del motor y un doble punto de apoyo articular compuesto por el acople frontal del eje motriz y un pivote coaxial posterior de descarga.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/V1Hexapodo.png} 
+    \caption{Primera iteración estructural del hexápodo secundario con bastidor rectangular.}
+    \label{fig:V1Hexapodo}
+\end{figure}
+
+Al montar las seis extremidades completas sobre el chasis rectangular inicial, se comprobó además que los barridos horizontales de las coxas contiguas se superponían, generando colisiones entre fémures y tibias durante la fase de balanceo. Esta restricción cinemática motivó el rediseño del cuerpo central hacia el armazón hexagonal mostrado en la Figura~\ref{fig:ChasisHexagonal}, cuya distribución radial a $60^\circ$ separa los conos de trabajo de cada pata y despeja las trayectorias de locomoción omnidireccional.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/ChasisHexagonal.png} 
+    \caption{Rediseño del chasis central con geometría hexagonal para eliminar colisiones entre extremidades.}
+    \label{fig:ChasisHexagonal}
+\end{figure}
+
+\subsection{Electrónica}
+
+Siguiendo las restricciones de volumen definidas en el Capítulo VI, el accionamiento de cada pata del hexápodo secundario se concentró en una tarjeta de circuito impreso (PCB) modular de diseño propio que reúne el módulo ESP32-WROOM-32E, tres puentes H DRV8876, regulación lineal a $3.3\text{ V}$ e interfaz USB-UART CP2102N. El trazado de pistas en doble capa y los planos de disipación térmica se verificaron en software ECAD antes de su fabricación, conforme a la distribución mostrada en la Figura~\ref{fig:PCB2D}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/PCB2D.png} 
+    \caption{Trazado ECAD en dos dimensiones de la placa modular PCB por extremidad.}
+    \label{fig:PCB2D}
+\end{figure}
+
+Una vez recibidas las tarjetas fabricadas, se efectuó el soldado superficial (SMD) de los circuitos integrados de paso fino (incluidos el puente CP2102N en encapsulado QFN-28 y los drivers DRV8876 con almohadilla térmica inferior soldada a tierra), el regulador AMS1117-3.3 y los componentes pasivos 0805. Las Figuras~\ref{fig:PCBEnsamblada} y~\ref{fig:PCBEnsambladaDetras} registran el estado físico de la placa ensamblada por ambas caras.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/PCBEnsamblada.jpeg} 
+    \caption{Vista superior de la placa modular PCB ensamblada.}
+    \label{fig:PCBEnsamblada}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/PCBEnsambladaDetras.jpeg} 
+    \caption{Vista inferior de la placa modular PCB ensamblada.}
+    \label{fig:PCBEnsambladaDetras}
+\end{figure}
+
+En las primeras pruebas de encendido se detectaron fallos intermitentes en el reconocimiento del puerto USB y en la secuencia de auto-programación hacia los pines \texttt{EN} e \texttt{IO0} del ESP32. Tras inspeccionar continuidad y niveles lógicos en la red de transistores acoplada al CP2102N, se corrigieron las uniones defectuosas y se estabilizó la carga repetible del firmware. Superada esta depuración eléctrica, se validó la modulación PWM bidireccional sobre los tres canales DRV8876, confirmando inversión de giro limpia, lectura de encoders sin pérdida de cuadratura y operación térmica estable de los motores N20 a $12\text{ V}$.
+
+\subsection{Sistema de control}
+
+Para sintonizar analíticamente los tres lazos anidados del hexápodo secundario se realizó la identificación experimental en lazo abierto y semicerrado de un micromotor DC N20 ($12\text{ V}$, reducción $1:300$), capturando la telemetría a $100\text{ Hz}$ por puerto serial a $460800\text{ baudios}$. En primer término se excitó la etapa eléctrica para identificar la planta dinámica de corriente mostrada en la Figura~\ref{fig:GraficaCorrientePlanta}, contrastando dos estructuras de segundo orden con distinto número de ceros:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/GraficaCorrientePlanta.png} 
+    \caption{Respuesta experimental de corriente de armadura empleada para la identificación paramétrica.}
+    \label{fig:GraficaCorrientePlanta}
+\end{figure}
+
+\begin{equation*}
+    G_{21}(s) = \frac{4.036s + 6.16}{s^2 + 2550s + 1.08 \times 10^4}
+\end{equation*}
+\noindent Ajuste del modelo: $71.1\%$
+
+\vspace{0.6cm}
+
+\begin{equation*}
+    G_{22}(s) = \frac{0.001184s^2 + 1.441s + 2.325}{s^2 + 904.4s + 3996}
+\end{equation*}
+\noindent Ajuste del modelo: $86.5\%$
+
+Mientras la función $G_{21}(s)$ reprodujo únicamente el $71.1\%$ de la varianza medida frente a los transitorios rápidos de corriente, la estructura bipolo-bicero $G_{22}(s)$ elevó el índice de ajuste al $86.5\%$. En consecuencia, se adoptó $G_{22}(s)$ como planta nominal del lazo interno para capturar con mayor exactitud el pico inicial de conducción del puente H.
+
+En la segunda fase experimental se identificó la dinámica entre la consigna de corriente y la velocidad angular medida con el encoder magnético (Figura~\ref{fig:GraficaVelocidadPlanta}), obteniendo dos modelos candidatos con ajustes cercanos al $98\%$:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/GraficaVelocidadPlanta.png} 
+    \caption{Respuesta experimental de velocidad angular empleada para la identificación paramétrica.}
+    \label{fig:GraficaVelocidadPlanta}
+\end{figure}
+
+\begin{equation*}
+    G_{10}(s) = \frac{998.5}{s + 1.545}
+\end{equation*}
+\noindent Ajuste del modelo: $97.5\%$
+
+\vspace{0.6cm}
+
+\begin{equation*}
+    G_{20}(s) = \frac{1.107 \times 10^5}{s^2 + 110.1s + 172.3}
+\end{equation*}
+\noindent Ajuste del modelo: $97.9\%$
+
+La comparación entre ambas expresiones favorece la elección del modelo de primer orden $G_{10}(s)$. Al discretizar el regulador en el microcontrolador ESP32 para operar sobre tres motores por tarjeta simultáneamente, una ecuación en diferencias asociada a un sistema de primer orden requiere almacenar un menor historial de muestras y reduce el número de multiplicaciones en punto flotante por interrupción. Dado que el modelo de segundo orden $G_{20}(s)$ solo aporta una mejora de $0.4$ puntos porcentuales ($97.9\%$ frente a $97.5\%$), se descartó añadir un polo adicional innecesario.
+
+El mismo criterio de parsimonia se aplicó en la identificación del lazo externo de posición mostrada en la Figura~\ref{fig:GraficaPosicionPlanta}, donde se compararon una aproximación de primer orden ($99.1\%$ de ajuste) y otra de segundo orden ($100\%$ de ajuste):
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/GraficaPosicionPlanta.png} 
+    \caption{Respuesta experimental de posición articular empleada para la identificación paramétrica.}
+    \label{fig:GraficaPosicionPlanta}
+\end{figure}
+
+También en este caso se seleccionó la planta de primer orden $G_{10}(s)$ ($99.1\%$). En el mecanismo físico real, una diferencia de ajuste de $0.9\%$ queda por debajo de la banda muerta introducida por la holgura de los engranajes $1:300$ y la cuantificación discreta del encoder, de modo que el modelo reducido conserva toda la información dinámica útil con menor carga de procesador.
+
+A partir de las tres plantas nominales identificadas, se obtuvieron mediante la herramienta \textit{PID Tuner} las ganancias iniciales de los controladores Proporcional-Integral en cascada:
+
+\noindent Controlador de corriente / ciclo útil PWM:
+\begin{equation*}
+    PI_{\text{current}}(s) = \frac{8.832s + 8.009 \times 10^4}{s}
+\end{equation*}
+
+\vspace{0.5cm}
+
+\noindent Controlador de velocidad / referencia de corriente:
+\begin{equation*}
+    PI_{\text{vel}}(s) = \frac{0.0284s + 0.01392}{s}
+\end{equation*}
+
+\vspace{0.5cm}
+
+\noindent Controlador de posición / referencia de velocidad:
+\begin{equation*}
+    PI_{\text{pos}}(s) = \frac{6.166s + 3192}{s}
+\end{equation*}
+
+Antes de cargar las leyes de control en el firmware, se verificó en simulación la respuesta temporal ante entrada escalón de cada lazo cerrado (Figuras~\ref{fig:DesempeñoCorriente}, \ref{fig:DesempeñoVelocidad} y~\ref{fig:DesempeñoPosicion}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/DesempeñoCorriente.png} 
+    \caption{Respuesta simulada al escalón de la planta de corriente con controlador PI.}
+    \label{fig:DesempeñoCorriente}
+\end{figure}
+
+En el lazo interno de corriente (Figura~\ref{fig:DesempeñoCorriente}), el controlador alcanza un tiempo de subida $t_r = 0.0181\text{ s}$ y un tiempo de establecimiento $t_s = 0.0671\text{ s}$, con sobreimpulso nulo ($M_p = 0\%$) y un error estacionario residual de $1.38\%$. Suprimir el sobreimpulso en este lazo evita exceder el umbral de limitación por hardware ($1.1\text{ A}$) del puente DRV8876 durante cambios bruscos de par.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/DesempeñoVelocidad.png} 
+    \caption{Respuesta simulada al escalón de la planta de velocidad con controlador PI.}
+    \label{fig:DesempeñoVelocidad}
+\end{figure}
+
+La simulación del lazo intermedio de velocidad (Figura~\ref{fig:DesempeñoVelocidad}) arroja un tiempo de subida $t_r = 0.0630\text{ s}$, ausencia de sobreimpulso ($M_p = 0\%$) y una desviación estacionaria de $2.79\%$. Esta respuesta sobreamortiguada suaviza las aceleraciones angulares transmitidas a los eslabones de PLA, evitando tirones inerciales o pérdida de adherencia de la punta elastomérica al apoyar la tibia; a su vez, el pequeño desvío estacionario de velocidad es corregido de forma natural por la acción integral del lazo externo de posición.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/DesempeñoPosicion.png} 
+    \caption{Respuesta simulada al escalón de la planta de posición con controlador PI.}
+    \label{fig:DesempeñoPosicion}
+\end{figure}
+
+Por su parte, el lazo externo de posición (Figura~\ref{fig:DesempeñoPosicion}) registra un tiempo de subida $t_r = 0.0170\text{ s}$, un tiempo de asentamiento $t_s = 0.0998\text{ s}$, un sobreimpulso $M_p = 13.53\%$ y un error en estado estacionario $e_{ss} = 0.40\%$. El asentamiento por debajo de $100\text{ ms}$ resulta compatible con las frecuencias de interpolación articular requeridas por la marcha en trípode.
+
+Finalmente, los tres controladores discretizados se implementaron en cascada sobre el microcontrolador ESP32 accionando físicamente el motor N20. Las Figuras~\ref{fig:DesempeñoCorrienteIMP}, \ref{fig:DesempeñoVelocidadIMP} y~\ref{fig:DesempeñoPosicionIMP} muestran las señales experimentales capturadas en operación real de lazo cerrado.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/DesempeñoCorrienteIMP.png} 
+    \caption{Desempeño experimental en lazo cerrado del controlador PI de corriente sobre el motor N20.}
+    \label{fig:DesempeñoCorrienteIMP}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/DesempeñoVelocidadIMP.png} 
+    \caption{Desempeño experimental en lazo cerrado del controlador PI de velocidad sobre el motor N20.}
+    \label{fig:DesempeñoVelocidadIMP}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/DesempeñoPosicionIMP.png} 
+    \caption{Desempeño experimental en lazo cerrado del controlador PI de posición sobre el motor N20.}
+    \label{fig:DesempeñoPosicionIMP}
+\end{figure}
+
+En las pruebas físicas sobre banco se comprueba que el lazo interno de corriente (Figura~\ref{fig:DesempeñoCorrienteIMP}) reacciona de inmediato ante los escalones de demanda modulando el ciclo útil PWM con picos cercanos al $40\%$, lo que mantiene la corriente medida en el canal \texttt{IPROPI} acotada y lejos de la saturación térmica del driver. En el lazo intermedio (Figura~\ref{fig:DesempeñoVelocidadIMP}), la velocidad sigue los cambios de signo e intensidad impuestos por la trayectoria, aunque la señal de error refleja rizado de alta frecuencia debido a la cuantificación temporal del encoder magnético sobre ventanas de $50\text{ ms}$ y al juego mecánico propio del tren de engranajes $1:300$.
+
+Pese a dicho ruido electromecánico en las capas internas, la respuesta física de posición (Figura~\ref{fig:DesempeñoPosicionIMP}) converge con rapidez hacia los escalones angulares de referencia y anula los picos transitorios de error tras cada conmutación de consigna. De este modo, el esquema anidado de triple lazo PI atenúa las no linealidades de fricción seca de la reductora y asegura el posicionamiento repetible de las articulaciones del hexápodo secundario.

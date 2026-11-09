@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de Cámara UVC ESP32-S3 (Puerto Serial COM)</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --text-color: #f8fafc;
+            --text-dim: #94a3b8;
+            --border-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        header {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-title h1 {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+
+        .header-title p {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button {
+            background-color: var(--panel-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        button.primary {
+            background-color: #0284c7;
+            border-color: #0284c7;
+            color: white;
+        }
+
+        button.primary:hover {
+            background-color: #0369a1;
+        }
+
+        button.danger {
+            background-color: #dc2626;
+            border-color: #dc2626;
+            color: white;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background-color: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .status-badge.connected {
+            background-color: rgba(34, 197, 94, 0.15);
+            color: var(--accent-green);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .video-container {
+            background-color: #020617;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 4/3;
+            max-height: 520px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        #videoCanvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .no-signal-msg {
+            position: absolute;
+            text-align: center;
+            color: var(--text-dim);
+            padding: 20px;
+        }
+
+        .no-signal-msg svg {
+            width: 54px;
+            height: 54px;
+            margin-bottom: 12px;
+            stroke: #475569;
+        }
+
+        .no-signal-msg h3 {
+            color: var(--text-color);
+            margin-bottom: 6px;
+        }
+
+        .no-signal-msg p {
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .telemetry-overlay {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: #38bdf8;
+            font-family: monospace;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            pointer-events: none;
+            display: none;
+        }
+
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .card h2 {
+            font-size: 0.95rem;
+            color: var(--accent-color);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-item .label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .stat-item .value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-color);
+            font-family: monospace;
+        }
+
+        .log-box {
+            background-color: #020617;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            height: 180px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .info-callout {
+            background-color: rgba(56, 189, 248, 0.1);
+            border-left: 3px solid var(--accent-color);
+            padding: 10px 12px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.8rem;
+            color: #e2e8f0;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-title">
+            <h1>ESP32-S3 · Visor UVC USB por Puerto COM</h1>
+            <p>Tesis UTEC 2026 · Streaming directo a 921600 baudios sin Wi-Fi</p>
+        </div>
+        <div class="controls">
+            <span id="connStatus" class="status-badge">
+                <span class="status-dot"></span>
+                <span id="connText">Desconectado</span>
+            </span>
+            <button id="btnConnect" class="primary" onclick="toggleConnect()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v10m0 0l-3-3m3 3l3-3M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+                Conectar Puerto COM
+            </button>
+            <button id="btnSnap" onclick="takeSnapshot()" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="4"/><path d="M5 7h2l2-3h6l2 3h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2z"/></svg>
+                Captura
+            </button>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <!-- Panel Izquierdo: Video y Canvas -->
+        <div class="video-container">
+            <canvas id="videoCanvas" width="640" height="480"></canvas>
+            <div id="noSignal" class="no-signal-msg">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                <h3>Sin señal de video</h3>
+                <p>1. Conecta el ESP32-S3 a la laptop por el puerto <strong>COM</strong>.<br>
+                   2. Pulsa <strong>"Conectar Puerto COM"</strong> y selecciona tu COM.<br>
+                   3. Asegúrate de que la cámara tenga <strong>5V en VBUS</strong>.</p>
+            </div>
+            <div id="telemetryOverlay" class="telemetry-overlay">
+                FPS: <span id="overlayFps">0.0</span> | Res: <span id="overlayRes">--</span>
+            </div>
+        </div>
+
+        <!-- Panel Derecho: Telemetría y Registro -->
+        <div class="side-panel">
+            <div class="card">
+                <h2>Telemetría en Vivo</h2>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="label">Tasa de Cuadros</div>
+                        <div class="value" id="valFps">0.0 FPS</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">Resolución</div>
+                        <div class="value" id="valRes">--</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">Cuadros Recibidos</div>
+                        <div class="value" id="valFrames">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">Flujo de Datos</div>
+                        <div class="value" id="valBandwidth">0.0 KB/s</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Registro de Eventos ESP32</h2>
+                <div id="logBox" class="log-box">Esperando conexión serial...</div>
+            </div>
+
+            <div class="info-callout">
+                <strong>Nota de Hardware:</strong> El puerto USB nativo del ESP32-S3 requiere 5V en VBUS para alimentar la cámara UVC. El pin <strong>5Vin</strong> de la placa debe recibir 5V (desde la laptop o fuente) para alimentar el sensor.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let port = null;
+        let reader = null;
+        let readableStreamClosed = null;
+        let isConnected = false;
+
+        const BAUD_RATE = 1500000;
+        const canvas = document.getElementById('videoCanvas');
+        const ctx = canvas.getContext('2d');
+        const noSignal = document.getElementById('noSignal');
+        const telemetryOverlay = document.getElementById('telemetryOverlay');
+        const logBox = document.getElementById('logBox');
+
+        let frameCount = 0;
+        let lastTime = performance.now();
+        let fpsCounter = 0;
+        let bytesReceivedThisSec = 0;
+        let currentFps = 0;
+
+        function appendLog(text) {
+            const time = new Date().toLocaleTimeString();
+            logBox.textContent += `[${time}] ${text}\n`;
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        async function toggleConnect() {
+            if (isConnected) {
+                await disconnect();
+            } else {
+                await connect();
+            }
+        }
+
+        async function connect() {
+            if (!("serial" in navigator)) {
+                alert("Tu navegador no soporta WebSerial. Por favor utiliza Google Chrome o Microsoft Edge en tu laptop.");
+                return;
+            }
+
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: BAUD_RATE, bufferSize: 65536 });
+
+                isConnected = true;
+                updateUiConnected(true);
+                appendLog(`Conectado a puerto serial a ${BAUD_RATE} baudios`);
+
+                readSerialLoop();
+            } catch (err) {
+                console.error(err);
+                appendLog(`Error de conexión: ${err.message}`);
+            }
+        }
+
+        async function disconnect() {
+            isConnected = false;
+            if (reader) {
+                try {
+                    await reader.cancel();
+                } catch(e) {}
+            }
+            if (port) {
+                try {
+                    await port.close();
+                } catch(e) {}
+                port = null;
+            }
+            updateUiConnected(false);
+            appendLog("Puerto serial desconectado.");
+        }
+
+        function updateUiConnected(connected) {
+            const badge = document.getElementById('connStatus');
+            const btn = document.getElementById('btnConnect');
+            const snap = document.getElementById('btnSnap');
+            const text = document.getElementById('connText');
+
+            if (connected) {
+                badge.className = "status-badge connected";
+                text.textContent = "Conectado";
+                btn.className = "danger";
+                btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 11-12.73 0M12 2v10"/></svg> Desconectar`;
+                snap.disabled = false;
+            } else {
+                badge.className = "status-badge";
+                text.textContent = "Desconectado";
+                btn.className = "primary";
+                btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v10m0 0l-3-3m3 3l3-3M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg> Conectar Puerto COM`;
+                snap.disabled = true;
+                noSignal.style.display = 'block';
+                telemetryOverlay.style.display = 'none';
+            }
+        }
+
+        async function readSerialLoop() {
+            let buffer = new Uint8Array(0);
+            const textDecoder = new TextDecoder();
+            let textLineBuffer = "";
+
+            // Header mágico 0xFF 0xAA 0x55 0xFF
+            const H0 = 0xFF, H1 = 0xAA, H2 = 0x55, H3 = 0xFF;
+
+            function concat(a, b) {
+                const c = new Uint8Array(a.length + b.length);
+                c.set(a, 0);
+                c.set(b, a.length);
+                return c;
+            }
+
+            while (port && port.readable && isConnected) {
+                try {
+                    reader = port.readable.getReader();
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+                        if (!value) continue;
+
+                        bytesReceivedThisSec += value.length;
+                        buffer = concat(buffer, value);
+
+                        // Procesar buffer buscando tramas de video
+                        while (true) {
+                            // Buscar 0xFF 0xAA 0x55 0xFF
+                            let idx = -1;
+                            for (let i = 0; i <= buffer.length - 4; i++) {
+                                if (buffer[i] === H0 && buffer[i+1] === H1 && buffer[i+2] === H2 && buffer[i+3] === H3) {
+                                    idx = i;
+                                    break;
+                                }
+                            }
+
+                            if (idx === -1) {
+                                // No hay encabezado. Si hay texto acumulado, mostrarlo en log
+                                if (buffer.length > 3) {
+                                    const textBytes = buffer.slice(0, buffer.length - 3);
+                                    textLineBuffer += textDecoder.decode(textBytes, { stream: true });
+                                    const lines = textLineBuffer.split('\n');
+                                    while (lines.length > 1) {
+                                        const l = lines.shift().trim();
+                                        if (l) appendLog(`[ESP32] ${l}`);
+                                    }
+                                    textLineBuffer = lines[0];
+                                    buffer = buffer.slice(buffer.length - 3);
+                                }
+                                break;
+                            }
+
+                            // Si hay texto antes del encabezado
+                            if (idx > 0) {
+                                const textBytes = buffer.slice(0, idx);
+                                textLineBuffer += textDecoder.decode(textBytes, { stream: true });
+                                const lines = textLineBuffer.split('\n');
+                                while (lines.length > 1) {
+                                    const l = lines.shift().trim();
+                                    if (l) appendLog(`[ESP32] ${l}`);
+                                }
+                                textLineBuffer = lines[0];
+                                buffer = buffer.slice(idx);
+                            }
+
+                            if (buffer.length < 16) {
+                                break; // Esperar cabecera completa
+                            }
+
+                            // Desempaquetar cabecera
+                            const view = new DataView(buffer.buffer, buffer.byteOffset, 16);
+                            const payloadLen = view.getUint32(4, true);
+                            const width = view.getUint16(8, true);
+                            const height = view.getUint16(10, true);
+                            const seq = view.getUint32(12, true);
+
+                            // Validación de cordura del tamaño
+                            if (payloadLen > 300000 || payloadLen < 100) {
+                                buffer = buffer.slice(1);
+                                continue;
+                            }
+
+                            const totalLen = 16 + payloadLen + 2;
+                            if (buffer.length < totalLen) {
+                                break; // Esperar imagen completa
+                            }
+
+                            // Verificar footer 0x00 0xFF
+                            if (buffer[16 + payloadLen] !== 0x00 || buffer[16 + payloadLen + 1] !== 0xFF) {
+                                appendLog(`[WARN] Footer inválido en frame #${seq}`);
+                                buffer = buffer.slice(4);
+                                continue;
+                            }
+
+                            const jpegBytes = buffer.slice(16, 16 + payloadLen);
+                            buffer = buffer.slice(totalLen);
+
+                            // Renderizar JPEG
+                            renderJpegFrame(jpegBytes, width, height, seq);
+                        }
+                    }
+                } catch (err) {
+                    if (isConnected) appendLog(`Error de lectura: ${err.message}`);
+                } finally {
+                    if (reader) {
+                        try { reader.releaseLock(); } catch(e) {}
+                    }
+                }
+            }
+        }
+
+        const imgElement = new Image();
+        let isRendering = false;
+
+        function renderJpegFrame(jpegBytes, w, h, seq) {
+            frameCount++;
+            fpsCounter++;
+
+            const blob = new Blob([jpegBytes], { type: 'image/jpeg' });
+            const url = URL.createObjectURL(blob);
+
+            imgElement.onload = () => {
+                if (canvas.width !== imgElement.width || canvas.height !== imgElement.height) {
+                    canvas.width = imgElement.width;
+                    canvas.height = imgElement.height;
+                }
+                ctx.drawImage(imgElement, 0, 0);
+                URL.revokeObjectURL(url);
+
+                noSignal.style.display = 'none';
+                telemetryOverlay.style.display = 'block';
+
+                document.getElementById('valRes').textContent = `${imgElement.width}x${imgElement.height}`;
+                document.getElementById('overlayRes').textContent = `${imgElement.width}x${imgElement.height}`;
+                document.getElementById('valFrames').textContent = frameCount;
+            };
+            imgElement.src = url;
+        }
+
+        // Intervalo de cálculo de FPS y ancho de banda
+        setInterval(() => {
+            const now = performance.now();
+            const elapsed = (now - lastTime) / 1000.0;
+            currentFps = fpsCounter / elapsed;
+            const kbSec = (bytesReceivedThisSec / 1024) / elapsed;
+
+            document.getElementById('valFps').textContent = `${currentFps.toFixed(1)} FPS`;
+            document.getElementById('overlayFps').textContent = currentFps.toFixed(1);
+            document.getElementById('valBandwidth').textContent = `${kbSec.toFixed(1)} KB/s`;
+
+            fpsCounter = 0;
+            bytesReceivedThisSec = 0;
+            lastTime = now;
+        }, 1000);
+
+        function takeSnapshot() {
+            const link = document.createElement('a');
+            link.download = `captura_esp32_${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            appendLog("Captura de pantalla guardada en Descargas.");
+        }
+    </script>
+</body>
+</html>

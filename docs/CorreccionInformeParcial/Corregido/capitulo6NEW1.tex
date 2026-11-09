@@ -1,0 +1,524 @@
+\chapter{DISEÑO TECNOLÓGICO}
+
+Siguiendo la rama descendente del modelo en V de la directriz VDI 2206~\cite{VDI2206_2004}, este capítulo desarrolla la ingeniería de detalle de la configuración cooperativa terrestre--terrestre (A2). El diseño se divide en sus tres dominios constitutivos: estructura mecánica y cadena cinemática, hardware electrónico y distribución de potencia, y arquitectura de software y control articular. Dentro de cada dominio se formulan primero las especificaciones numéricas bajo el estándar ISO/IEC/IEEE 29148, se comparan las alternativas constructivas mediante matrices VDI 2225 Blatt 3 y se ejecutan los cálculos de dimensionamiento e integración física de ambas unidades hexápodas.
+
+\section{Subsistema mecánico}
+
+El diseño mecánico define la geometría portante del chasis y el dimensionamiento articular de las extremidades para los dos robots caminantes del sistema cooperativo. Ambas plataformas emplean seis patas independientes de tres grados de libertad (3 DoF: coxa, fémur y tibia) coordinadas bajo un patrón de marcha en trípode, configuración que conserva un polígono triangular de soporte estático durante el tránsito sobre pisos irregulares~\cite{Sensors2021_HexapodReview, Wu2024_SpiderLegDesign}.
+
+Atendiendo a la división de roles establecida en los capítulos previos, se proyectan dos escalas constructivas diferenciadas: un hexápodo primario derivado de una arquitectura abierta e impulsado por servomotores metálicos MG996R para portar la carga útil de mapeo y sensado ambiental, y un hexápodo secundario de envolvente mínima accionado por micromotores DC N20 con reductora para incursiones en cavidades estrechas.
+
+\subsection{Especificación de requerimientos numéricos (Norma ISO/IEC/IEEE 29148)}
+
+Las exigencias geométricas, inerciales y presupuestales derivadas del marco normativo y operativo se formalizan conforme al estándar ISO/IEC/IEEE 29148 en cuatro especificaciones cuantitativas verificables:
+
+\begin{itemize}
+    \item \textbf{Ancho operativo total y margen de despeje vertical:} La envergadura transversal de cada robot hexápodo en postura de reposo deberá ser menor a $0.50\text{ m}$ para maniobrar en secciones restringidas de laboratorio (tomando como referencia el ancho libre mínimo de $1.0\text{ m}$ exigido en pasos mineros~\cite{MINEM_DS024_2016}), mientras que la cadena cinemática deberá permitir un despeje ventral libre de al menos $15.0\text{ cm}$ respecto al piso cuando se requiera franquear escombros sin colisión del chasis~\cite{Obosu2025_Automation}.
+    \item \textbf{Límite de masa inercial y distribución de carga por actuador:} La masa acumulada de las seis extremidades deberá representar menos del $45\%$ de la masa total del robot para acotar los pares centrífugos e inerciales durante la fase de balanceo~\cite{Sensors2021_HexapodReview}, verificando que el par estático y dinámico demandado en las articulaciones de la unidad secundaria no supere el torque de bloqueo ($\tau_{\text{stall}} = 0.0765\text{ N}\cdot\text{m}$) de los micromotores N20 a $12\text{ V}$~\cite{N20_Datasheet}.
+    \item \textbf{Fidelidad geométrica respecto al diseño 3D y tiempo de iteración:} Los alojamientos de actuadores y uniones articuladas deberán fabricarse con una tolerancia dimensional dentro de $\pm 0.2\text{ mm}$ respecto al modelo CAD para evitar juego angular excesivo, manteniendo un tiempo total de manufactura y postprocesado por eslabón inferior a $24.0\text{ horas}$ para sostener ciclos rápidos de reemplazo en banco.
+    \item \textbf{Viabilidad económica y techo presupuestal de manufactura:} El costo directo en filamento e insumos estructurales para fabricar el chasis y las seis patas deberá mantenerse por debajo de $\text{S/ } 75.00\text{ PEN}$ ($15\%$ del presupuesto global del prototipo), asegurando disponibilidad inmediata de repuestos durante las campañas de prueba.
+\end{itemize}
+
+
+\subsection{Matriz de evaluación y selección de materiales (VDI 2225)}
+
+Para elegir el material estructural del chasis y los eslabones dentro de la fase de diseño de subsistemas de la norma VDI 2206~\cite{VDI2206_2004}, se aplicó el método de valoración técnico-económica VDI 2225 Blatt 3 contrastando tres alternativas habituales en robótica ligera: ácido poliláctico (PLA) procesado por deposición fundida (FDM), aleación de aluminio mecanizada y laminado de fibra de carbono.
+
+Los cinco criterios de comparación se ponderaron con pesos $g \in [1,5]$, asignando la máxima importancia ($g=5$) al bajo peso, al costo directo y a la facilidad de reposición en laboratorio, en correspondencia directa con las restricciones de inercia articular y el tope presupuestal de $\text{S/ } 75.00\text{ PEN}$. Cada opción se calificó en la escala entera $p \in [0,4]$ detallada en la Tabla~\ref{tab:matriz_vdi2225_materiales}.
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.25} % Espaciado vertical adecuado entre filas
+\setlength{\tabcolsep}{3pt}       % Ajuste del espaciado horizontal interno
+
+\caption{Matriz de evaluación multicriterio VDI 2225 para la selección del material estructural.}
+\label{tab:matriz_vdi2225_materiales}
+
+% Leyenda explicativa superior centrada
+\begin{tabular}{c}
+$p$: Puntaje de 0 a 4 (según escala VDI 2225) \\[1pt]
+$0 =$ No satisface, $1 =$ Aceptable, $2 =$ Suficiente, $3 =$ Bien, $4 =$ Muy bien (ideal). \\[2pt]
+$g$: Peso ponderado de importancia del criterio (de 1 a 5). \\
+\end{tabular}
+
+\vspace{6pt}
+
+% Estructura adaptable al ancho de la hoja (100% \textwidth)
+\begin{tabularx}{\textwidth}{|c|>{\raggedright\arraybackslash}X|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{3}{|c|}{} & \multicolumn{2}{c|}{\textbf{Solución 1}} & \multicolumn{2}{c|}{\textbf{Solución 2}} & \multicolumn{2}{c|}{\textbf{Solución 3}} \\
+\multicolumn{3}{|c|}{} & \multicolumn{2}{c|}{(PLA)} & \multicolumn{2}{c|}{(Aluminio)} & \multicolumn{2}{c|}{(Fibra de C.)} \\
+\hline
+$\mathbf{N^\circ}$ & \textbf{Criterio} & $\mathbf{g}$ & $\mathbf{p}$ & $\mathbf{gp}$ & $\mathbf{p}$ & $\mathbf{gp}$ & $\mathbf{p}$ & $\mathbf{gp}$ \\
+\hline
+1 & Resistencia mecánica & 3 & 2 & 6 & 3 & 9 & 4 & 12 \\
+2 & Peso & 5 & 4 & 20 & 1 & 5 & 2 & 10 \\
+3 & Costo & 5 & 4 & 20 & 2 & 10 & 1 & 5 \\
+4 & Precisión dimensional & 4 & 3 & 12 & 4 & 16 & 4 & 16 \\
+5 & Mantenimiento & 5 & 4 & 20 & 3 & 15 & 1 & 5 \\
+\hline
+\multicolumn{3}{|l|}{\textbf{Puntaje máximo obtenido}} & \multicolumn{2}{c|}{\textbf{78}} & \multicolumn{2}{c|}{55} & \multicolumn{2}{c|}{48} \\
+\multicolumn{3}{|l|}{\textbf{Valor técnico-económico ($X_i$)}} & \multicolumn{2}{c|}{\textbf{0.89}} & \multicolumn{2}{c|}{0.63} & \multicolumn{2}{c|}{0.55} \\
+\hline
+\end{tabularx}
+\end{table}
+
+Los resultados de la Tabla~\ref{tab:matriz_vdi2225_materiales} posicionan al termoplástico PLA como la alternativa seleccionada ($X_1 = 0.89$), con ventaja amplia frente al aluminio ($X_2 = 0.63$) y la fibra de carbono ($X_3 = 0.55$). El PLA virgen impreso por FDM ofrece un módulo elástico cercano a $E \approx 4258\text{ MPa}$ y un esfuerzo de fluencia de $\sigma_y \approx 40.43\text{ MPa}$~\cite{Anderson2017_PLA}. Con el fin de compensar su comportamiento frágil ante cargas concentradas de flexión sin penalizar la masa de las patas, el laminado de impresión se fijó en tres paredes perimetrales continuas con relleno interno en rejilla (\textit{grid}) al $8\%$, aprovechando la rigidez torsional que aportan los contornos cerrados frente a rellenos densos innecesarios~\cite{MahovicPoljacek2025_PLA}.
+
+\subsection{Cálculo de parámetros y dimensionamiento}
+
+En una pata hexápoda de tres grados de libertad, la razón longitudinal entre el fémur y la tibia gobierna la amplitud de zancada horizontal, la capacidad de levantamiento vertical sobre obstáculos y el brazo de palanca que soportan los reductores~\cite{N20_Datasheet}. Restringiendo la longitud extendida a las dimensiones útiles de la plataforma de impresión FDM, se contrastaron seis proporciones candidatas entre fémur y tibia reportadas en la literatura de hexápodos bioinspirados (Tabla~\ref{tab:relaciones_femur_tibia})~\cite{Wu2024_SpiderLegDesign}.
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.3} % Espaciado vertical adecuado entre filas
+\setlength{\tabcolsep}{6pt}       % Ajuste del espaciado horizontal interno
+
+\caption{Relaciones geométricas candidatas entre Fémur y Tibia y características asociadas a su espacio de trabajo (adaptado de Wu et al., 2024~\cite{Wu2024_SpiderLegDesign}).}
+\label{tab:relaciones_femur_tibia}
+
+\begin{tabularx}{\textwidth}{|>{\centering\arraybackslash}p{0.22\textwidth}|>{\centering\arraybackslash}p{0.18\textwidth}|>{\centering\arraybackslash}p{0.18\textwidth}|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Relación Fémur--Tibia} & \textbf{Longitud Fémur (mm)} & \textbf{Longitud Tibia (mm)} & \textbf{Característica principal del espacio de trabajo} \\
+\hline
+2:8 & 35.0 & 140.0 & Alcance hacia adelante limitado y potencial de zancada efectiva reducido. \\
+\hline
+3:7 & 52.5 & 122.5 & Mayor alcance en comparación con 2:8, pero espacio de trabajo horizontal aún limitado. \\
+\hline
+\rowcolor{yellow!20} \textbf{4:6 (2:3)} & \textbf{70.0} & \textbf{105.0} & \textbf{Alcance horizontal equilibrado, capacidad de elevación vertical del pie y compacidad.} \\
+\hline
+1:1 & 87.5 & 87.5 & Espacio de trabajo moderado, pero sin una ventaja clara sobre 4:6. \\
+\hline
+6:4 & 105.0 & 70.0 & Capacidad de ajuste distal reducida y espacio de trabajo vertical comprimido. \\
+\hline
+7:3 & 122.5 & 52.5 & Tibia excesivamente corta, región de colocación efectiva del pie limitada y pobre compacidad. \\
+\hline
+\end{tabularx}
+\end{table}
+
+La comparación geométrica confirma que la proporción fémur--tibia $4:6$ (equivalente a $2:3$) equilibra el alcance de avance con la altura libre de transferencia y evita configuraciones plegadas voluminosas.
+
+Al trasladar esta relación $2:3$ al hexápodo secundario, las longitudes absolutas se escalaron para respetar el par admisible de los micromotores N20 ($1:300$)~\cite{N20_Datasheet}. Así, la cadena articular adopta la progresión entera $1x : 2x : 3x$, conformada por $L_1 = 30.0\text{ mm}$ (coxa), $L_2 = 60.0\text{ mm}$ (fémur) y $L_3 = 90.0\text{ mm}$ (tibia). Acotar la coxa a $30.0\text{ mm}$ reduce al mínimo físico el voladizo proximal donde se aloja el motor base, disminuyendo el momento flector transmitido al chasis hexagonal.
+
+\subsection{Diseño constructivo e integración mecánica}
+
+Las soluciones de unión, transmisión de eje y contacto con el suelo se particularizaron para cada hexápodo de acuerdo con su tipo de actuador y escala mecánica.
+
+\subsubsection{Diseño constructivo e integración del hexápodo primario}
+
+El hexápodo primario parte de los planos mecánicos abiertos del proyecto \textit{MakeYourPet/hexapod} (\textit{Chipo})~\cite{MakeYourPetHexapod}, sobre los cuales se introdujeron tres modificaciones estructurales para adecuarlo a componentes disponibles localmente y dotarlo de detección de apoyo:
+
+\begin{itemize}
+    \item \textbf{Sustitución y acoplamiento de actuadores:} Los servomotores estándar del modelo base se reemplazaron por 18 servomotores de piñonería metálica MG996R ($\approx 10\text{ kg}\cdot\text{cm}$ a $6\text{ V}$)~\cite{MG996R_Datasheet}, redimensionando las cajas de coxa y fémur en PLA para asegurar el asiento rígido de las pestañas laterales y la concentricidad con las bocinas metálicas (\textit{servo horns}).
+    \item \textbf{Adaptación de elementos de unión y sujeción:} Los pasadores y cierres del chasis se estandarizaron a tornillería métrica M3 con tuercas embutidas y pasacables internos que protegen los ramales de alimentación y PWM frente a pellizcos articulares.
+    \item \textbf{Modificación distal táctil (\textit{Foot tip}):} En el extremo inferior de cada tibia se sustituyó el interruptor de lámina expuesto por un alojamiento telescópico corto que acciona un pulsador mecánico (\textit{push button}), recubierto exteriormente por un capuchón elastomérico de goma. Esta terminación registra el instante de apoyo firme sobre roca o piso irregular mientras eleva la fricción estática y amortigua el impacto de pisada.
+\end{itemize}
+
+\subsubsection{Diseño constructivo e integración del hexápodo secundario}
+
+En el hexápodo secundario, la sujeción de los 18 micromotores DC N20 y la transferencia de giro sin holgura se resolvieron mediante uniones impresas con ajuste controlado:
+
+\begin{itemize}
+    \item \textbf{Transmisión por acople intermedio cúbico:} El par motriz del vástago metálico en ``D'' ($3.0\text{ mm}$ de diámetro) se transfiere al eslabón contiguo a través de un dado cúbico intermedio en PLA dimensionado con $0.1\text{ mm}$ de interferencia diametral, eliminando el juego muerto (\textit{backlash} externo) durante inversiones rápidas de giro.
+    \item \textbf{Montura en cuna y sujeción autorroscante:} Cada motor N20 descansa sobre una cuna semicilíndrica moldeada en el chasis hexagonal y asegurada con abrazaderas y pernos $\text{M3} \times 18\text{ mm}$. Los orificios de anclaje se modelaron en CAD (Fusion 360) a $2.8\text{ mm}$ ($-0.2\text{ mm}$ de interferencia), permitiendo que los hilos del perno M3 tallen directamente las tres paredes del PLA y resistan el aflojamiento por vibración.
+    \item \textbf{Remate distal de tracción:} La punta de cada tibia remata en una base plana revestida con caucho elastomérico fijado con adhesivo cianoacrílico de alta viscosidad, prescindiendo de interruptores internos para conservar una sección distal esbelta y ligera.
+\end{itemize}
+
+\section{Subsistema Electrónico y de Potencia}
+
+El subsistema electrónico suministra energía regulada a los 18 actuadores de cada plataforma, acondiciona las señales químicas, ópticas e inerciales y ejecuta el procesamiento distribuido de locomoción y telemetría~\cite{AdvancesMining_2023, Sensors2021_HexapodReview}. Dado el régimen pulsante de corriente propio de la caminata hexápoda, el diseño eléctrico separa los rieles de tracción motriz respecto de la alimentación digital para impedir caídas transitorias de tensión o acoplamiento de ruido conmutado en los microcontroladores y cámaras.
+
+En las siguientes subsecciones se detallan los requerimientos cuantitativos bajo la norma ISO/IEC/IEEE 29148, la generación de variantes mediante matrices morfológicas, la selección multicriterio VDI 2225 y el dimensionamiento eléctrico del banco energético y las tarjetas modulares.
+
+\subsection{Especificación de requerimientos numéricos (ISO/IEC/IEEE 29148)}
+
+Las necesidades operativas de suministro eléctrico, adquisición sensorial e integración física se expresan mediante cinco especificaciones verificables alineadas con el estándar ISO/IEC/IEEE 29148:
+
+\begin{enumerate}
+    \item \textbf{Capacidad de procesamiento y control determinista:} La electrónica deberá sostener simultáneamente la navegación en ROS 2 sobre la unidad primaria y el cierre de lazos articulares digitales a frecuencias de $50\text{ Hz}$ (posición) y $100\text{ Hz}$ (velocidad y corriente) con muestreo ADC por DMA a $200\text{ kS/s}$ en la unidad secundaria, sin bloqueo de tareas ni pérdida de paquetes.
+    \item \textbf{Eficiencia de conversión y autonomía regulada:} Las etapas conmutadas Buck DC-DC deberán operar con eficiencias $\eta \ge 90\%$ sobre rieles desacoplados ($5.1\text{ V}$ lógicos y $6.0\text{ V}$ motrices en el primario; $3.3\text{ V}$ lógicos y $12.0\text{ V}$ motrices en el secundario), asegurando una autonomía nominal mínima $T_{\text{op}} \ge 1.0\text{ hora}$ con factor de seguridad energético $FS = 1.25$.
+    \item \textbf{Protección eléctrica y tolerancia ambiental:} Los drivers de motor del explorador secundario deberán incorporar limitación de corriente por hardware ajustada a $1.1\text{ A}$ por canal y señalización unificada de falla térmica o cortocircuito, proyectando envolventes electrónicas con meta de protección IP65 (IEC 60529) frente a polvo y humedad.
+    \item \textbf{Modularidad constructiva y reducción de cableado:} El accionamiento del hexápodo secundario deberá integrarse en seis tarjetas PCB idénticas e intercambiables (una por extremidad) con componentes pasivos estandarizados en formato SMD 0805, eliminando mazos de cables sueltos propensos a falsos contactos o diafonía capacitiva.
+    \item \textbf{Sostenibilidad presupuestal y disponibilidad local:} La totalidad de controladores, convertidores, sensores químicos/ópticos y circuitos integrados deberá seleccionarse entre componentes comerciales de reposición accesible dentro del techo financiero del proyecto.
+\end{enumerate}
+
+\subsection{Matriz de evaluación y selección de componentes (VDI 2225)}
+
+Previo a la calificación numérica VDI 2225, se construyeron matrices morfológicas independientes para el hexápodo primario y el hexápodo secundario con el fin de explorar combinaciones viables de cómputo, percepción, sensado de gases, tracción y enlace inalámbrico.
+
+\subsubsection{Sistema electrónico del robot principal}
+
+La matriz morfológica del hexápodo primario descompone sus requerimientos electrónicos en dieciséis funciones elementales codificadas en la Tabla~\ref{tab:matriz_morfologica_principal}, planteando tres opciones tecnológicas por fila.
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.3} % Espaciado vertical holgado entre celdas
+\setlength{\tabcolsep}{5pt}       % Ajuste del margen interno horizontal
+
+\begin{tabularx}{\textwidth}{|c|C|C|C|C|}
+\hline
+\textbf{Ítem} & \textbf{Función} & \textbf{Opción 1} & \textbf{Opción 2} & \textbf{Opción 3} \\
+\hline
+A & Computador principal & Raspberry Pi 5 8 GB & NVIDIA Jetson Orin Nano & RDK X5 \\
+\hline
+B & Controlador de bajo nivel & Pololu Mini Maestro & ESP32-S3 + PCA9685 & STM32F4 \\
+\hline
+C & Percepción RGB-D & Orbbec Gemini 2 & Intel RealSense D455 & Luxonis OAK-D Pro \\
+\hline
+D & Sensor inercial (IMU) & BMI160 & MPU9250 & BNO055 \\
+\hline
+E & Sensor de gases & Módulo MQ-9 & MiCS-4514 & BME680 \\
+\hline
+J & Detección de obstáculos cercana & VL53L5CX & VL53L8CX & LiDAR 2D \\
+\hline
+K & Comunicación entre unidades & Wi-Fi (UDP) & Wi-Fi + MQTT/ROS 2 & Wi-Fi + enlace auxiliar LoRa \\
+\hline
+L & Comunicación interna & USB / UART & CAN & RS-485 \\
+\hline
+M & Almacenamiento & microSD & SSD NVMe & SSD USB 3.0 \\
+\hline
+N & Sistema de alimentación & Batería Li-ion 3S & Batería LiPo 3S & Batería LiFePO4 \\
+\hline
+O & Conversión de potencia & Convertidores Buck DC-DC & Buck-Boost DC-DC & Sistema DC-DC distribuido \\
+\hline
+P & Estimación de posición & Visual odometry + IMU (EKF) & Odometría + IMU & SLAM RGB-D + odometría \\
+\hline
+Q & Generación de mapa & SLAM RGB-D (RTAB-Map) & SLAM LiDAR 3D & SLAM visual monocular \\
+\hline
+R & Arquitectura de software & ROS 2 Humble & ROS 2 Jazzy & Sistema propietario \\
+\hline
+S & Actuador de locomoción & Servomotor MG996R & MX-64R DYNAMIXEL & DRS-0101 Herkulex \\
+\hline
+T & Realimentación de contacto suelo & Pulsador SW-060A & FSR 402 & FlexiForce A201 \\
+\hline
+\end{tabularx}
+\caption{Matriz morfológica del sistema electrónico del robot principal.}
+\label{tab:matriz_morfologica_principal}
+\end{table}
+
+Las tres arquitecturas integradas obtenidas a partir de esta tabla se contrastan mediante cinco criterios ponderados ($g \in [1,5]$):
+
+\begin{enumerate}
+    \item \textbf{Capacidad de cómputo y percepción ($g = 5$):} Rendimiento del procesador embarcado para manejar nubes de puntos RGB-D y alcance útil de los sensores ópticos.
+    \item \textbf{Compatibilidad con ROS 2, SLAM y comunicaciones ($g = 5$):} Soporte de paquetes oficiales en Linux/ROS 2, madurez de drivers para mapeo 3D y facilidad de enlace inalámbrico.
+    \item \textbf{Robustez y confiabilidad del sistema ($g = 4$):} Estabilidad de los trenes de pulsos PWM bajo carga, margen térmico de reguladores e inmunidad ante ruido eléctrico.
+    \item \textbf{Complejidad de integración ($g = 3$):} Volumen ocupado en el chasis, cantidad de convertidores lógicos auxiliares y simplicidad del arnés de conexionado.
+    \item \textbf{Costo y disponibilidad ($g = 3$):} Ajuste al presupuesto universitario y tiempos de importación o compra local.
+\end{enumerate}
+
+\subsubsection{Sistema electrónico del robot secundario}
+
+De forma complementaria, la matriz morfológica del hexápodo secundario (Tabla~\ref{tab:matriz_morfologica_secundario}) reúne veinte funciones elementales (ítems A hasta T) orientadas a miniaturizar la electrónica de control articular y proyectar su escalabilidad hacia arreglos compactos de monitoreo ambiental.
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.3} % Espaciado vertical holgado entre celdas
+\setlength{\tabcolsep}{4pt}       % Ajuste del margen interno horizontal
+
+\begin{tabularx}{\textwidth}{|c|C|C|C|C|}
+\hline
+\textbf{Ítem} & \textbf{Función} & \textbf{Opción 1} & \textbf{Opción 2} & \textbf{Opción 3} \\
+\hline
+A & Controlador & ESP32-WROOM / ESP32-S3 & STM32F4 & Teensy 4.1 \\
+\hline
+B & Sensor de visión & Cámara Mini USB-C & Raspberry Pi Camera Module 3 & OAK-D Lite \\
+\hline
+C & Sensor inercial (IMU) & MPU6050 & BMI160 & BNO055 \\
+\hline
+D & Detección de $\text{CO}$ & ZE07-CO & SPEC Sensors CO & Alphasense CO-B4 \\
+\hline
+E & Detección de $\text{CO}_2$ & MH-Z19C & SCD30 & SCD41 \\
+\hline
+F & Detección de $\text{NO}_2$ / $\text{NO}_x$ & MiCS-4514 & SPEC Sensors $\text{NO}_2$ & Alphasense NO2-B43F \\
+\hline
+G & Medición de $\text{O}_2$ & Grove ME2-O2 & DFRobot $\text{O}_2$ & Alphasense O2-A2 \\
+\hline
+H & Temperatura y humedad & BME280 & SHT31 & BME680 \\
+\hline
+I & Detección local de obstáculos & --- & VL53L5CX & VL53L8CX \\
+\hline
+J & Comunicación con la unidad principal & Wi-Fi (UDP) & Wi-Fi + micro-ROS & Wi-Fi + enlace auxiliar LoRa \\
+\hline
+K & Comunicación interna & UART / USB & CAN & RS-485 \\
+\hline
+L & Actuador de locomoción & N20 12 V con encoder & N20 6 V con encoder & Servomotor compacto \\
+\hline
+M & Driver de motores & DRV8876 & TB6612FNG & DRV8833 \\
+\hline
+N & Realimentación articular & Encoder magnético integrado & Encoder óptico & Sensor magnético absoluto \\
+\hline
+O & Sensado de corriente & DRV8876 IPROPI & INA219 & ACS712 \\
+\hline
+P & Alimentación & Li-ion & LiPo & LiFePO4 \\
+\hline
+Q & Conversión de potencia & Buck DC-DC / LDO local & Buck-Boost & Reguladores distribuidos \\
+\hline
+R & Localización & Localización relativa al mapa compartido & Visual odometry + IMU & Estimación por odometría articular \\
+\hline
+S & Navegación & Coordinación cooperativa con base primaria & Nav2 independiente & Seguimiento reactivo de paredes \\
+\hline
+T & Arquitectura de software & ESP-IDF / C++ embebido & STM32Cube & Teensyduino \\
+\hline
+\end{tabularx}
+\caption{Matriz morfológica del sistema electrónico del robot secundario.}
+\label{tab:matriz_morfologica_secundario}
+\end{table}
+
+Las configuraciones candidatas del explorador secundario se ponderan bajo cinco criterios técnico-económicos ($g \in [1,5]$):
+
+\begin{enumerate}
+    \item \textbf{Desempeño de control y adquisición ($g = 5$):} Disponibilidad de periféricos dedicados en hardware (contadores de cuadratura PCNT, PWM y ADC con DMA) para cerrar tres lazos PI por motor en tiempo real.
+    \item \textbf{Cobertura y adecuación del sistema sensorial ($g = 5$):} Compatibilidad eléctrica y de interfaz con módulos electroquímicos, NDIR y semiconductores para medición de gases en espacios confinados.
+    \item \textbf{Robustez eléctrica y de comunicaciones ($g = 4$):} Protección integrada contra sobrecorriente en puentes H, medición analógica de corriente de armadura y estabilidad del transceptor Wi-Fi integrado.
+    \item \textbf{Complejidad de integración ($g = 3$):} Huella superficial en PCB personalizada, disipación térmica sin disipadores externos y reducción del cableado hacia cada extremidad.
+    \item \textbf{Costo y disponibilidad ($g = 3$):} Precio unitario al escalar el diseño a seis tarjetas modulares y facilidad de reemplazo de circuitos integrados.
+\end{enumerate}
+
+A continuación, las subsecciones siguientes presentan las matrices cuantitativas VDI 2225 definitivas junto con los cálculos eléctricos de potencia para cada unidad.
+
+\subsection{Cálculo de parámetros y dimensionamiento}
+
+Definidos los criterios de valoración, se califican las tres opciones conceptuales de cada plataforma y se dimensionan las corrientes nominales, transitorios pico, capacidad energética del acumulador y etapas de regulación.
+
+\subsubsection{Sistema electrónico del robot principal}
+
+\paragraph{A. Evaluación Multicriterio (VDI 2225)}
+Las tres configuraciones candidatas del hexápodo primario se evaluaron en la escala $p \in [0,4]$ frente a la referencia ideal ($80$ puntos máximos), obteniendo los índices registrados en la Tabla~\ref{tab:evaluacion_electronica_principal}.
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{3pt}
+\caption{Matriz de selección del sistema electrónico del robot primario (VDI 2225).}
+\label{tab:evaluacion_electronica_principal}
+\begin{tabularx}{\textwidth}{|c|>{\raggedright\arraybackslash}X|c|c|c|c|c|c|c|>{\columncolor{lightgreen}}c|>{\columncolor{lightgreen}}c|}
+\hline
+\multicolumn{3}{|c|}{} & \multicolumn{2}{c|}{\textbf{Opción 1}} & \multicolumn{2}{c|}{\textbf{Opción 2}} & \multicolumn{2}{c|}{\textbf{Opción 3}} & \multicolumn{2}{c|}{\textbf{Ideal}} \\
+\hline
+\textbf{N.º} & \textbf{Criterio} & \textbf{g} & \textbf{p} & \textbf{gp} & \textbf{p} & \textbf{gp} & \textbf{p} & \textbf{gp} & \textbf{p} & \textbf{gp} \\
+\hline
+1 & Capacidad de cómputo y percepción & 5 & 4 & 20 & 4 & 20 & 4 & 20 & 4 & 20 \\
+\hline
+2 & Compatibilidad con ROS 2, SLAM y comunicaciones & 5 & 4 & 20 & 4 & 20 & 3 & 15 & 4 & 20 \\
+\hline
+3 & Robustez y confiabilidad del sistema & 4 & 3 & 12 & 4 & 16 & 3 & 12 & 4 & 16 \\
+\hline
+4 & Complejidad de integración & 3 & 4 & 12 & 2 & 6 & 2 & 6 & 4 & 12 \\
+\hline
+5 & Costo y disponibilidad & 3 & 4 & 12 & 2 & 6 & 2 & 6 & 4 & 12 \\
+\hline
+\multicolumn{3}{|l|}{\textbf{Puntaje total}} & \multicolumn{2}{c|}{76} & \multicolumn{2}{c|}{68} & \multicolumn{2}{c|}{59} & \multicolumn{2}{c|}{80} \\
+\hline
+\multicolumn{3}{|l|}{\textbf{Valor normalizado}} & \multicolumn{2}{c|}{0.95} & \multicolumn{2}{c|}{0.85} & \multicolumn{2}{c|}{0.74} & \multicolumn{2}{c|}{1.00} \\
+\hline
+\end{tabularx}
+\end{table}
+
+La \textbf{Opción 1} alcanza el mayor índice técnico-económico ($0.95$, con $76/80$ puntos), por encima de la Opción 2 ($0.85$) y la Opción 3 ($0.74$). Esta configuración articula una computadora Raspberry Pi 5 (8 GB RAM) para ejecutar los nodos de ROS 2, un controlador USB dedicado Pololu Mini Maestro de 18 canales para comandar los servomotores MG996R sin fluctuaciones de temporización y una cámara RGB-D Orbbec Gemini 2 con IMU interna. Frente a la variante basada en NVIDIA Jetson Orin Nano (Opción 2), la arquitectura elegida ofrece el mismo puntaje en compatibilidad con SLAM RGB-D a una fracción del costo y menor peso térmico.
+
+\paragraph{B. Presupuesto de Potencia (Power Budget)}
+A partir de las hojas de datos de los módulos seleccionados en la Opción 1, el balance eléctrico del hexápodo primario se desglosa en cuatro cargas principales:
+
+\begin{enumerate}
+    \item \textbf{Unidad Central de Cómputo (Raspberry Pi 5 8 GB):} Alimentada nominalmente en el riel de $5\text{ V DC}$ ($5.1\text{ V}$ regulados), demanda $1.5\text{ A}$ ($7.5\text{ W}$) en carga media y picos de hasta $3.0\text{ A}$ ($15.0\text{ W}$) durante el procesamiento simultáneo de odometría visual y optimización de grafos en ROS 2~\cite{RaspberryPi5_Datasheet}.
+    \item \textbf{Controlador de Bajo Nivel (Pololu Mini Maestro) y Sensórica Secundaria:} La lógica del Pololu Mini Maestro~\cite{Pololu_Maestro_Datasheet}, sumada a la IMU auxiliar BMI160, el calefactor del sensor de gases MQ-9 y el sensor ToF multizona VL53L5CX~\cite{MQ9_Datasheet, VL53L5CX_Datasheet}, consume en conjunto $0.35\text{ A}$ sobre el riel de $5.0\text{ V DC}$ ($1.75\text{ W}$).
+    \item \textbf{Sistema de Percepción RGB-D (Orbbec Gemini 2):} Alimentada directamente desde el puerto USB 3.0 a $5.0\text{ V DC}$, registra un consumo continuo de $0.8\text{ A}$ ($4.0\text{ W}$)~\cite{Orbbec_Gemini2_Datasheet}.
+    \item \textbf{Etapa de Actuación y Locomoción:} Integrada por los 18 servomotores MG996R alimentados a $6.0\text{ V DC}$. Durante la marcha en trípode (nueve articulaciones con carga dinámica principal por semiperiodo), el consumo promedio equivale a $0.4\text{ A}$ por actuador activo ($3.6\text{ A}$ totales, $21.6\text{ W}$), mientras que las exigencias transitorias de arranque o corrección brusca alcanzan $1.2\text{ A}$ en nueve canales simultáneos ($10.8\text{ A}$ totales, $64.8\text{ W}$)~\cite{MG996R_Datasheet}.
+\end{enumerate}
+
+La suma de estos cuatro aportes arroja una potencia continua nominal de $34.85\text{ W}$ y una demanda transitoria pico de $85.55\text{ W}$.
+
+\paragraph{C. Dimensionamiento del Banco de Baterías y Convertidores DC-DC}
+Para cubrir una misión continua de $T_{\text{op}} = 1.0\text{ hora}$ aplicando un factor de resguardo energético $FS = 1.25$:
+
+\begin{itemize}
+    \item \textbf{Capacidad del Banco de Baterías:} Adoptando un paquete acumulador Li-ion / LiPo de tres celdas en serie ($3\text{S}$, $V_{\text{nom}} = 11.1\text{ V DC}$, $V_{\text{max}} = 12.6\text{ V DC}$):
+    \begin{equation}
+        \text{Energía requerida} = P_{\text{nom}} \cdot T_{\text{op}} \cdot FS = 34.85\text{ W} \times 1.0\text{ h} \times 1.25 = 43.56\text{ Wh}
+    \end{equation}
+    \begin{equation}
+        \text{Capacidad mínima} = \frac{43.56\text{ Wh}}{11.1\text{ V}} = 3.924\text{ Ah} \quad (3924\text{ mAh})
+    \end{equation}
+    Se elige un banco comercial \textbf{Li-ion/LiPo $3\text{S}$ de $4500\text{ mAh}$} con tasa de descarga de $25\text{C}$ ($112.5\text{ A}$ máximos continuos), holgura que permite absorber los picos transitorios de los 18 servomotores sin provocar caídas bruscas de tensión (\textit{voltage sag}).
+
+    \item \textbf{Etapas de Conversión de Potencia (DC-DC Buck):}
+    \begin{itemize}
+        \item \textbf{Riel de Cómputo y Lógica ($11.1\text{ V} \to 5.1\text{ V}$):} Convertidor reductor conmutado Buck DC-DC con eficiencia $\eta \ge 92\%$ y entrega continua de $5\text{ A}$ ($\approx 25\text{ W}$), ajustado a $5.1\text{ V}$ para compensar la caída resistiva en el puerto de la Raspberry Pi 5, la lógica del Pololu Maestro y el bus USB 3.0 de la cámara Orbbec.
+        \item \textbf{Riel de Actuadores ($11.1\text{ V} \to 6.0\text{ V}$):} Convertidor Buck DC-DC separado con capacidad continua de $10\text{ A}$ y soporte de picos de $15\text{ A}$ ($\eta \ge 90\%$), manteniendo aislados los transitorios inductivos de los servomotores respecto de la electrónica digital.
+    \end{itemize}
+\end{itemize}
+
+
+\subsubsection{Sistema electrónico del robot secundario}
+
+\paragraph{A. Evaluación Multicriterio (VDI 2225)}
+Las tres variantes del explorador secundario derivadas de su matriz morfológica se calificaron bajo el mismo procedimiento VDI 2225, otorgando peso máximo ($g = 5$) a la capacidad de cierre de lazo en tiempo real y a la adecuación sensorial. La Tabla~\ref{tab:evaluacion_electronica_secundario} resume los puntajes obtenidos.
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{3pt}
+\caption{Matriz de selección del sistema electrónico del robot secundario (VDI 2225).}
+\label{tab:evaluacion_electronica_secundario}
+\begin{tabularx}{\textwidth}{|c|>{\raggedright\arraybackslash}X|c|c|c|c|c|c|c|>{\columncolor{lightgreen}}c|>{\columncolor{lightgreen}}c|}
+\hline
+\multicolumn{3}{|c|}{} & \multicolumn{2}{c|}{\textbf{Opción 1}} & \multicolumn{2}{c|}{\textbf{Opción 2}} & \multicolumn{2}{c|}{\textbf{Opción 3}} & \multicolumn{2}{c|}{\textbf{Ideal}} \\
+\hline
+\textbf{N.º} & \textbf{Criterio} & \textbf{g} & \textbf{p} & \textbf{gp} & \textbf{p} & \textbf{gp} & \textbf{p} & \textbf{gp} & \textbf{p} & \textbf{gp} \\
+\hline
+1 & Desempeño de control y adquisición & 5 & 4 & 20 & 4 & 20 & 4 & 20 & 4 & 20 \\
+\hline
+2 & Cobertura y adecuación del sistema sensorial & 5 & 4 & 20 & 4 & 20 & 4 & 20 & 4 & 20 \\
+\hline
+3 & Robustez eléctrica y de comunicaciones & 4 & 3 & 12 & 4 & 16 & 3 & 12 & 4 & 16 \\
+\hline
+4 & Complejidad de integración & 3 & 4 & 12 & 2 & 6 & 2 & 6 & 4 & 12 \\
+\hline
+5 & Costo y disponibilidad & 3 & 4 & 12 & 2 & 6 & 1 & 3 & 4 & 12 \\
+\hline
+\multicolumn{3}{|l|}{\textbf{Puntaje total}} & \multicolumn{2}{c|}{76} & \multicolumn{2}{c|}{68} & \multicolumn{2}{c|}{61} & \multicolumn{2}{c|}{80} \\
+\hline
+\multicolumn{3}{|l|}{\textbf{Valor normalizado}} & \multicolumn{2}{c|}{0.95} & \multicolumn{2}{c|}{0.85} & \multicolumn{2}{c|}{0.76} & \multicolumn{2}{c|}{1.00} \\
+\hline
+\end{tabularx}
+\end{table}
+
+La \textbf{Opción 1} obtiene un puntaje ponderado de $76/80$ ($X_1 = 0.95$), superando a la Opción 2 ($0.85$) y a la Opción 3 ($0.76$). Su ventaja decisiva proviene de combinar el módulo ESP32-WROOM-32E (que integra conectividad Wi-Fi nativa, unidades de conteo por hardware PCNT y ADC con DMA en un único encapsulado económico) junto con puentes H DRV8876 provistos de espejo analógico de corriente (\texttt{IPROPI}) y micromotores N20 de $12\text{ V}$ con encoder magnético integrado, prescindiendo de sensores externos de corriente tipo Hall o shunt con amplificador adicional.
+
+\subsection{Arquitectura de conexionado e integración de hardware}
+
+El esquema de interconexión eléctrica define el seccionamiento de rieles de tensión, las protecciones por fusible, los lazos de retorno de masa y la disposición física de las tarjetas sobre ambos chasis. Mientras el diseño autónomo se alimenta desde el banco acumulador dimensionado ($3\text{S}$), durante las sesiones estacionarias de calibración y validación en banco el bus primario admite alimentación directa desde fuentes regulables de laboratorio con limitación de corriente.
+
+\subsubsection{Sistema electrónico del robot principal}
+
+El hardware del hexápodo primario se organiza en cuatro subsistemas interconectados: potencia regulada, cómputo y percepción espacial, control de servomotores y enlace inalámbrico. La Figura~\ref{fig:arquitectura_primario} muestra el flujo funcional de energía y datos, en tanto que la Figura~\ref{fig:HardwarePrimario} detalla las interfaces físicas de puerto entre módulos.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/ArquitecturaPrimario.png} 
+    \caption{Arquitectura electrónica, flujo de señales y distribución de potencia del robot primario.}
+    \label{fig:arquitectura_primario}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/HardwarePrimario.png} 
+    \caption{Diagrama de conexionado e interfaces de hardware del robot primario.}
+    \label{fig:HardwarePrimario}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Distribución de Potencia:} La entrada principal de energía (batería $3\text{S}$ de $11.1\text{ V}$ en operación autónoma o fuente regulada de banco durante ajustes estacionarios) atraviesa un interruptor general en serie con un fusible de protección contra cortocircuitos. Desde este nodo se alimentan en paralelo los dos reguladores Buck DC-DC aislados: la rama lógica de $5.1\text{ V}$ ($5\text{ A}$) para procesamiento y sensores, y la rama de potencia de $6.0\text{ V}$ ($10\text{ A}$ continuos / $15\text{ A}$ pico) conectada al bus de servomotores.
+    \item \textbf{Percepción y Procesamiento Central:} La Raspberry Pi 5 ejecuta los nodos de navegación en ROS 2 y recibe el flujo RGB-D e inercial de la cámara Orbbec Gemini 2 mediante enlace USB 3.0~\cite{RaspberryPi5_Datasheet, Orbbec_Gemini2_Datasheet}. En paralelo, las lecturas analógicas del sensor semiconductor MQ-9 (monóxido de carbono y gases combustibles)~\cite{MQ9_Datasheet} ingresan a través de una etapa de conversión analógico-digital hacia el procesador.
+    \item \textbf{Control de Locomoción y Retroalimentación:} La Raspberry Pi 5 envía consignas articulares por USB al controlador Pololu Mini Maestro de 18 canales~\cite{Pololu_Maestro_Datasheet}, el cual genera por hardware las señales PWM hacia los 18 servomotores MG996R (coxa, fémur y tibia de las seis patas). Los seis pulsadores instalados en las puntas distales se cablean directamente hacia entradas digitales GPIO ($\times 6$) de la Raspberry Pi para confirmar el contacto de cada extremidad con el terreno.
+    \item \textbf{Comunicación Externa:} El intercambio de comandos de misión y paquetes de telemetría con el hexápodo secundario se realiza sobre red local Wi-Fi mediante datagramas UDP de baja sobrecarga.
+\end{itemize}
+
+\subsubsection{Sistema electrónico del robot secundario}
+
+En el hexápodo secundario se descartó el empleo de tarjetas de desarrollo comerciales cableadas punto a punto debido al reducido volumen interno del chasis hexagonal y a los problemas de fiabilidad detectados en prototipos con cables \textit{jumper} (tales como desconexiones por vibración y acoplamiento capacitivo entre canales de encoder contiguos). En su lugar, se diseñó una placa de circuito impreso (PCB) modular a medida para controlar íntegramente los tres motores N20 de una extremidad.
+
+Esta topología replica seis tarjetas idénticas alrededor del chasis hexagonal (una por pata), lo que permite sustituir en pocos minutos cualquier módulo afectado durante las pruebas sin desmontar el resto de la electrónica. La Figura~\ref{fig:ArquitecturaSecundario} presenta el diagrama interno de bloques de cada tarjeta modular de extremidad, la Figura~\ref{fig:HardwareSecundario} muestra la arquitectura general de interconexión del hexápodo secundario y la Figura~\ref{fig:PCB1} ilustra el modelado tridimensional de la PCB personalizada.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/ArquitecturaSecundario.png} 
+    \caption{Diagrama de bloques y flujo de señales de la placa modular por extremidad del robot secundario.}
+    \label{fig:ArquitecturaSecundario}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/HardwareSecundario.png} 
+    \caption{Arquitectura general de hardware e interconexión eléctrica del robot secundario.}
+    \label{fig:HardwareSecundario}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Procesamiento y Programación:} Cada tarjeta aloja un módulo ESP32-WROOM-32E ($16\text{ MB}$ Flash) dedicado a los tres grados de libertad de su respectiva pata. Para la carga de firmware y telemetría por cable, incorpora un conector USB-C (\texttt{J1}) acoplado a un puente USB-UART CP2102N (\texttt{U1}) con red de auto-programación por transistores (\texttt{Q1}, \texttt{Q2}) y pulsadores físicos (\texttt{RESET}, \texttt{BOOT}) sobre las líneas \texttt{EN} e \texttt{IO0}. Se eligió el encapsulado QFN-28 del CP2102N para minimizar el área ocupada en la tarjeta pese a exigir mayor control térmico durante el soldado superficial.
+    \item \textbf{Distribución de Potencia:} El riel lógico toma $5\text{ V}$ desde la línea \texttt{VBUS} y los reduce a $3.3\text{ V}$ mediante un regulador lineal AMS1117-3.3 (\texttt{U2}) en encapsulado SOT-223, respaldado por un polígono extendido de cobre en su pestaña de disipación. La energía motriz de $12\text{ V}$ ingresa por una bornera dedicada (\texttt{J3}, \texttt{V\_MOT}) separada del regulador digital.
+    \item \textbf{Etapa de Potencia y Control de Motores:} Tres circuitos integrados puente H DRV8876 (\texttt{DRV1}, \texttt{DRV2}, \texttt{DRV3}) manejan de forma independiente los micromotores N20 de coxa (\texttt{M1}), fémur (\texttt{M2}) y tibia (\texttt{M3}). El ESP32 genera seis canales PWM para modular sentido y tensión efectiva, mientras muestrea en tres entradas de su conversor ADC1 la corriente proporcional entregada por el pin \texttt{IPROPI} de cada driver (compatible con el uso simultáneo del transceptor Wi-Fi). El umbral de recorte de corriente por hardware se fijó mediante divisor resistivo en $1.1\text{ A}$, unificando las salidas de drenador abierto \texttt{nFAULT} hacia el pin \texttt{IO4}. Las almohadillas térmicas inferiores (\textit{thermal pads}) de los encapsulados HTSSOP-16 se sueldan directamente al plano continuo de masa con vías térmicas.
+    \item \textbf{Periféricos y Componentes Pasivos:} La conexión hacia cada conjunto motor-encoder se realiza mediante tres cabezales compactos JST-SH de 6 pines (\texttt{P1}, \texttt{P2}, \texttt{P3}) que agrupan alimentación del encoder ($3.3\text{ V}$, \texttt{GND}), canales de cuadratura A/B y terminales de armadura. Las resistencias y capacitores de desacoplo se unificaron en formato SMD 0805 para agilizar el ensamblaje manual, reservando encapsulados 1206 y electrolíticos de polímero en los condensadores de filtro principal para evitar la caída efectiva de capacitancia por polarización continua (\textit{DC bias}).
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/PCB1.png} 
+    \caption{Vista renderizada de la placa de circuito impreso (PCB) modular diseñada para cada extremidad del hexápodo secundario.}
+    \label{fig:PCB1}
+\end{figure}
+
+
+\section{Subsistema de control, navegación y software}
+
+La arquitectura de software divide el problema de control en dos niveles adaptados al hardware de cada plataforma. En el hexápodo primario, el computador embarcado ejecuta una pila de navegación autónoma sobre ROS 2 que enlaza la percepción RGB-D e inercial con el mapeo tridimensional en RTAB-Map, la planificación de rutas libres de colisión en Nav2 y la generación cinemática de marcha en trípode.
+
+En el hexápodo secundario, donde los micromotores DC N20 carecen de electrónica de posición interna, el control recae en un firmware distribuido sobre los seis módulos ESP32. Cada microcontrolador ejecuta localmente una estructura en cascada de tres reguladores Proporcional-Integral (PI) anidados para gobernar corriente de armadura, velocidad angular y ángulo articular de los tres eslabones de su pata.
+
+\subsection{Arquitectura de navegación autónoma y mapeo (Robot principal)}
+
+El software del hexápodo primario se organiza como una red de nodos en ROS 2 comunicados sobre middleware DDS, cuya coherencia geométrica descansa en el árbol de transformaciones espaciales (\texttt{tf2}) representado en la Figura~\ref{fig:arbol_transformaciones}. En esta jerarquía, el nodo de SLAM (\texttt{rtabmap}) corrige la deriva global publicando la transformación \texttt{map} $\to$ \texttt{odom}; el filtro estocástico de localización actualiza de forma continua \texttt{odom} $\to$ \texttt{base\_link}; y el modelo descriptivo URDF fija la relación rígida entre el centro del chasis y el marco óptico \texttt{camera\_link}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/ArbolTransformaciones.png} 
+    \caption{Árbol de transformaciones espaciales (\texttt{tf2}) de la arquitectura de navegación en ROS 2, indicando los nodos responsables de cada enlace.}
+    \label{fig:arbol_transformaciones}
+\end{figure}
+
+El flujo de procesamiento opera a través de cinco bloques acoplados en cascada:
+
+\begin{enumerate}
+    \item \textbf{Percepción:} El nodo \texttt{orbbec\_camera} captura imágenes sincronizadas de color, mapas de profundidad ($0.15\text{ m}$ a $10.0\text{ m}$, campo visual de $91^\circ \times 66^\circ$) y lecturas inerciales de seis ejes desde la cámara Orbbec Gemini 2 por USB 3.0~\cite{Orbbec_Gemini2_Datasheet}.
+    \item \textbf{Odometría:} El paquete \texttt{robot\_localization} ejecuta un Filtro de Kalman Extendido (EKF) que fusiona la odometría visual RGB-D con las aceleraciones y giros de la IMU, entregando una estimación suave de estado a alta frecuencia entre \texttt{odom} y \texttt{base\_link}.
+    \item \textbf{SLAM:} El nodo \texttt{rtabmap} construye un grafo incremental de poses con detección visual de cierre de lazo (\textit{loop closure})~\cite{cadena2016past}. A partir de las nubes de puntos registradas genera tanto la reconstrucción 3D de la galería como la rejilla de ocupación 2D, admitiendo conmutación entre modo de cartografía activa y modo de relocalización sobre mapa previo.
+    \item \textbf{Planificación:} El marco \texttt{Nav2} mantiene mapas de costos (\textit{costmaps}) global y local alimentados por el sensor de profundidad y coordina, mediante árboles de comportamiento, el cálculo de trayectorias y maniobras de recuperación para publicar consignas de velocidad del chasis en el tópico \texttt{/cmd\_vel} ($v_x, v_y, \omega_z$).
+    \item \textbf{Locomoción:} El nodo generador de marcha suscribe el vector \texttt{/cmd\_vel}, planifica los ciclos alternados en trípode, evalúa la cinemática inversa de las seis extremidades y envía las tramas seriales de ancho de pulso al controlador Pololu Mini Maestro para posicionar los 18 servomotores MG996R.
+\end{enumerate}
+
+La puesta en marcha y verificación de esta pila en laboratorio sigue una secuencia incremental de cinco etapas:
+
+\begin{itemize}
+    \item \textbf{Etapa 1 (Base ROS 2):} Despliegue del modelo URDF, publicación del árbol \texttt{tf2}, lectura de la cámara y enlace con el nodo de caminata, verificando en RViz la geometría de marcos coordenados y la respuesta del robot bajo teleoperación.
+    \item \textbf{Etapa 2 (Odometría):} Integración de \texttt{rgbd\_odometry} con la IMU dentro del filtro EKF de \texttt{robot\_localization}, cuantificando el error porcentual de cierre al recorrer trayectorias cerradas de prueba.
+    \item \textbf{Etapa 3 (Mapeo):} Construcción de la base cartográfica en RTAB-Map mediante recorridos teleoperados, validando el reconocimiento de cierres de lazo y la exactitud métrica de paredes y obstáculos respecto a mediciones físicas con cinta láser.
+    \item \textbf{Etapa 4 (Localización y Nav2):} Ajuste del polígono de huella (\textit{footprint}), radios de inflación en \textit{costmaps} y topes cinemáticos de velocidad en Nav2, comprobando el arribo autónomo sin colisiones ante metas (\textit{goals}) asignadas en RViz.
+    \item \textbf{Etapa 5 (Pruebas integrales en pista):} Ensayos repetidos con obstáculos representativos en laboratorio, registrando error absoluto y relativo de trayectoria (ATE y RPE), porcentaje de misiones completadas, error final de pose y carga de CPU en la Raspberry Pi 5.
+\end{itemize}
+
+
+\subsection{Control articular en cascada de bajo nivel (Robot secundario)}
+
+A diferencia de los servomotores integrados del robot primario, cada articulación del hexápodo secundario emplea un micromotor DC N20 ($12\text{ V}$, $300\text{ RPM}$, reducción $1:300$) gobernado directamente por el módulo ESP32 de su tarjeta PCB~\cite{N20_Datasheet}. Para asegurar el seguimiento preciso de perfiles articulares bajo carga variable de peso propio, se implementó una arquitectura digital en cascada que separa la dinámica rápida del devanado eléctrico respecto de la respuesta mecánica del eje~\cite{TexasInstruments_CurrentLoop, RobetGautier_CascadedLoops_2014, threeLoopControl1}.
+
+El esquema consta de tres lazos cerrados anidados con reguladores Proporcional-Integral (PI) discretos: corriente en el núcleo interno, velocidad angular en el nivel intermedio y posición en el contorno externo (Figura~\ref{fig:ControlArticularCascada}). La organización de tareas, colas y periféricos en el firmware embebido se detalla en la Figura~\ref{fig:arquitectura_firmware}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/ControlArticularCascada.png} 
+    \caption{Arquitectura de control articular en cascada con lazos anidados de posición, velocidad y corriente para el accionamiento del micromotor N20.}
+    \label{fig:ControlArticularCascada}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/ArquitecturaFirmware.png} 
+    \caption{Arquitectura de tareas y periféricos en el firmware del módulo ESP32 por extremidad.}
+    \label{fig:arquitectura_firmware}
+\end{figure}
+
+Para garantizar temporización determinista sobre los tres motores de la pata sin saturar el procesador, el firmware delega la captura de pulsos y muestras analógicas en periféricos dedicados del ESP32:
+
+\begin{enumerate}
+    \item \textbf{Lazo externo de posición ($50\text{ Hz}$):} Las señales en cuadratura A/B de cada encoder magnético ingresan al módulo contador por hardware PCNT (\textit{Pulse Counter}), el cual acumula pasos bidireccionales sin generar tormentas de interrupciones en la CPU. Cada $20\text{ ms}$ ($50\text{ Hz}$), el regulador PI de posición evalúa el error angular frente a la consigna cinemática y calcula la velocidad de referencia para el lazo intermedio.
+    \item \textbf{Lazo intermedio de velocidad ($100\text{ Hz}$):} La velocidad angular efectiva se estima sobre una ventana deslizante mínima de $50\text{ ms}$ para atenuar el ruido de cuantificación de pulsos. Este lazo PI se ejecuta a $100\text{ Hz}$ y entrega como salida la consigna de corriente de armadura requerida para sostener el movimiento.
+    \item \textbf{Lazo interno de corriente y muestreo por DMA ($1\text{ kHz}$ PWM):} La corriente instantánea se mide desde la salida analógica \texttt{IPROPI} de cada puente DRV8876. Con el fin de filtrar el rizado propio de la conmutación sin introducir retardos de fase excesivos, el conversor ADC opera en barrido continuo con Acceso Directo a Memoria (DMA) a $200\text{ kS/s}$, agrupando paquetes de 200 lecturas por milisegundo ($1\text{ ms}$) etiquetados temporalmente. El regulador PI de corriente procesa los bloques promediados válidos a una tasa nominal de $100\text{ Hz}$ y ajusta el ciclo útil de la portadora PWM de $1\text{ kHz}$ aplicada al puente H.
+\end{enumerate}
+
+Durante las rutinas de identificación de planta y validación en banco, el firmware empaqueta a $100\text{ Hz}$ las referencias, mediciones y esfuerzos de control de los tres lazos y los transmite por enlace serial UART/USB a $460800\text{ baudios}$. Este flujo continuo permite registrar archivos CSV en computadora externa para ajustar empíricamente las ganancias de los controladores~\cite{Budai_CascadeControl_2020}.

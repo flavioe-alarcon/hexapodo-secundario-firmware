@@ -1,0 +1,126 @@
+\chapter{REVISIÓN CRÍTICA DE LA LITERATURA}
+
+
+\noindent El presente capítulo tiene como objetivo analizar y sintetizar los principales avances científicos, tecnológicos y normativos vinculados con la inspección remota de gases tóxicos y la caracterización de terrenos de alto riesgo. Se revisan enfoques y soluciones desde la ingeniería mecatrónica orientados a la evaluación ambiental y topográfica en entornos de acceso restringido —tales como escenarios de desastre post-incendio o post-terremoto, túneles con ventilación comprometida y galerías subterráneas—, abarcando plataformas terrestres móviles y esquemas robóticos cooperativos con énfasis en su aplicabilidad práctica, desempeño medible y restricciones de seguridad~\cite{CruzUlloa2024_Nose,PutraWidodo2023_Hexapod,ObosuFrimpong2025_MineRescue}. Este análisis busca establecer el estado actual del conocimiento, identificar limitaciones persistentes en la navegación y detección atmosférica, y fundamentar, con criterios ingenieriles, la selección preliminar de un sistema robótico capaz de brindar soporte operacional para la evaluación de riesgos bajo protocolos de no ingreso (\textit{no-entry})~\cite{KimChoi_2025_MineMapping,Machines_2024_ArtificialNose}.
+
+\medskip
+
+\noindent En la introducción de este trabajo se expuso la problemática asociada a la exposición de personal en entornos de acceso restringido, tales como galerías subterráneas, túneles reducidos y estructuras colapsadas tras sismos o incendios, que son de alto riesgo, destacando la necesidad de implementar soluciones de inspección remota que eviten el ingreso humano a zonas con ventilación escasa o presencia de gases nocivos~\cite{CruzUlloa2024_Nose,PutraWidodo2023_Hexapod}. Diversos reportes de siniestralidad industrial y de gestión de emergencias confirman la criticidad de mejorar las prácticas de monitoreo ambiental y mapeo remoto~\cite{ObosuFrimpong2025_MineRescue}, mientras que análisis sobre dispersión de contaminantes y fallas de ventilación en infraestructuras bajo tierra o de desastre identifican brechas en los procedimientos tradicionales de supervisión presencial~\cite{KimChoi_2025_MineMapping,Wang2022_Energies}. Sobre esa base, este capítulo profundiza en qué enfoques tecnológicos se han propuesto, qué resultados han mostrado en pruebas de campo y cómo dichas evidencias condicionan los requisitos de diseño de sistemas robóticos para este tipo de entornos hostiles.
+
+\medskip
+
+\noindent La revisión considera literatura académica y técnica publicada principalmente en la última década, así como la normativa internacional y local aplicable. Se consultaron artículos indexados y documentos técnicos centrados en robótica para exploración de zonas de desastre, sistemas de nariz artificial y navegación autónoma en entornos sin señal GNSS~\cite{CruzUlloa2024_Nose,Machines_2024_ArtificialNose}. En paralelo, se incorporan exigencias de seguridad ocupacional y ambiental que determinan límites de exposición a contaminantes, protocolos de ventilación y requerimientos mínimos de medición remota y registro, tomando como referencia el Reglamento de Seguridad y Salud Ocupacional en Minería (DS-024-2016-EM) y lineamientos complementarios para inspecciones de riesgo en labores subterráneas y galerías~\cite{MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020b}. Como marco comparativo internacional, se consideran las directivas europeas sobre valores límite de exposición profesional a gases tóxicos ($\text{CO}$, $\text{NO}_2$ y $\text{NO}$)~\cite{EU_ExposureDirective_2020,TatoDiogo2020_IOELVs}. Estos marcos normativos se emplean como criterios de diseño e indicadores de comparación entre distintas plataformas robóticas. Este enfoque articulado permite respaldar los aportes científicos con la normativa vigente, derivando en criterios concretos de ingeniería para fundamentar las decisiones de diseño.
+
+\medskip
+
+\noindent Este capítulo se organiza de la siguiente manera. Primero se presenta el estado del arte de las plataformas robóticas y tecnologías utilizadas en la inspección ambiental y mapeo de zonas de difícil acceso, destacando sus principios de operación, métricas de desempeño y limitaciones reportadas en escenarios de prueba. Luego se realiza una comparación cualitativa y cuantitativa de las principales alternativas tecnológicas, con base en criterios ingenieriles y condicionantes de operabilidad no-entry. A continuación se sintetizan las normas, directivas e índices de exposición relevantes para el problema estudiado, explicitando su impacto en los requisitos de diseño e instrumentación del sistema. Finalmente, se identifican las brechas tecnológicas y oportunidades de investigación que motivan y justifican la arquitectura del sistema robótico propuesto.
+
+
+\section{Estado del arte sobre la inspección de gases en minería subterránea}
+
+En la última década, la inspección y el monitoreo de atmósferas peligrosas en minería subterránea han pasado de procedimientos manuales con instrumentos portátiles a soluciones robotizadas más seguras y repetibles. La literatura agrupa los enfoques en tres líneas: plataformas terrestres (UGV), plataformas móviles de exploración ligera y esquemas cooperativos entre múltiples robots. En todos los casos, el diseño está condicionado por exigencias de seguridad y registro definidas por la normativa vigente y por los hallazgos de los organismos de supervisión del sector minero~\cite{MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020,OSINERGMIN_BoletinGSM_2020b}.
+
+Los UGV se han consolidado como base fiable para integrar sensado de gases y percepción del entorno, gracias a su mayor capacidad de carga, autonomía y robustez frente a polvo y variaciones de iluminación. Trabajos recientes en plataformas oruga o de tracción diferencial orientadas a minería enfatizan control robusto, movilidad en rampas y construcción de mapas 3D de túneles mediante nubes de puntos, sobre los cuales se planifican recorridos de inspección y se georreferencian mediciones~\cite{AdaptiveControl_Mines_2024,KimChoi_2025_MineMapping,AdvancesMining_2023}. Sus ventajas incluyen operación continua, facilidad para montar sensores electroquímicos o NDIR con acondicionamiento adecuado y la posibilidad de actuar como nodo de comunicaciones. Entre las limitaciones se reporta menor alcance para inspecciones en cavidades elevadas, chimeneas u oquedades complejas, así como tiempos de misión mayores para cubrir áreas extensas.
+
+Para superar esas limitaciones aparecen propuestas con plataformas móviles de exploración ligera que actúan como agentes complementarios: unidades pequeñas, maniobrables y de despliegue puntual que acceden a zonas estrechas, elevadas o parcialmente obstruidas. La literatura en robótica para espacios confinados y diseños bioinspirados aporta soluciones de miniaturización, control y locomoción que resultan útiles para desplazarse en entornos estrechos y con geometrías irregulares, aunque persisten retos en la estabilización de la estimación de estado y en la obtención de mediciones de gas reproducibles cerca de superficies y esquinas~\cite{InsectInspired_2020,FlappingFlight_2021,AdvancesMining_2023}. En síntesis, estos agentes aportan acceso y rapidez local, pero su ventana operativa tiende a ser más corta y su tren de sensado exige cuidados para minimizar perturbaciones del flujo alrededor\textbf{ }de la muestra\textbf{.}
+
+Los esquemas cooperativos entre múltiples robots buscan combinar lo mejor de cada plataforma: un UGV ``plataforma segura'' que transporta sensores de mayor calidad, provee cómputo/energía y sirve como nodo de comunicaciones; y un explorador complementario que ejecuta inspecciones puntuales donde la base no puede ingresar con seguridad. Reportes en automatización minera muestran que esta aproximación puede reducir la exposición humana, mantener la conectividad y mejorar la cobertura en menos tiempo, siempre que se gestionen adecuadamente la asignación de tareas, el acople entre navegación y comunicaciones y las reglas de abortaje seguro de misión~\cite{AdvancesMining_2023}. Este enfoque facilita, además, la trazabilidad de rutas y bitácoras de medición, y la definición de zonas ``no-entry''.
+
+En cuanto al sensado de gases, la práctica industrial y los documentos técnicos del regulador señalan el uso de sensores electroquímicos (CO, NO\textsubscript{2}, H\textsubscript{2}S) y NDIR (CO\textsubscript{2}), entre otros, priorizando rangos y tiempos de respuesta acordes con límites de exposición y procedimientos de ventilación. La literatura orientada a minas recomienda integrar el tren de sensado con rutas que cubran gradientes esperados (techo--pared--suelo), registrar posición y tiempo de cada muestra y aplicar calibraciones periódicas para reducir deriva e interferencias~\cite{OSINERGMIN_BoletinGSM_2020b,MINEM_DS024_2016,EU_ExposureDirective_2020}. Un punto recurrente es la necesidad de sincronizar la localización (SLAM/registro 3D) con las lecturas de gas, para convertir mediciones puntuales en mapas útiles para decisiones de ventilación~\cite{KimChoi_2025_MineMapping}.
+
+Respecto de localización y navegación, las soluciones con LiDAR y registro de nubes de puntos han mostrado buen desempeño en galerías y rampas, mientras que la navegación visual--inercial (VIO) es sensible a polvo y cambios de iluminación, por lo que se combina con sensores activos o con restricciones geométricas del túnel~\cite{KimChoi_2025_MineMapping}. En comunicaciones, los estudios reportan atenuación por curvaturas y cruces, lo que justifica estrategias de malla, repetidores y el uso del propio UGV como nodo de apoyo.
+
+
+
+\section{Comparación de alternativas y decisión preliminar}
+
+Con base en la evidencia sintetizada en la sección 1.1, se comparan tres aproximaciones que cubren el espectro de soluciones planteadas en la literatura y en la práctica industrial: (A1) plataforma terrestre única (UGV) para inspección y monitoreo; (A2) configuración cooperativa UGV + agente explorador complementario de despliegue puntual con locomoción terrestre; y (A3) configuración cooperativa UGV + agente explorador complementario ligero (de alta maniobrabilidad) para acceder a zonas estrechas o elevadas. Las tres alternativas se evalúan frente a criterios ingenieriles alineados con los condicionantes regulatorios y operativos del entorno minero subterráneo~\cite{MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020,OSINERGMIN_BoletinGSM_2020b}.
+
+Los criterios de comparación considerados son: (a) desempeño del sensado de gases (rango útil, límite de detección, tiempo de respuesta y estabilidad); (b) seguridad y cumplimiento (posibilidad de operar bajo protocolos ``no-entry'', registro y trazabilidad exigidos por la normativa); (c) navegabilidad y localización en entornos sin GNSS (robustez de SLAM/registro 3D y odometría); (d) cobertura y eficiencia (área/volumen inspeccionado por unidad de tiempo); (e) comunicaciones y enlace (confiabilidad del canal en galerías curvas y ramales, posibilidad de actuar como nodo/relé); (f) robustez y mantenibilidad (tolerancia a polvo, vibración y golpes, facilidad de calibración de sensores); (g) viabilidad práctica (complejidad de operación, logística de despliegue, costo de integración y disponibilidad tecnológica). Estos criterios se justifican tanto por el estado del arte como por las exigencias de límites de exposición y procedimientos de ventilación que condicionan la calidad del dato y la seguridad del personal~\cite{MINEM_DS024_2016,EU_ExposureDirective_2020}. De este modo, la matriz no solo recoge parámetros de desempeño técnico, sino también el impacto de cada alternativa en la responsabilidad del equipo de ingeniería frente a la seguridad de los trabajadores y al cumplimiento de los requisitos regulatorios en minas subterráneas.
+
+
+Para la metodología de evaluación se emplea una matriz multicriterio con puntajes normalizados en $[0,1]$ por criterio y alternativa. Los puntajes se fundamentan en métricas reportadas en la literatura (precisión, autonomía, tasas de cobertura, robustez de navegación y conectividad) y se complementan con juicio ingenieril cuando la evidencia es cualitativa~\cite{AdvancesMining_2023,KimChoi_2025_MineMapping,AdaptiveControl_Mines_2024}. Los criterios se ponderan según su relevancia para el caso de uso (por ejemplo, mayor peso para seguridad/cumplimiento y calidad de sensado), y se realiza un análisis de sensibilidad variando los pesos críticos para verificar la estabilidad de la conclusión.
+
+
+% Requiere en el preámbulo:
+% \usepackage{booktabs}
+
+\begin{table}[H]
+\centering
+\caption{Matriz multicriterio. Puntajes $s_{ij}\in[0,1]$.}
+\label{tab:matriz_compacta}
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Criterio & $w_i$ & A1 (UGV) & A2 (UGV+Expl.\ Ter.) & A3 (UGV+Expl.\ Lig.) \\
+\midrule
+C1 & 0.22 & 0.85 & 0.80 & 0.65 \\
+C2 & 0.22 & 0.75 & 0.85 & 0.80 \\
+C3 & 0.16 & 0.80 & 0.78 & 0.70 \\
+C4 & 0.10 & 0.60 & 0.75 & 0.90 \\
+C5 & 0.05 & 0.80 & 0.82 & 0.72 \\
+C6 & 0.15 & 0.85 & 0.80 & 0.65 \\
+C7 & 0.10 & 0.80 & 0.75 & 0.70 \\
+\midrule
+\textbf{Suma de pesos} & \textbf{1.00} &  &  &  \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.35em}
+\footnotesize
+Leyenda: C1 Sensado; C2 Seguridad; C3 Navegación/Localización; C4 Cobertura;
+C5 Comunicaciones; C6 Robustez; C7 Viabilidad.
+\end{table}
+
+
+\begin{table}[H]
+\centering
+\caption{Totales ponderados por alternativa.}
+\label{tab:totales_compacto}
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lc@{}}
+\toprule
+Alternativa & Puntaje total $\sum_i w_i s_{ij}$ \\
+\midrule
+A1: UGV & 0.7875 \\
+A2: UGV + Explorador Terrestre & 0.7988 \\
+A3: UGV + Explorador Ligero & 0.7245 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+En esta comparación, la alternativa A2 (UGV + explorador terrestre) resulta la mejor evaluada por combinar buen desempeño en seguridad/cumplimiento y calidad del sensado con una mejora clara en cobertura frente a A1. Mantener el tren de sensado principal sobre el UGV facilita la trazabilidad de mediciones y el cumplimiento de procedimientos de seguridad exigidos en faenas subterráneas, mientras que el explorador terrestre permite inspecciones puntuales en ramales estrechos sin comprometer la estabilidad de las lecturas~\cite{MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020b,EU_ExposureDirective_2020}. Además, la cooperación entre dos plataformas terrestres favorece la robustez mecánica y la facilidad de mantenimiento en ambientes con polvo y vibración, aspectos críticos en minas subterráneas~\cite{AdvancesMining_2023}.
+
+A1 (UGV único) se mantiene como alternativa competitiva por su simplicidad operativa, elevada robustez y estabilidad del sensado embarcado. No obstante, al enfrentar galerías con oquedades o accesos restringidos, su cobertura y eficiencia tienden a disminuir al requerir rutas más largas o maniobras adicionales, lo que incrementa los tiempos de misión. En entornos donde la prioridad sea minimizar complejidad de integración y mantenimiento, A1 sigue siendo una opción técnicamente sólida y alineada con las prácticas de inspección segura y registro confiable~\cite{MINEM_DS024_2016,AdvancesMining_2023}.
+
+A3 (UGV + explorador ligero de alta maniobrabilidad) ofrece la mejor capacidad de acceso puntual y puede acelerar la cobertura local; sin embargo, su ventana operativa corta y la sensibilidad del muestreo de gas ante perturbaciones de flujo cercanas a superficies reducen su desempeño en calidad de sensado y seguridad. Adicionalmente, la navegación y la localización pueden verse afectadas por polvo y cambios de iluminación, lo que exige estrategias de fusión sensorial y registro 3D más cuidadosas~\cite{KimChoi_2025_MineMapping,EmisionesDiesel_2021,GEI_MinasPeru_2022}. En consecuencia, aunque A3 es útil para misiones muy focalizadas, no lidera cuando se priorizan trazabilidad, estabilidad de medición y robustez global del sistema.
+
+Con esta evidencia, la decisión preliminar es avanzar con una configuración cooperativa terrestre--terrestre (A2): el UGV como plataforma segura de sensado, cómputo y registro; y un explorador terrestre para extender cobertura en zonas de difícil acceso, manteniendo trazabilidad de datos y procedimientos acordes con la normativa aplicable~\cite{MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020b}.
+
+La elección de la configuración A2 implica, por tanto, asumir un compromiso explícito con la reducción de la exposición humana directa y con la mejora de la cobertura y trazabilidad de las mediciones, pero también reconocer sus limitaciones. La necesidad de coordinar dos plataformas, garantizar la integridad del enlace entre ellas y mantener procedimientos claros de operación e mantenimiento introduce requisitos adicionales de capacitación y gestión del riesgo. No obstante, frente a A1 y A3, A2 ofrece un balance más favorable entre seguridad, desempeño técnico y viabilidad práctica, lo que la convierte en una alternativa responsable desde la perspectiva de la ingeniería y alineada con los objetivos de esta tesis.
+
+
+\section{Normas y estándares relevantes y su impacto en los requisitos de diseño}
+
+El diseño de un sistema de inspección de gases para minería subterránea está condicionado por marcos normativos que regulan seguridad, exposición ocupacional y trazabilidad de la información. En el contexto peruano, el DS-024-2016-EM establece lineamientos de seguridad y salud ocupacional en minería, incluyendo prácticas de ventilación, control de atmósferas peligrosas, registro y reporte de eventos; OSINERGMIN complementa con boletines técnicos sobre supervisión y buenas prácticas de medición y control; y, como referencia comparativa, las directivas europeas sobre valores límite de exposición aportan guías de umbrales indicativos y metodologías de evaluación que ayudan a armonizar criterios de diseño y verificación~\cite{MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020b,EU_ExposureDirective_2020}. Reportes recientes confirman además la necesidad de reforzar trazabilidad y procedimientos en escenarios de emergencia~\cite{MINEM_Yanaquihua_2023}. En consecuencia, el diseño y la operación de sistemas robóticos para inspección atmosférica no solo constituyen un reto técnico, sino también un ámbito de responsabilidad profesional en el que las decisiones de ingeniería deben ser trazables y defendibles frente a las autoridades regulatorias y a los propios trabajadores expuestos.
+
+
+A partir de estos marcos, se derivan requisitos de diseño que afectan directamente a la arquitectura del sistema y a la operación de una configuración cooperativa terrestre--terrestre:
+
+\begin{enumerate}
+\item \textit{Sensado de gases y desempeño metrológico.} El tren de sensado debe cubrir, al menos, los gases críticos de seguridad en minas subterráneas (por ejemplo, O$_2$, CO, CO$_2$, NO$_2$ y H$_2$S) con rangos pertinentes a los límites de exposición y alarmas operativas. Se requiere tiempo de respuesta suficiente para detectar gradientes en tránsito, estabilidad frente a deriva y procedimientos de calibración y verificación programada. La ubicación física de los sensores y la estrategia de muestreo deben permitir registrar gradientes verticales y laterales (techo--pared--suelo) y asociar cada lectura a posición y tiempo, de modo que el registro sea útil para decisiones de ventilación~\cite{OSINERGMIN_BoletinGSM_2020b,MINEM_DS024_2016}.
+\item \textit{Trazabilidad, registro y custodia de datos.} Toda medición relevante debe quedar registrada con sello de tiempo, posición estimada y estado del sistema; el sistema debe conservar bitácoras de misión y soportar la generación de reportes auditables, en línea con los principios de trazabilidad exigidos por la normativa y las prácticas de supervisión~\cite{MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020}. Dado el escenario de operación desconectada, se privilegia una arquitectura de almacenamiento local con sincronización al retorno, asegurando integridad y respaldo.
+\item \textit{Seguridad operacional y zonas no autorizadas.} La plataforma debe incorporar límites de operación y rutinas de abortaje seguro ante detecciones fuera de umbral o fallas de navegación (frenado seguro, retorno al punto de despliegue, registro de incidente). Deben definirse zonas no autorizadas y reglas para evitar acercamientos no seguros a cavidades inestables o áreas con ventilación comprometida, de acuerdo con los procedimientos del DS-024 y las guías de inspección~\cite{MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020b}.
+\item \textit{Navegación y localización sin GNSS.} Se exige coherencia entre el método de localización (por ejemplo, LiDAR--SLAM y registro 3D) y la calidad del dato: la posición debe ser lo bastante estable como para convertir muestras puntuales en mapas o secciones interpretables por el área de ventilación. En ambientes con polvo y variaciones de iluminación, se favorece la fusión sensorial y restricciones geométricas del túnel, tal como respalda la literatura~\cite{KimChoi_2025_MineMapping}.
+\item \textit{Comunicaciones y operación desconectada.} En galerías con atenuación severa, el plan de misión considera operación desconectada con retorno y consolidación de resultados. En ese escenario, las comunicaciones se reducen a enlaces locales entre las dos plataformas terrestres o a sincronización en puntos de control; la arquitectura debe garantizar continuidad de la misión y preservación de registros aún sin enlace persistente~\cite{OSINERGMIN_BoletinGSM_2020}.
+\item \textit{Robustez, protección y facilida de mantenimiento.} La selección de hardware y envolventes debe considerar polvo, vibración y golpes; se recomiendan protecciones mecánicas, filtrado del flujo que entra a la cámara de muestreo y accesos rápidos para calibración y mantenimiento. La cooperación terrestre--terrestre facilita compartir repuestos, herramientas y procedimientos, lo que mejora disponibilidad y reduce tiempos fuera de servicio~\cite{AdvancesMining_2023}.
+\item \textit{Viabilidad práctica y procedimientos.} Se requiere definir roles y responsabilidades del equipo operador (despliegue, supervisión, retiro), listas de chequeo pre y post misión, y criterios de aceptación del recorrido. La solución debe balancear costo de integración con impacto en seguridad y cobertura, priorizando componentes disponibles localmente y procedimientos compatibles con el estándar de la unidad minera~\cite{MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020b}.
+\end{enumerate}
+
+En síntesis, las normas no solo fijan umbrales de seguridad; también orientan decisiones técnicas: qué sensores emplear y cómo muestrear, cómo registrar y custodiar datos, qué rutinas de seguridad implementar, y cómo validar que el resultado sea útil para ventilación. Estos requisitos habilitan la transición hacia el marco metodológico del capítulo siguiente (objetivos de medición, métricas, plan de validación) y consolidan la elección preliminar de una cooperación terrestre--terrestre al privilegiar trazabilidad, robustez y facilida de mantenimiento en operación desconectada.
+
+De este análisis se desprende que una arquitectura cooperativa terrestre--terrestre como la propuesta en la alternativa A2 se adecúa mejor a estos marcos normativos, al facilitar el registro estructurado de datos, la implementación de rutinas de abortaje seguro y la integración de procedimientos compatibles con el reglamento vigente. Esta alineación entre solución tecnológica y requisitos regulatorios sirve como base para el marco metodológico del capítulo siguiente, en el que se traducen estas exigencias en especificaciones técnicas y criterios de validación para el sistema robótico colaborativo.
+

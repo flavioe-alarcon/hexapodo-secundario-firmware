@@ -1,0 +1,80 @@
+\chapter{MARCO METODOLÓGICO}
+
+En este capítulo se presenta la metodología empleada para materializar la alternativa cooperativa terrestre--terrestre (A2) seleccionada en el Capítulo 2. Se describe la caracterización de la investigación, el diseño metodológico adoptado y la secuencia de procesos seguida para el desarrollo del sistema robótico cooperativo, con énfasis en el diseño, la implementación y la validación preliminar del robot hexápodo explorador destinado al monitoreo de terrenos accidentados en entornos hostiles de difícil acceso.
+
+
+\section{Caracterización de la investigación}
+
+\noindent
+La presente investigación se define como de tipo aplicada y de carácter tecnológico, orientada al desarrollo e integración mecatrónica de un sistema robótico cooperativo enfocado en la exploración, mapeo y monitoreo ambiental en entornos de alta complejidad y difícil acceso. Aunque el proyecto toma como marco de referencia escenarios severos como zonas de desastre (estructuras colapsadas tras sismos, incendios o derrumbes) y túneles muy estrechos de inspección, la metodología se orienta a establecer un sistema móvil modular y escalable para la evaluación de riesgos en áreas donde el acceso de operarios humanos representa un peligro latente. En esta etapa, el estudio se enfoca en las unidades exploradoras de tipo hexápodo, responsables de garantizar la estabilidad estática y dinámica sobre terrenos accidentados mediante una marcha en trípode.
+
+\noindent
+El trabajo adopta un enfoque cuantitativo, fundamentado en el modelado cinemático y dinámico de las extremidades articuladas, el cálculo numérico de torques e inercias estructurales, y la caracterización de variables de locomoción y consumo energético. Se emplean criterios de dimensionamiento y adecuación paramétrica en la geometría y masa de los eslabones para asegurar una relación apropiada entre masa y rigidez, garantizando la capacidad de soporte de carga y la estabilidad operacional adecuada frente a perturbaciones del entorno.
+
+\noindent
+Asimismo, la investigación posee un carácter experimental y de validación empírica, puesto que el desempeño del sistema cooperativo se evalúa mediante la construcción y ensamble de prototipos funcionales. Las evaluaciones experimentales en laboratorio permiten verificar la tracción mecánica de las extremidades impresas, la estabilidad durante la marcha y la efectividad de los algoritmos de control local en el despliegue del sistema.
+
+\noindent
+Finalmente, el proyecto responde a un diseño transversal y multidisciplinario, abarcando etapas consecutivas del ciclo mecatrónico: diseño mecánico estructural, integración electrónica de potencia, percepción y control de movimiento. Para la captura de variables inerciales, la ejecución de algoritmos de localización y mapeo simultáneo (SLAM) y la gestión de las trayectorias y recorridos de los robots, se utiliza la infraestructura de software ROS 2, asegurando un marco de comunicación y procesamiento estandarizado, preciso y reproducible.
+
+
+
+
+
+
+
+\section{Marco metodológico integrado y modelo de desarrollo mecatrónico}
+
+\noindent
+El marco metodológico de la presente investigación se articula mediante la integración de estándares internacionales y directrices de ingeniería mecatrónica, estructurando una ruta procedimental continua para la concepción, evaluación e integración del sistema robótico cooperativo. La arquitectura global del desarrollo se rige bajo la norma VDI 2206, la cual establece un marco macro basado en el modelo en V para coordinar interdisciplinarymente los dominios mecánico, electrónico y de software. Como herramienta de entrada para la definición formal de especificaciones en el vértice superior del modelo, se adopta el estándar internacional ISO/IEC/IEEE 29148, garantizando que los requerimientos del sistema y de sus subsistemas se formulen mediante parámetros numéricos, unidades de medida y condiciones de verificación cuantitativas.
+
+\noindent
+Asimismo, dentro de la fase descendente de diseño conceptual y de detalle, se incorpora de manera auxiliar la directriz VDI 2225 (específicamente la VDI 2225 Blatt 3), la cual provee la herramienta de evaluación técnico-económica multicriterio mediante una escala ordinal ponderada de cinco niveles. Esta articulación entre la VDI 2206 como marco macro de procesos, la ISO/IEC/IEEE 29148 como estándar de sintaxis de requerimientos y la VDI 2225 como matriz de evaluación cuantitativa asegura una metodología rigurosa, transparente y reproducible para la toma de decisiones técnicas a lo largo de todo el ciclo de vida del desarrollo.
+
+\subsection{Arquitectura del ciclo de desarrollo en "V" (Norma VDI 2206)}
+
+\noindent
+La directriz alemana VDI 2206 constituye el marco de referencia principal para la gestión del desarrollo mecatrónico del sistema explorador. Esta metodología fundamenta su flujo de trabajo en la representación del macro-ciclo conocido como el modelo en V, el cual establece una secuencia estructurada de etapas que descienden desde la definición de necesidades globales a nivel de sistema hasta la especificación de componentes en los dominios disciplinares, para luego ascender integrando y verificando progresivamente las soluciones físicas y lógicas resultantes.
+
+\noindent
+En la fase superior descendente, correspondiente al Nivel de Sistema, la metodología contempla la clarificación de la tarea y la definición conceptual de la arquitectura cooperativa. En esta etapa se fijan las funciones macro del conjunto y la distribución de roles entre la plataforma de procesamiento central de mayor envergadura y la unidad exploradora ligera de extremidades articuladas. A partir de esta arquitectura global, la VDI 2206 rige la descomposición del problema hacia el Nivel de Subsistemas y Dominios Específicos, permitiendo abordar de manera independiente pero coordinada el diseño mecánico estructural, el diseño del hardware electrónico de potencia y sensado, y la síntesis de la arquitectura de software y control de locomoción.
+
+\noindent
+En la base del modelo, cada subsistema ejecuta microciclos iterativos de resolución de problemas que comprenden el análisis de la situación, la síntesis de soluciones mediante la combinación de principios de funcionamiento en matrices morfológicas y la simulación del comportamiento dinámico. Finalmente, el tramo ascendente del modelo en V abarca las etapas de integración y verificación. En este proceso, los módulos diseñados se ensamblan virtual y físicamente de forma progresiva, evaluando en primera instancia las interfaces de acoplamiento mecánico, electrónico y de comunicaciones, para posteriormente validar el comportamiento global del prototipo frente a los requerimientos iniciales fijados en la cúspide de la metodología.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/metodología_hexapodo.png}
+    \caption{Metodología del sistema VDI 2206}
+    \label{fig:vdi2206_modelo_v}
+\end{figure}
+
+
+\subsection{Formulación de requerimientos numéricos del sistema \newline(Norma ISO/IEC/IEEE 29148)}
+
+\noindent
+Para la definición y gestión de las especificaciones técnicas en la cúspide del modelo en V, la presente investigación adopta las directrices del estándar internacional ISO/IEC/IEEE 29148 sobre ingeniería de sistemas, procesos del ciclo de vida e ingeniería de requisitos. Esta norma proporciona un marco sistemático para transformar las necesidades operacionales del sistema cooperativo en requerimientos cuantitativos, unívocos y verificables, los cuales constituyen los criterios de aceptación formal en las etapas ascendentes de integración y validación.
+
+\noindent
+Bajo esta directriz, la especificación de requerimientos se estructura de manera modular abarcando la totalidad de las disciplinas mecatrónicas del proyecto, garantizando que cada subsistema cuente con parámetros numéricos, unidades de medida y márgenes de tolerancia explícitos:
+
+\begin{itemize}
+    \item \textbf{Subsistema mecánico y estructural:} Define los umbrales cuantitativos de soporte de carga estática por extremidad, los límites de deflexión máxima de los eslabones, las restricciones inerciales de masa y las tolerancias de acoplamiento dimensional, asegurando la integridad física y la tracción en terrenos accidentados.
+    \item \textbf{Subsistema electrónico y de potencia:} Establece los límites operacionales de tensión de alimentación, consumo de corriente pico por actuador, rangos de resolución y frecuencia de muestreo de los sensores de gases y variables inerciales, así como la eficiencia en la regulación de energía para garantizar la autonomía de operación del prototipo.
+    \item \textbf{Subsistema de control, navegación y software:} Determina las métricas numéricas de desempeño algorítmico, tales como la frecuencia de actualización de las rutinas de cinemática inversa, los tiempos máximos de latencia en la transmisión de datos bajo el protocolo DDS en ROS 2, los márgenes de error aceptables en el seguimiento de trayectorias angulares y los criterios de convergencia para el mapeo local.
+\end{itemize}
+
+\noindent
+La formulación estandarizada de esta lista de requerimientos integrados actúa como el insumo directo para alimentar las matrices de selección conceptual y de detalle bajo la norma VDI 2225. Al parametrizar objetivamente las demandas de cada dominio técnico, el estándar ISO/IEC/IEEE 29148 elimina la subjetividad en la asignación de puntajes de evaluación, asegurando una toma de decisiones coherente y transparente durante todo el ciclo de desarrollo mecatrónico.
+
+
+\subsection{Evaluación y selección multicriterio de alternativas (Norma VDI 2225)}
+
+\noindent
+En la fase descendente de diseño conceptual y de subsistemas, la toma de decisiones técnicas para la selección de alternativas de solución se fundamenta en la directriz alemana VDI 2225, específicamente en su apartado VDI 2225 Blatt 3 (Technisch-wirtschaftliche Bewertung). Debido a que la directriz marco VDI 2206 no incorpora un algoritmo cuantitativo propio para ponderar variantes de diseño, la VDI 2225 Blatt 3 se aplica de manera auxiliar para sistematizar la evaluación técnico-económica de componentes, materiales y arquitecturas estructurales.
+
+\noindent
+El método implementa un análisis de valor de uso mediante una matriz multicriterio ponderada. En este procedimiento, a cada requerimiento clave derivado del subsistema se le asigna un factor de ponderación o peso de importancia $g$, dentro de un rango entero de 1 a 5. Posteriormente, cada variante conceptual o solución tecnológica propuesta es evaluada bajo una escala ordinal normalizada de cinco niveles de calificación $p$, que abarca desde un valor de 0 (correspondiente a una opción inadmisible o que no satisface el requerimiento) hasta un valor de 4 (representativo de una solución ideal o de desempeño superior), pasando por niveles intermedios de aceptable, suficiente y bueno.
+
+\noindent
+La combinación del producto entre el peso del criterio y la calificación otorgada permite calcular el puntaje acumulado de cada alternativa y contrastarlo contra una solución ideal teórica. El resultado final se expresa mediante un índice técnico-económico adimensional menor o igual a la unidad. Esta formulación cuantitativa garantiza que la selección del material estructural para el chasis y las extremidades del robot explorador se sostenga en evidencia física y en restricciones reales de prototipado, justificando de forma transparente la variante óptima dentro del ciclo de desarrollo mecatrónico.

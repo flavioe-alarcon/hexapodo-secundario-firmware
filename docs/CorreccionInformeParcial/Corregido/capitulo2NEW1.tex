@@ -1,0 +1,117 @@
+\chapter{REVISIÓN CRÍTICA DE LA LITERATURA}
+
+La evaluación técnica y normativa para la inspección remota de gases en minería subterránea exige contrastar las capacidades de locomoción terrestre con las exigencias de muestreo en atmósferas confinadas. En labores con ventilación deficiente o secciones colapsadas, las plataformas robóticas deben sortear sustratos irregulares y registrar concentraciones de contaminantes sin exponer cuadrillas humanas~\cite{CruzUlloa2024_Nose, PutraWidodo2023_Hexapod, Obosu2025_Automation}. A partir de estos condicionantes, este capítulo examina el estado del arte en exploración robótica subterránea y fundamenta la selección preliminar de una arquitectura cooperativa bajo criterios cuantitativos y protocolos de no ingreso (\textit{no-entry})~\cite{KimChoi_2025_MineMapping}.
+
+En las faenas bajo tierra, las galerías de avance, cruceros y chimeneas presentan restricciones geométricas severas y atmósferas potencialmente letales debido a la emanación continua de gases de combustión y voladura~\cite{CruzUlloa2024_Nose, PutraWidodo2023_Hexapod}. Los reportes de siniestralidad del sector minero confirman que las inspecciones presenciales con detectores manuales conllevan una alta vulnerabilidad ante fallas imprevistas en los circuitos de ventilación auxiliar~\cite{Obosu2025_Automation, Wang2022_Energies_Hexapod}. Para mitigar este riesgo, la investigación actual se orienta a sustituir la presencia física del operador por sistemas no tripulados dotados de sensores ambientales y cartografía tridimensional~\cite{KimChoi_2025_MineMapping}.
+
+Este marco de revisión abarca desarrollos recientes en plataformas robóticas para espacios confinados, instrumentación de nariz electrónica y algoritmos de localización en entornos donde la señal satelital GNSS es inaccesible~\cite{CruzUlloa2024_Nose}. Asimismo, se incorporan las directivas europeas sobre valores límite de exposición profesional (IOELV) para monóxido de carbono ($\text{CO}$), dióxido de nitrógeno ($\text{NO}_2$) y monóxido de nitrógeno ($\text{NO}$)~\cite{EU_ExposureDirective_2020}, en concordancia con los estándares de seguridad minera peruanos estipulados en el D.S. 024-2016-EM y los boletines técnicos de supervisión~\cite{MINEM_DS024_2016, OSINERGMIN_BoletinGSM_Ventilacion_2020}. Esta articulación entre normativa de higiene ocupacional y requerimientos mecatrónicos permite establecer criterios objetivos para comparar alternativas de diseño.
+
+
+\section{Estado del arte sobre la inspección de gases en minería subterránea}
+
+En la última década, la supervisión atmosférica en labores subterráneas ha evolucionado desde el monitoreo manual discontinuo hacia esquemas robotizados continuos. La literatura especializada clasifica las soluciones existentes en tres arquitecturas principales: vehículos terrestres no tripulados convencionales (UGV), exploradores móviles ligeros y sistemas cooperativos multirrobot, todos condicionados por los marcos regulatorios de ventilación y seguridad ocupacional~\cite{MINEM_DS024_2016, OSINERGMIN_BoletinGSM_2020, OSINERGMIN_BoletinGSM_Ventilacion_2020}.
+
+Los UGV de tracción por orugas o diferencial representan la solución más extendida para transportar cargas útiles pesadas, tales como escáneres LiDAR, computadores embebidos y bancos de baterías de alta capacidad~\cite{AdaptiveControl_Mines_2025, KimChoi_2025_MineMapping, AdvancesMining_2023}. Estas plataformas permiten generar nubes de puntos 3D de túneles y rampas mientras georreferencian lecturas de sensores electroquímicos o NDIR con alta repetibilidad. No obstante, su masa y volumen operativo limitan severamente el acceso a labores estrechas, zanjas de drenaje o frentes con desprendimiento de rocas, además de requerir trayectorias prolongadas que reducen la velocidad de inspección en ramales secundarios.
+
+Como respuesta a estas limitaciones de accesibilidad, diversos autores proponen plataformas ligeras y de escala reducida capaces de penetrar en secciones angostas o con derrumbes parciales~\cite{InsectInspired_2020, FlappingFlight_2021, AdvancesMining_2023}. Los diseños bioinspirados y articulados facilitan la maniobrabilidad sobre escombros y bordes escarpados; sin embargo, estas unidades enfrentan restricciones energéticas que reducen su autonomía a pocos minutos. Asimismo, la proximidad del chasis a las paredes y el suelo induce vórtices aerodinámicos y perturbaciones térmicas que pueden alterar la tasa de difusión de los gases hacia los sensores químicos.
+
+Los esquemas cooperativos distribuidos combinan las fortalezas de ambas arquitecturas para resolver este dilema de diseño. En esta configuración, una plataforma principal actúa como base segura de procesamiento, nodo de telecomunicaciones y transporte de energía, mientras que una unidad secundaria compacta se desacopla para realizar inspecciones puntuales en zonas inaccesibles~\cite{AdvancesMining_2023}. Esta jerarquía funcional permite preservar la trazabilidad espacial del sensado sin arriesgar la unidad principal ni forzar el ingreso de brigadas humanas en zonas no ventiladas.
+
+En el ámbito metrológico, la instrumentación para atmósferas subterráneas requiere integrar sensores electroquímicos para $\text{CO}$, $\text{NO}_2$ y $\text{H}_2\text{S}$, complementados con celdas ópticas NDIR para dióxido de carbono ($\text{CO}_2$) y sensores paramagnéticos u ópticos para oxígeno ($\text{O}_2$)~\cite{OSINERGMIN_BoletinGSM_Ventilacion_2020, MINEM_DS024_2016, EU_ExposureDirective_2020}. La literatura destaca que las concentraciones gaseosas en galerías ciegas no son homogéneas: la estratificación térmica y las bolsas de gas exigen perfiles de muestreo verticales (piso, zona media y corona de la galería), así como la sincronización temporal estricta de las lecturas con el algoritmo de localización (SLAM) para construir mapas de dispersión térmicamente compensados~\cite{KimChoi_2025_MineMapping}.
+
+En cuanto a navegación sin GNSS, el registro de nubes de puntos mediante LiDAR 3D ha demostrado mayor inmunidad al polvo y a la penumbra frente a la odometría visual-inercial (VIO), la cual se degrada ante variaciones bruscas de iluminación y suspensión de partículas abrasivas~\cite{KimChoi_2025_MineMapping}. Finalmente, la propagación de señales de radiofrecuencia en galerías rocosas experimenta pérdidas de trayectoria severas y desvanecimiento multicamino en esquinas y cruceros, justificando esquemas donde el robot principal actúe como repetidor o punto de sincronización asíncrona para misiones desconectadas.
+
+
+\section{Comparación de alternativas y decisión preliminar}
+
+Con base en el análisis del estado del arte, se formularon tres alternativas tecnológicas para resolver la inspección y cartografía atmosférica en socavones: (A1) plataforma terrestre única (UGV) de mediana envergadura; (A2) sistema cooperativo compuesto por un robot principal y un explorador terrestre ligero; y (A3) sistema cooperativo integrado por un UGV terrestre y un microagente aéreo de alta maniobrabilidad. Su contraste se evalúa bajo los condicionantes técnicos y regulatorios de la minería subterránea nacional~\cite{MINEM_DS024_2016, OSINERGMIN_BoletinGSM_2020, OSINERGMIN_BoletinGSM_Ventilacion_2020}.
+
+La comparación se estructuró sobre siete criterios de ingeniería ponderados:
+\begin{enumerate}
+    \item[a)] \textbf{Sensado de gases ($w_1 = 0.22$):} Exactitud metrológica, tiempo de respuesta ($t_{90}$) y estabilidad frente a derivas térmicas.
+    \item[b)] \textbf{Seguridad y cumplimiento ($w_2 = 0.22$):} Capacidad para operar bajo protocolos estrictos de \textit{no-entry} y generar registros auditables según norma.
+    \item[c)] \textbf{Navegación y localización ($w_3 = 0.16$):} Robustez de la odometría y precisión del mapeo SLAM en galerías sin cobertura satelital.
+    \item[d)] \textbf{Cobertura y tasa de avance ($w_4 = 0.10$):} Área inspeccionada por unidad de tiempo y acceso a puntos ciegos.
+    \item[e)] \textbf{Comunicaciones y enlace ($w_5 = 0.05$):} Confiabilidad de transmisión de telemetría y soporte para enlaces en línea de vista no directa.
+    \item[f)] \textbf{Robustez mecánica y mantenibilidad ($w_6 = 0.15$):} Resistencia al polvo, choque mecánico, humedad y facilidad de sustitución de componentes en campo.
+    \item[g)] \textbf{Viabilidad técnica y económica ($w_7 = 0.10$):} Complejidad de fabricación, disponibilidad de componentes y presupuesto admisible de prototipado.
+\end{enumerate}
+
+Estos criterios asignan el mayor peso a la seguridad del personal y a la fidelidad metrológica, dado que un error en la detección de gases nocivos invalida la toma de decisiones sobre la ventilación auxiliar~\cite{MINEM_DS024_2016, EU_ExposureDirective_2020}. Para la ponderación cuantitativa se aplicó una matriz de decisión con puntajes normalizados $s_{ij} \in [0, 1]$, calibrados a partir de datos experimentales reportados en la literatura y validaciones de campo~\cite{AdvancesMining_2023, KimChoi_2025_MineMapping, AdaptiveControl_Mines_2025}.
+
+\begin{table}[H]
+\centering
+\caption{Matriz multicriterio de evaluación de alternativas ($s_{ij} \in [0, 1]$).}
+\label{tab:matriz_compacta}
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Criterio & Peso ($w_i$) & A1 (UGV Único) & A2 (Cooperativo Terrestre) & A3 (Terrestre + Aéreo) \\
+\midrule
+C1: Sensado de gases        & 0.22 & 0.85 & 0.80 & 0.65 \\
+C2: Seguridad y cumplimiento & 0.22 & 0.75 & 0.85 & 0.80 \\
+C3: Navegación y mapeo      & 0.16 & 0.80 & 0.78 & 0.70 \\
+C4: Cobertura espacial      & 0.10 & 0.60 & 0.75 & 0.90 \\
+C5: Comunicaciones          & 0.05 & 0.80 & 0.82 & 0.72 \\
+C6: Robustez y mantención   & 0.15 & 0.85 & 0.80 & 0.65 \\
+C7: Viabilidad de proyecto  & 0.10 & 0.80 & 0.75 & 0.70 \\
+\midrule
+\textbf{Suma de pesos}      & \textbf{1.00} & & & \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.4em}
+\footnotesize
+Leyenda: Ponderaciones normalizadas según relevancia operacional en frentes mineros.
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Puntajes totales ponderados por alternativa tecnológica.}
+\label{tab:totales_compacto}
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lc@{}}
+\toprule
+Alternativa de Diseño & Puntaje Global ($\sum_i w_i s_{ij}$) \\
+\midrule
+A1: Plataforma Terrestre Única (UGV)               & 0.7875 \\
+A2: Sistema Cooperativo Terrestre--Terrestre        & \textbf{0.7988} \\
+A3: Sistema Cooperativo Terrestre--Aéreo            & 0.7245 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La alternativa A2 obtiene la mayor calificación global (0.7988) al equilibrar la seguridad operativa con una cobertura superior frente al robot unitario. Alojar los módulos principales de procesamiento y calibración sobre el robot primario asegura estabilidad analítica y cumplimiento normativo, mientras que el explorador secundario penetra en galerías angostas sin comprometer el enlace ni la integridad del equipo~\cite{MINEM_DS024_2016, OSINERGMIN_BoletinGSM_Ventilacion_2020, EU_ExposureDirective_2020}. Asimismo, la compatibilidad constructiva entre dos unidades terrestres simplifica el mantenimiento en faena y reduce la vulnerabilidad ante polvo abrasivo~\cite{AdvancesMining_2023}.
+
+La alternativa A1 (0.7875) destaca en estabilidad de sensado y robustez mecánica; no obstante, su incapacidad física para acceder a ramales angostos o cruzar obstáculos mayores a su despeje libre degrada su eficiencia e incrementa los tiempos de misión en frentes irregulares~\cite{MINEM_DS024_2016, AdvancesMining_2023}.
+
+Por su parte, la alternativa A3 (0.7245) ofrece la mayor tasa de exploración rápida en altura, pero queda rezagada en calidad metrológica. Las corrientes descendentes del flujo del rotor (\textit{downwash}) alteran los gradientes locales de gas, y la turbulencia en suspensión de polvo daña los rodamientos y obstruye los sensores ópticos en galerías estrechas~\cite{KimChoi_2025_MineMapping, TorresSalazar2021_Diesel, Cortez2016_GEI_Minas}.
+
+En consecuencia, se adopta formalmente la configuración cooperativa terrestre--terrestre (A2) como solución de diseño para esta investigación, asumiendo el reto de coordinar la cinemática articular y la transmisión de telemetría entre ambas plataformas bajo protocolos de no ingreso~\cite{MINEM_DS024_2016, OSINERGMIN_BoletinGSM_Ventilacion_2020}.
+
+
+\section{Normas y estándares relevantes y su impacto en los requisitos de diseño}
+
+El desarrollo mecatrónico del sistema está sujeto a la legislación de seguridad minera y a normas técnicas de exposición a contaminantes. En el Perú, el D.S. 024-2016-EM regula la ventilación mecánica, la detección previa de gases y el protocolo de evacuación inmediata ante anomalías ambientales; disposiciones respaldadas por los manuales técnicos de fiscalización de OSINERGMIN~\cite{MINEM_DS024_2016, OSINERGMIN_BoletinGSM_Ventilacion_2020}. A nivel internacional, la Directiva Europea 2017/164 fija umbrales estrictos de exposición laboral (IOELV) que orientan la resolución y rango de los sensores electroquímicos~\cite{EU_ExposureDirective_2020}. Los accidentes fatales reportados en socavones evidencian la urgencia de dotar a las operaciones de datos auditables y verificaciones continuas~\cite{MINEM_Yanaquihua_2023}.
+
+De este marco regulatorio se desprenden siete requisitos técnicos vinculantes para la arquitectura del sistema cooperativo:
+
+\begin{enumerate}
+    \item \textit{Sensado de gases y desempeño metrológico:} El instrumental debe cuantificar concentraciones de $\text{O}_2$, $\text{CO}$, $\text{CO}_2$, $\text{NO}_2$ y $\text{H}_2\text{S}$ con tiempos de respuesta ($t_{90}$) compatibles con la velocidad de avance del robot, previendo procedimientos de calibración con gas patrón y compensación por temperatura y humedad~\cite{OSINERGMIN_BoletinGSM_Ventilacion_2020, MINEM_DS024_2016}.
+    
+    \item \textit{Trazabilidad y custodia digital de datos:} Cada medición debe almacenarse junto con su coordenada espacial 3D y marca de tiempo determinística. Frente a cortes de radiofrecuencia, el sistema debe registrar las bitácoras en memoria no volátil local para su descarga y auditoría al retornar a la base~\cite{MINEM_DS024_2016, OSINERGMIN_BoletinGSM_2020}.
+    
+    \item \textit{Seguridad funcional y zonas de exclusión:} El software de control debe incorporar rutinas automáticas de aborto y retroceso seguro al detectar gases por encima de los límites permisibles o pérdida de tracción en pendientes, respetando las distancias de despeje normativas~\cite{MINEM_DS024_2016, OSINERGMIN_BoletinGSM_Ventilacion_2020}.
+    
+    \item \textit{Navegación y cartografía sin GNSS:} La localización debe descansar en la fusión de sensores inerciales y percepción espacial con capacidad para cerrar lazos en tiempo real, garantizando mapas de ocupación legibles para el área de ventilación minera~\cite{KimChoi_2025_MineMapping}.
+    
+    \item \textit{Comunicaciones y sincronización en enlace degradado:} La arquitectura de red debe operar bajo esquemas de sincronización local punto a punto entre ambos robots, asegurando el almacenamiento provisional y la integridad de los paquetes de telemetría sin depender de conexión permanente a superficie~\cite{OSINERGMIN_BoletinGSM_2020}.
+    
+    \item \textit{Protección ambiental y mantenibilidad:} Los componentes críticos deben alojarse en carcasas con sellado frente a polvo fino y goteo de agua (grado objetivo IP65), con filtros de partículas en las cámaras de toma de aire y elementos mecánicos modulares de rápida sustitución~\cite{AdvancesMining_2023}.
+    
+    \item \textit{Procedimientos operativos estandarizados:} El diseño constructivo debe contemplar la manipulación ergonómica por cuadrillas de rescate o supervisores, incorporando rutinas de inicialización y verificación previa de batería y actuadores antes de autorizar el descenso al frente ciego~\cite{MINEM_DS024_2016, OSINERGMIN_BoletinGSM_Ventilacion_2020}.
+\end{enumerate}
+
+Estos requerimientos normativos y funcionales definen los criterios de entrada para la etapa de diseño de detalle. Sobre esta base, en los capítulos siguientes se formulan las especificaciones paramétricas de los subsistemas mecánico, electrónico y de control bajo la metodología de desarrollo mecatrónico VDI 2206.

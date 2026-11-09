@@ -1,0 +1,29 @@
+CMake Error at C:/Users/ASUS TUF/.espressif/tools/cmake/3.30.2/share/cmake-3.30/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Users/ASUS TUF/.espressif/tools/xtensa-esp-elf/esp-14.2.0_20260121/xtensa-esp-elf/bin/xtensa-esp32s3-elf-gcc.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/IDF_proyects/ESP32_S3_with_CAMERA/build-s3/CMakeFiles/CMakeScratch/TryCompile-iteq4m'
+    
+    Run Build Command(s): C:/Users/ASUSTU~1/ESPRES~1/tools/ninja/112~1.1/ninja.exe -v cmTC_5955a
+    [1/2] C:\Users\ASUSTU~1\ESPRES~1\tools\XTENSA~2\ESP-14~1.0_2\XTENSA~1\bin\XT34AB~1.EXE   -mlongcalls  -fno-builtin-memcpy -fno-builtin-memset -fno-builtin-bzero -fno-builtin-stpcpy -fno-builtin-strncpy -o CMakeFiles/cmTC_5955a.dir/testCCompiler.c.obj -c C:/IDF_proyects/ESP32_S3_with_CAMERA/build-s3/CMakeFiles/CMakeScratch/TryCompile-iteq4m/testCCompiler.c
+    FAILED: CMakeFiles/cmTC_5955a.dir/testCCompiler.c.obj 
+    C:\Users\ASUSTU~1\ESPRES~1\tools\XTENSA~2\ESP-14~1.0_2\XTENSA~1\bin\XT34AB~1.EXE   -mlongcalls  -fno-builtin-memcpy -fno-builtin-memset -fno-builtin-bzero -fno-builtin-stpcpy -fno-builtin-strncpy -o CMakeFiles/cmTC_5955a.dir/testCCompiler.c.obj -c C:/IDF_proyects/ESP32_S3_with_CAMERA/build-s3/CMakeFiles/CMakeScratch/TryCompile-iteq4m/testCCompiler.c
+    cc1.exe: fatal error: Both 'XTENSA_GNU_CONFIG' and "-dynconfig=" specified but pointed different files: "'C:\Users\ASUSTU~1\ESPRES~1\tools\XTENSA~2\ESP-14~1.0_2\XTENSA~1\lib\XTENSA~3.SO'" "'xtensa_esp32s3.so'"
+    compilation terminated.
+    ninja: build stopped: subcommand failed.
+    
+    
+
+  
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  C:/esp/v5.4.4/esp-idf/tools/cmake/project.cmake:571 (__project)
+  CMakeLists.txt:4 (project)
+
+

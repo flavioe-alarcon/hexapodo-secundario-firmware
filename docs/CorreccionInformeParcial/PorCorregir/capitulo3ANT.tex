@@ -1,0 +1,201 @@
+\chapter{{MARCO TEÓRICO}}
+
+Este capítulo presenta los fundamentos teóricos esenciales para el diseño y análisis del sistema robótico cooperativo propuesto para la inspección y monitoreo en entornos mineros subterráneos. A partir de la revisión crítica de la literatura del capítulo anterior, se organiza el marco teórico siguiendo la lógica de los principales subsistemas del robot: mecánico, electrónico y de control y programación, de modo que cada bloque reúna los conceptos necesarios para entender cómo se genera el movimiento, cómo se percibe el entorno y cómo se toman decisiones de navegación y cooperación~\cite{InsectInspired_2020,AdvancesMining_2023}.
+
+En el \textit{subsistema mecánico} se revisan los fundamentos de la cinemática de robots móviles y bioinspirados, incluyendo la relación entre movimientos articulares y desplazamiento del cuerpo, así como los conceptos de cinemática directa, inversa y diferencial que se requieren para planificar trayectorias seguras sobre terrenos irregulares. En el \textit{subsistema electrónico} se abordan los sensores de percepción del entorno, con énfasis en la medición de gases y en la integración de hardware para navegación y seguridad en ambientes subterráneos. Finalmente, en el \textit{subsistema de control y programación} se presentan los principios de control cinemático y de navegación autónoma, así como los esquemas básicos de cooperación entre plataformas terrestres, que permiten coordinar el movimiento y garantizar el cumplimiento de los requisitos normativos y operativos establecidos en el capítulo anterior~\cite{KimChoi_2025_MineMapping,MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020b}.
+
+
+\section{Subsistema mecánico del sistema robótico cooperativo}
+\label{sec:subsistema_mecanico}
+
+\hspace{1.25cm}
+El subsistema mecánico define cómo el robot interactúa físicamente con el entorno y, en consecuencia, condiciona la capacidad de desplazarse sobre terrenos accidentados, sortear obstáculos y mantener la estabilidad durante la inspección. En el caso del sistema cooperativo propuesto, este subsistema comprende la plataforma base terrestre (UGV) y el explorador complementario, considerando su estructura portante, los grados de libertad de locomoción, la distribución de masas y los mecanismos de contacto con el terreno. Estos elementos deben permitir recorridos seguros en galerías mineras, rampas y zonas irregulares, sin comprometer la integridad de los sensores ni la trazabilidad de las mediciones de gases~\cite{AdvancesMining_2023}.
+
+\subsection{Cinemática de robots móviles}
+
+\hspace{1.25cm}
+La cinemática describe la relación entre los movimientos articulares del robot y el movimiento resultante de su cuerpo o de puntos de interés, sin entrar aún en fuerzas o torques. En robots móviles, la configuración se define por la posición y orientación del cuerpo respecto a un marco de referencia global, mientras que en robots articulados o bioinspirados se añaden los ángulos de cada articulación de patas, brazos o segmentos del torso~\cite{InsectInspired_2020}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/morfologia_3dof_hexapodo.png}
+    \caption{Ilustración conceptual de morfologías bioinspiradas de 3 grados de libertad (DoF) para robots caminantes de configuración cuadrúpeda y de configuración hexápoda, indicando la codificación de color por articulación y los ejes de orientación espacial (Adaptado de Billeschou et al., 2020).}
+    \label{fig:morfologia_3dof_hexapodo}
+\end{figure}
+
+El análisis de \emph{cinemática directa} permite calcular la pose del cuerpo a partir de los valores de las articulaciones y las variables de locomoción (por ejemplo, ángulos de rueda o articulaciones de una pata). En plataformas terrestres, esto se utiliza para estimar la trayectoria a partir de velocidades lineales y angulares del chasis; en robots de patas, para determinar la posición de cada punto de apoyo en función de los ángulos de las articulaciones de la pierna. La \emph{cinemática inversa}, en cambio, resuelve el problema opuesto: dada una posición deseada del cuerpo o del punto de contacto con el terreno, se calculan los ángulos articulares necesarios para alcanzarla~\cite{James2021_InsectLegDesign}.
+
+El análisis diferencial, a través del jacobiano cinemático, permite relacionar velocidades de articulación con velocidades del cuerpo o del efector (por ejemplo, la pata o el torso). Esta relación es clave para el control de movimiento, ya que vincula directamente los comandos de motor con la velocidad de avance, giro o desplazamiento sobre el terreno. En configuraciones con más grados de libertad de los estrictamente necesarios para cumplir una tarea (robots redundantes), el jacobiano también permite redistribuir el movimiento para mejorar la estabilidad o evitar configuraciones indeseadas~\cite{InsectInspired_2020,James2021_InsectLegDesign}.
+
+\subsection{Locomoción bioinspirada en insectos}
+
+\hspace{1.25cm}
+Los principios de la robótica bioinspirada muestran que los insectos combinan estructuras ligeras, múltiples patas y patrones de marcha robustos para desplazarse sobre superficies irregulares, inclinadas o con obstáculos pequeños. Esta observación ha motivado el diseño de robots con patas segmentadas, cuerpos articulados y \textit{gaits} inspirados en insectos, que buscan replicar la capacidad de adaptación al terreno y la estabilidad estática o cuasi-estática en presencia de perturbaciones~\cite{InsectInspired_2020,James2021_InsectLegDesign}.
+
+En robots de tipo insecto, la distribución de masas y la disposición de las patas se diseñan para mantener el centro de masa dentro del polígono de soporte formado por los puntos de contacto con el suelo. Los patrones de marcha (tripod gait, tetrapod gait, wave gait, entre otros) regulan qué patas se elevan y cuáles permanecen en apoyo, balanceando velocidad y estabilidad. Estudios recientes presentan diseños de robots cuadrúpedos y hexápodos orientados a terrenos naturales o escombros, donde se demuestra que una locomoción inspirada en insectos puede mantener la movilidad incluso cuando el terreno presenta huecos, piedras o cambios bruscos de nivel~\cite{InsectInspired_2020,DungBeetle_2021}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/poligono_triangulo_soporte.png}
+    \caption{Polígonos de estabilidad triangular formados por el grupo de extremidades en fase de apoyo ($L_1-R_2-L_3$ frente a $R_1-L_2-R_3$) durante la ejecución de la marcha en trípode (Adaptado de Wu et al., 2026).}
+    \label{fig:poligono_triangulo_soporte}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/diagrama_marcha_tripode.png}
+    \caption{Diagrama de secuencias y fases de caminata (\textit{gait diagram}) para la marcha en trípode, ilustrando la alternancia simétrica entre la fase de balanceo (\textit{Swing}) y la fase de soporte (\textit{Support}) para cada extremidad (Adaptado de Wu et al., 2026).}
+    \label{fig:diagrama_marcha_tripode}
+\end{figure}
+
+Para el sistema robótico cooperativo de esta tesis, estos principios son relevantes tanto para la base terrestre como para el explorador complementario. Una base robusta con tracción adecuada (ruedas, orugas o patas) y un explorador con buena capacidad de apoyo en zonas estrechas permiten cubrir áreas donde un único tipo de locomoción sería insuficiente. El uso de geometrías bioinspiradas en las patas o soportes de contacto ayuda a distribuir cargas, mejorar la tracción y reducir la probabilidad de atascos en terrenos accidentados~\cite{James2021_InsectLegDesign}.
+
+\subsection{Interacción mecánica con terrenos accidentados}
+
+\hspace{1.25cm}
+La operación en minas subterráneas implica enfrentarse a rampas, irregularidades, charcos, zonas con roca suelta y espacios reducidos. Desde el punto de vista mecánico, esto se traduce en exigencias sobre la capacidad de escalada, el ángulo máximo de inclinación estable, la altura máxima de obstáculo superable y la resistencia estructural ante impactos y vibraciones. Estudios en robótica aplicada a minería subrayan la necesidad de diseñar chasis compactos, con bajo centro de masa y protección de elementos críticos, de forma que el robot pueda transitar por galerías sin quedar bloqueado ni dañar sus sensores~\cite{AdvancesMining_2023}.
+
+El diseño de las superficies de contacto (neumáticos, orugas, puntas de patas) condiciona la tracción disponible y la capacidad de frenar o maniobrar en suelos con baja adherencia. En robots de patas, las puntas de apoyo y la rigidez de las articulaciones impactan en la estabilidad local y en la capacidad de absorber pequeñas irregularidades. En robots de ruedas u orugas, la distancia entre ejes, el despeje al suelo y la geometría del casco definen la habilidad para superar bordes y desniveles. Estos aspectos son especialmente críticos cuando el robot transporta sensores de gas y debe mantener una altura y orientación razonables para que las mediciones sean repetibles.
+
+En el contexto de un sistema cooperativo, la interacción mecánica también influye en el modo de despliegue y recuperación del explorador. El diseño debe prever puntos de anclaje, rampas o mecanismos sencillos para que el explorador pueda descender, moverse y retornar a la base sin requerir intervención humana directa. Esto exige compatibilidad geométrica entre ambas plataformas y tolerancias suficientes para compensar pequeñas imprecisiones de posicionamiento durante la maniobra.
+
+\subsection{Implicancias para el diseño del sistema propuesto}
+
+\hspace{1.25cm}
+De manera sintética, el análisis del subsistema mecánico permite extraer varios lineamientos para el sistema robótico cooperativo orientado a inspección en minas subterráneas:
+
+\begin{itemize}
+    \item La base terrestre debe ofrecer una locomoción robusta sobre rampas y terrenos irregulares, con centro de masa bajo y protección estructural de sensores y electrónica~\cite{AdvancesMining_2023}.
+    \item El explorador complementario debe priorizar maniobrabilidad en espacios reducidos, aprovechando principios de locomoción bioinspirada para mantener estabilidad y tracción en zonas donde la base no puede ingresar~\cite{InsectInspired_2020,James2021_InsectLegDesign}.
+    \item La cinemática directa, inversa y diferencial debe estar suficientemente modelada para que, en el capítulo metodológico, se puedan definir estrategias de planificación y control de trayectoria coherentes con las capacidades físicas del sistema.
+    \item La interfaz mecánica entre base y explorador (puntos de fijación, volumen de carga, rampas de despliegue) debe facilitar misiones repetibles de ``dejar--explorar--retornar'', minimizando la necesidad de ajustes manuales.
+\end{itemize}
+
+Estos criterios mecánicos se integrarán posteriormente con los subsistemas electrónico y de control y programación, de manera que el diseño final responda tanto a las exigencias del entorno minero como a los requisitos normativos y de seguridad definidos en el capítulo anterior.
+
+\section{Subsistema electrónico de percepción y sensado ambiental}
+\label{sec:subsistema_electronico}
+
+\hspace{1.25cm}
+El subsistema electrónico proporciona al sistema robótico cooperativo la capacidad de percibir el entorno, medir las condiciones atmosféricas y registrar la información necesaria para la toma de decisiones y la trazabilidad de las misiones. Mientras que el subsistema mecánico define cómo se desplaza y se apoya el robot sobre terrenos accidentados, la electrónica determina qué variables se observan, con qué calidad y cómo se integran estas mediciones con la navegación y la seguridad operacional. En el contexto de minas subterráneas, este subsistema debe soportar condiciones de polvo, humedad y vibración, respetar los requisitos normativos de monitoreo de gases y garantizar que los datos permanezcan disponibles para auditoría y análisis posterior~\cite{MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020b,EmisionesDiesel_2021}.
+
+\subsection{Sensores de gases y condiciones ambientales}
+
+\hspace{1.25cm}
+El núcleo del subsistema electrónico, desde el punto de vista de seguridad, lo constituyen los sensores de gases y parámetros ambientales. La normativa y los reportes técnicos para minería subterránea priorizan el monitoreo de gases como monóxido de carbono (CO), dióxido de carbono (CO$_2$), óxidos de nitrógeno (NO, NO$_2$) y sulfuro de hidrógeno (H$_2$S), además de la concentración de oxígeno (O$_2$), temperatura y humedad relativa~\cite{MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020b,EU_ExposureDirective_2020}. En la práctica se emplean sensores electroquímicos, catalíticos y NDIR, cada uno con rangos de operación, tiempos de respuesta y requisitos de calibración específicos.
+
+
+La integración de estos sensores en el UGV y el explorador terrestre debe considerar el flujo de aire alrededor del punto de muestreo y la altura respecto al suelo o al techo, de modo que las lecturas sean representativas de la atmósfera inhalada por los trabajadores. Una cámara o ducto de muestreo puede ayudar a estabilizar el flujo y reducir perturbaciones debidas al movimiento del robot. Además, el sistema de adquisición debe registrar no solo el valor instantáneo, sino también el estado del sensor (por ejemplo, fase de calentamiento, saturación o falla) para evitar interpretaciones erróneas.
+
+
+Desde el punto de vista electrónico, es necesario implementar etapas de acondicionamiento de señal (filtrado, amplificación, conversión analógica-digital) y rutinas de diagnóstico que detecten desviaciones respecto a la calibración. En ambientes donde las emisiones diésel y otros contaminantes pueden degradar la respuesta de los sensores, resulta crítico disponer de procedimientos de verificación rápida en campo y de mecanismos de aviso cuando un canal de medición pierde confiabilidad~\cite{EmisionesDiesel_2021,GEI_MinasPeru_2022}.
+
+\subsection{Sensores de navegación y percepción del entorno}
+
+\hspace{1.25cm}
+Además del sensado de gases, el subsistema electrónico incluye los sensores necesarios para estimar la pose del robot y caracterizar el entorno físico. Entre los más habituales se encuentran unidades de medición inercial (IMU), encoders en las ruedas o articulaciones, sensores de distancia (LiDAR, cámaras de profundidad, ultrasonido) y, en algunos casos, cámaras RGB o térmicas. En minas subterráneas, el uso de LiDAR y de nubes de puntos 3D ha demostrado ser especialmente útil para construir mapas de túneles y rampas, incluso en ausencia de GNSS~\cite{KimChoi_2025_MineMapping}.
+
+La elección y ubicación de estos sensores debe ser coherente con las restricciones mecánicas del sistema: el chasis y las estructuras bioinspiradas analizadas en la Sección~\ref{sec:subsistema_mecanico} condicionan campos de visión, ángulos muertos y posibles oclusiones. Por ello, la integración mecánico--electrónica debe diseñarse de forma conjunta, asegurando que el LiDAR, las cámaras o los sensores de distancia mantengan un campo de visión estable mientras el robot se desplaza sobre rampas o supera obstáculos.
+
+La información de navegación se combina posteriormente mediante algoritmos de fusión sensorial y SLAM, pero a nivel de hardware es necesario garantizar tasas de muestreo adecuadas, sincronización temporal entre canales y una capacidad de procesamiento suficiente para manejar en tiempo real los datos de nubes de puntos y lecturas inerciales~\cite{KimChoi_2025_MineMapping}.
+
+\subsection{Arquitectura electrónica en la configuración cooperativa}
+
+\hspace{1.25cm}
+En una configuración cooperativa terrestre--terrestre, la arquitectura electrónica se distribuye entre el UGV y el explorador. La base terrestre concentra típicamente los módulos de procesamiento principal, almacenamiento masivo y una parte importante de los sensores de navegación y de gases. El explorador, por su parte, integra una electrónica más liviana, enfocada en la maniobrabilidad local y en la recolección de lecturas puntuales en zonas de difícil acceso.
+
+Esta distribución responde tanto a limitaciones mecánicas (espacio disponible, masa máxima admisible) como a criterios de robustez: ubicar la mayor parte de la electrónica crítica en la base, que es más estable y mejor protegida, reduce la probabilidad de fallas por golpes o vuelcos en zonas estrechas. Al mismo tiempo, el explorador debe contar con suficiente autonomía eléctrica y capacidad de sensado para cumplir sus misiones locales sin depender de un enlace permanente.
+
+Desde un punto de vista práctico, la arquitectura puede organizarse en módulos: gestión de energía, adquisición de datos de gases, adquisición de navegación, comunicaciones y almacenamiento. Esta modularidad facilita el mantenimiento y la sustitución de componentes, alineándose con los requisitos de disponibilidad y robustez planteados para operación en minas~\cite{AdvancesMining_2023}.
+
+\subsection{Comunicaciones, sincronización y registro de datos}
+
+\hspace{1.25cm}
+El diseño de las comunicaciones está condicionado por la atenuación y las reflexiones presentes en túneles subterráneos. En muchos casos no es realista asumir un enlace inalámbrico continuo hasta superficie, por lo que el sistema se concibe para operar en modo desconectado, con almacenamiento local de datos y sincronización al retorno, tal como se discutió en el Capítulo~\ref{sec:subsistema_mecanico} y en la revisión normativa~\cite{OSINERGMIN_BoletinGSM_2020,MINEM_DS024_2016}.
+
+A nivel electrónico, esto implica disponer de canales de comunicación robustos entre el UGV y el explorador (por ejemplo, enlaces de corto alcance o conexiones físicas en el punto de acople) y de una memoria no volátil suficiente para registrar las misiones completas. Cada registro debe incluir al menos: sello de tiempo, identificador de plataforma, lectura de gas, pose estimada y estado de los principales sensores. Este esquema de registro permite generar posteriormente mapas de concentración y trazas de recorrido auditables por los responsables de ventilación y seguridad~\cite{OSINERGMIN_BoletinGSM_2020b,EU_ExposureDirective_2020}.
+
+La sincronización temporal entre canales de datos (gases, navegación, eventos de misión) es un requisito clave para la trazabilidad. Aunque el reloj del sistema pueda desfasarse respecto a la hora oficial, es importante que las marcas temporales internas sean coherentes entre sí, de modo que se pueda reconstruir la secuencia de eventos y asociar cada lectura a una posición dentro del túnel. Este aspecto enlaza directamente con el subsistema de control y programación, que será abordado en la siguiente sección.
+
+\subsection{Implicancias para el diseño del sistema propuesto}
+
+\hspace{1.25cm}
+Del análisis del subsistema electrónico se desprenden varios lineamientos para el diseño del sistema robótico cooperativo:
+
+\begin{itemize}
+    \item La selección de sensores de gases debe cubrir los compuestos prioritarios indicados por la normativa, con tiempos de respuesta y rangos compatibles con los límites de exposición y los procedimientos de ventilación~\cite{MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020b,EU_ExposureDirective_2020}.
+    \item La integración mecánico--electrónica debe asegurar campos de visión adecuados y condiciones de flujo de aire estables para los sensores de navegación y de gases, respetando las restricciones estructurales descritas en el subsistema mecánico.
+    \item La arquitectura distribuida entre UGV y explorador debe ser modular, privilegiando que la electrónica crítica y el almacenamiento principal permanezcan en la base, mientras el explorador se especializa en lecturas puntuales en zonas de difícil acceso~\cite{AdvancesMining_2023}.
+    \item Los mecanismos de comunicación y registro deben estar diseñados para misiones desconectadas, con almacenamiento local robusto, sincronización interna de tiempo y capacidad de reconstruir la trayectoria y las condiciones ambientales de cada misión~\cite{OSINERGMIN_BoletinGSM_2020,GEI_MinasPeru_2022}.
+\end{itemize}
+
+Estos criterios electrónicos se combinarán con los del subsistema mecánico y con el subsistema de control y programación para definir, en el marco metodológico, la arquitectura final del sistema, las pruebas de validación y las métricas de desempeño en escenarios representativos de minería subterránea.
+
+
+
+\section{Subsistema de control y programación}
+\label{sec:subsistema_control}
+
+\hspace{1.25cm}
+El subsistema de control y programación define cómo el sistema robótico cooperativo utiliza la información proveniente de los sensores y las capacidades mecánicas de locomoción para ejecutar misiones de inspección de manera segura y repetible. Mientras que el subsistema mecánico determina qué movimientos son físicamente posibles y el subsistema electrónico qué variables se pueden medir, el subsistema de control se encarga de decidir \textit{cuándo} y \textit{cómo} se mueve cada plataforma, qué trayectoria sigue, en qué puntos se toman lecturas de gases y cómo se gestiona la cooperación entre la base terrestre (UGV) y el explorador complementario~\cite{InsectInspired_2020,KimChoi_2025_MineMapping}.
+
+\subsection{Control de movimiento y seguimiento de trayectorias}
+
+\hspace{1.25cm}
+El control de movimiento en robots móviles se organiza habitualmente en varios niveles. En el nivel más bajo se encuentran los controladores de velocidad de rueda o de articulación, basados por lo general en esquemas PID o variantes robustas que regulan la referencia enviada a los actuadores a partir de mediciones de encoders y, cuando es posible, de sensores inerciales~\cite{AdvancesMining_2023}. Sobre este nivel se construyen controladores cinemáticos o de seguimiento de trayectoria, que transforman referencias de posición y orientación en comandos de velocidad lineal y angular para el chasis.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/lazo_corriente.png}
+    \caption{Modelo simplificado del lazo de corriente en el dominio frecuencial (Adaptado de Zhang et al., 2023~\cite{threeLoopControl1}).}
+    \label{fig:lazo_corriente}
+\end{figure}
+
+En entornos como minas subterráneas, donde el terreno puede presentar pendientes, irregularidades y baja adherencia, el modelo cinemático debe ser coherente con las capacidades mecánicas descritas en la Sección~\ref{sec:subsistema_mecanico}. Modelos diferenciales simplificados del tipo unicycle o car-like son comunes para robots de ruedas, mientras que en robots de patas se emplean generadores de patrones de marcha que combinan la cinemática directa e inversa de cada extremidad para producir gaits estables~\cite{InsectInspired_2020}. En ambos casos, el controlador debe ser capaz de compensar pequeñas perturbaciones y errores de modelado, ya sea mediante ganancias adecuadas, estrategias de rechazo de perturbaciones o técnicas de control robusto y adaptativo~\cite{AdaptiveControl_Mines_2024}.
+
+El seguimiento de trayectorias no se limita a mantener la forma geométrica del recorrido, sino que también considera restricciones de velocidad, aceleración y seguridad. En zonas cercanas a frentes de trabajo, intersecciones o cavidades inestables, el controlador puede reducir la velocidad, aumentar la frecuencia de muestreo de gases o activar modos de exploración más conservadores, integrando así criterios de seguridad en la propia ley de control~\cite{MINEM_DS024_2016,OSINERGMIN_BoletinGSM_2020b}.
+
+\subsection{Navegación autónoma y planificación de la misión}
+
+\hspace{1.25cm}
+La navegación autónoma combina estimación de pose, construcción de mapas y planificación de rutas para que el robot recorra el entorno de forma consistente con los objetivos de la misión. En minas subterráneas, donde no se dispone de GNSS, la estimación de pose se basa típicamente en la fusión de datos de LiDAR, IMU y encoders, empleando algoritmos de SLAM y registro 3D para generar mapas de túneles y rampas~\cite{KimChoi_2025_MineMapping}. Estos mapas permiten localizar al robot dentro de la infraestructura y asociar las mediciones de gases a posiciones específicas.
+
+La planificación de la misión puede desagregarse en dos niveles. En el nivel global se definen los tramos de galería y los puntos de interés que deben inspeccionarse, considerando restricciones impuestas por la geometría del túnel y por las normas de seguridad. En el nivel local, se generan trayectorias suaves y factibles para el UGV y el explorador, que respetan las limitaciones mecánicas (radio de giro, capacidad de escalada, despeje al suelo) y las zonas a evitar identificadas por el área de ventilación o por supervisores~\cite{AdvancesMining_2023,MINEM_DS024_2016}.
+
+En el escenario de operación desconectada, la planificación debe incluir puntos de control en los que el sistema pueda verificar el estado de la misión, evaluar el nivel de riesgo y decidir si continúa, replantea la ruta o inicia el retorno. La programación de estas misiones se puede implementar mediante \emph{máquinas de estados} o \emph{árboles de comportamiento}, que estructuran las decisiones de alto nivel en función de eventos como detecciones de gas en umbrales críticos, pérdida de estimación de pose o dificultades mecánicas de avance.
+
+\subsection{Coordinación y cooperación entre plataformas terrestres}
+
+\hspace{1.25cm}
+En una configuración cooperativa terrestre--terrestre, el subsistema de control debe gestionar no solo el movimiento de cada plataforma por separado, sino también su interacción. Un esquema típico consiste en que el UGV actúe como plataforma principal de navegación y sensado continuo, mientras que el explorador se despliega para inspecciones puntuales en ramales estrechos, oquedades o zonas de difícil acceso, tal como se discutió en el Capítulo de revisión crítica de la literatura~\cite{InsectInspired_2020,DungBeetle_2021}.
+
+Desde el punto de vista de control y programación, esta cooperación puede modelarse como una asignación de tareas entre agentes: el UGV cubre la ruta troncal y define puntos de despliegue, mientras que el explorador recibe submisiones acotadas (salir, inspeccionar un volumen local, retornar). El intercambio de información puede realizarse mediante sincronización periódica cuando ambos robots están en proximidad, aprovechando la arquitectura electrónica descrita en la Sección~\ref{sec:subsistema_electronico}. Este enfoque reduce la necesidad de un enlace inalámbrico persistente y se adapta a las limitaciones de comunicación en túneles~\cite{OSINERGMIN_BoletinGSM_2020}.
+
+La coordinación también incluye la gestión de prioridades: en presencia de lecturas de gas que superen ciertos umbrales, el control puede cancelar tareas secundarias del explorador y ordenar el retorno inmediato a la base, o bien reconfigurar la misión para que el UGV se retire a una zona segura. De esta forma, la cooperación no solo mejora la cobertura espacial, sino que contribuye a mantener criterios de seguridad y trazabilidad alineados con la normativa vigente~\cite{MINEM_DS024_2016,EU_ExposureDirective_2020}.
+
+\subsection{Estrategias de seguridad y gestión de fallos}
+
+\hspace{1.25cm}
+Un aspecto central del subsistema de control y programación en entornos mineros es la incorporación de estrategias explícitas de seguridad y gestión de fallos. Estas estrategias definen cómo debe reaccionar el sistema ante situaciones como pérdida de estimación de pose, fallos en sensores críticos de gas, bloqueos mecánicos o condiciones ambientales extremas. La normativa de seguridad y salud ocupacional exige que los sistemas de monitoreo contribuyan a reducir el riesgo operativo, lo que implica que el robot no solo debe ser capaz de avanzar, sino también de detenerse y retirar de forma segura cuando las condiciones lo requieran~\cite{MINEM_DS024_2016,MINEM_Yanaquihua_2023}.
+
+En la práctica, estas estrategias se materializan en modos de operación y niveles de degradación. Por ejemplo, ante la pérdida del LiDAR pero con IMU y encoders aún operativos, el sistema puede pasar a un modo de navegación limitada con distancia máxima restringida y obligación de retornar por la ruta más segura conocida. Si se detecta un fallo en el sensor de gases principal, la misión puede marcarse como no válida, registrando el incidente y ordenando el regreso para recalibración o mantenimiento. En todos los casos, el software debe garantizar que los eventos relevantes queden registrados con sello de tiempo y contexto, permitiendo reconstruir posteriormente lo ocurrido~\cite{OSINERGMIN_BoletinGSM_2020b,GEI_MinasPeru_2022}.
+
+Adicionalmente, la programación debe considerar la interacción con el personal humano. El sistema debe ofrecer formas claras de iniciar, pausar y abortar misiones, así como de visualizar resúmenes comprensibles de los resultados (trayectorias, mapas de gas, eventos). Esto favorece la adopción práctica de la herramienta y facilita su integración en los procedimientos de trabajo ya establecidos por las unidades mineras~\cite{AdvancesMining_2023}.
+
+\subsection{Implicancias para el diseño del sistema propuesto}
+
+\hspace{1.25cm}
+Del análisis del subsistema de control y programación se pueden extraer varios lineamientos clave para el sistema robótico cooperativo:
+
+\begin{itemize}
+    \item El control de movimiento debe basarse en modelos cinemáticos coherentes con el subsistema mecánico, combinando controladores de bajo nivel robustos con capas de seguimiento de trayectoria que incorporen criterios de seguridad y restricciones propias de minas subterráneas~\cite{InsectInspired_2020,AdaptiveControl_Mines_2024}.
+    \item La navegación autónoma debe integrar estimación de pose, construcción de mapas y planificación de rutas, aprovechando los sensores descritos en el subsistema electrónico y respetando las limitaciones geométricas y normativas del entorno~\cite{KimChoi_2025_MineMapping,MINEM_DS024_2016}.
+    \item La cooperación entre UGV y explorador terrestre debe organizarse mediante asignación de tareas y sincronización de datos en puntos de contacto, priorizando siempre la seguridad y la trazabilidad de las mediciones~\cite{OSINERGMIN_BoletinGSM_2020,EU_ExposureDirective_2020}.
+    \item Las estrategias de seguridad y gestión de fallos deben estar explícitamente codificadas en el software, contemplando modos degradados y procedimientos de retorno seguro que cumplan con los criterios de supervisión y reporte establecidos por la normativa~\cite{MINEM_DS024_2016,MINEM_Yanaquihua_2023,GEI_MinasPeru_2022}.
+\end{itemize}
+
+Estos lineamientos completan la visión de los tres subsistemas principales (mecánico, electrónico y de control y programación) y servirán como base para el marco metodológico, donde se definirán las especificaciones detalladas, los casos de prueba y las métricas de desempeño del sistema propuesto en escenarios representativos de minería subterránea.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

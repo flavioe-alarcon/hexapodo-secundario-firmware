@@ -1,0 +1,267 @@
+\chapter{RESULTADOS PRELIMINARES}
+
+\section{Hexápodo primario}
+
+El ensamblaje del hexápodo primario, basado en la arquitectura de código abierto \textit{Chipo} e impulsado por 18 servomotores MG996R, se completó de manera satisfactoria. Durante el proceso de integración mecánica y las pruebas preliminares de locomoción, se identificaron fallos estructurales en ciertas piezas manufacturadas mediante impresión 3D. Estas fracturas fueron ocasionadas tanto por los esfuerzos dinámicos inherentes a la marcha, como por la fatiga mecánica derivada de los continuos ajustes, aprietes y reemplazos de la tornillería durante el proceso de ensamblaje y calibración.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/Chipo50.png} 
+    \caption{Ensamblaje al 50\%}
+    \label{fig:Chipo50}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/Chipo90.png} 
+    \caption{Ensamblaje al 80\%}
+    \label{fig:Chipo90}
+\end{figure}
+
+
+En una fase inicial, previo a la adquisición del controlador definitivo, se implementó una arquitectura de control auxiliar compuesta por un microcontrolador ESP32 DEVKIT V1 acoplado a dos módulos expansores PWM PCA9685. Las pruebas de locomoción ejecutadas con esta configuración evidenciaron deficiencias significativas: la plataforma carecía de la capacidad de torque para mantener la postura de pie y el desplazamiento resultaba errático. Esto se debió a que los servomotores presentaban inestabilidad en la señal (\textit{jitter} o temblor continuo) y no lograban alcanzar sus respectivos ángulos operativos de referencia.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/HexapodoPrimarioconDrivers.jpeg} 
+    \caption{Hexapodo primario con drivers PCA9685}
+    \label{fig:HexapodoPrimarioconDrivers}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/InterfazPropia.jpeg} 
+    \caption{Interfaz de control de servomotores MG996R. Elaboración propia}
+    \label{fig:InterfazPropia}
+\end{figure}
+
+Posteriormente, con la integración del controlador dedicado Pololu Mini Maestro, se reanudaron los ensayos de validación. La alimentación energética se dividió estratégicamente: para la calibración individual y pruebas de locomoción de una sola extremidad se empleó una fuente de voltaje variable de laboratorio, mientras que para la exigencia de la locomoción global (accionando las seis patas simultáneamente) se integró una fuente de voltaje propia de mayor capacidad de corriente. Para asegurar la precisión cinemática y la estabilidad estática del hexápodo, se realizó un proceso de sintonización y calibración. Utilizando la interfaz nativa del Pololu Mini Maestro, se registraron y grabaron las coordenadas articulares (posiciones angulares) de cada servomotor.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/HexapodoPrimarioconPololu.png} 
+    \caption{Hexapodo primario con driver Pololu}
+    \label{fig:HexapodoPrimarioconPololu}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/InterfazPololu.jpeg} 
+    \caption{Interfaz de control de Pololu}
+    \label{fig:InterfazPololu}
+\end{figure}
+
+
+Como resultado de la calibración, se configuraron y validaron cuatro secuencias posturales operativas: (1) una postura de reposo pasivo con las extremidades completamente extendidas sobre el suelo, (2) una postura de bipedestación estática (de pie), donde se determinaron los ángulos nominales requeridos para elevar y sostener el chasis, y (3, 4) dos secuencias dinámicas diseñadas para emular el patrón de marcha en trípode (\textit{tripod gait}). Estas dos últimas secuencias operan de manera complementaria, alternando el levantamiento de tres extremidades (fase de balanceo) mientras las tres restantes mantienen el soporte en el suelo (fase de apoyo), garantizando así un polígono de estabilidad continuo.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/ChipoAcostado.jpeg} 
+    \caption{Posición de reposo}
+    \label{fig:ChipoAcostado}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/ChipodePie.jpeg} 
+    \caption{Posición de pie}
+    \label{fig:ChipodePie}
+\end{figure}
+
+
+
+
+\section{Hexápodo secundario}
+
+
+\subsection{Diseño mecánico}
+
+Durante la fase inicial de desarrollo del hexápodo secundario, se fabricó un prototipo conceptual que sirvió como línea base para identificar oportunidades críticas de mejora estructural. Las pruebas mecánicas preliminares evidenciaron que los motores N20 requerían una sujeción integral a lo largo de toda su carcasa para mitigar desplazamientos indeseados. Asimismo, se determinó que la transmisión de movimiento desde el eje motriz hacia los eslabones articulares (coxa, fémur o tibia) demandaba una distribución de carga en dos puntos de apoyo: un anclaje frontal ubicado en la salida del eje y un soporte auxiliar posterior. Este último fue integrado en la iteración de diseño más reciente con el propósito de equilibrar los esfuerzos mecánicos y prevenir deformaciones en la estructura.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/V1Hexapodo.png} 
+    \caption{Primer diseño hexápodo secundario}
+    \label{fig:V1Hexapodo}
+\end{figure}
+
+Posteriormente, al efectuar la integración mecánica de las seis extremidades sobre un chasis de geometría rectangular, se detectaron interferencias cinemáticas en el espacio de trabajo. La disposición paralela de los anclajes provocaba colisiones físicas entre patas adyacentes al intentar ejecutar trayectorias de locomoción. Para solventar esta limitación, se rediseñó la plataforma central migrando hacia una arquitectura de chasis hexagonal. Esta nueva distribución proporciona la separación angular y radial necesaria para garantizar que cada extremidad opere libre de obstrucciones mecánicas.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/ChasisHexagonal.png} 
+    \caption{Armazón hexagonal}
+    \label{fig:ChasisHexagonal}
+\end{figure}
+
+\subsection{Electrónica}
+
+Conforme a los requerimientos de diseño y las restricciones volumétricas establecidas en el capítulo anterior, el sistema electrónico del hexápodo secundario se fundamentó en el desarrollo de una placa de circuito impreso (PCB) de diseño propio. Esta decisión arquitectónica responde a la necesidad de optimizar el espacio físico y reducir la alta densidad de cableado requerida para operar los motores N20, lo cual incrementa drásticamente la fiabilidad eléctrica del sistema frente a las vibraciones dinámicas de la locomoción. El diseño conceptual integra un microcontrolador ESP32-WROOM-32E como núcleo lógico y una etapa de potencia basada en puentes H DRV8876. El modelado final de esta tarjeta fue validado mediante herramientas de diseño ECAD, obteniendo las siguientes representaciones de la distribución de componentes y ruteo de pistas.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/PCB2D.png} 
+    \caption{Diseño de PCB personalizada}
+    \label{fig:PCB2D}
+\end{figure}
+
+A partir de la culminación del diseño asistido por computadora, se procedió con la manufactura de la placa y el respectivo ensamble físico de los componentes electrónicos. Para garantizar una adecuada disipación térmica y distribución de señales, se soldaron meticulosamente los encapsulados correspondientes a la lógica de control, el puente de comunicación USB-UART CP2102N y la etapa de regulación de voltaje. El resultado de este proceso de integración a nivel de hardware, evidenciando las soldaduras en la cara superior e inferior, se presenta a continuación:
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/PCBEnsamblada.jpeg} 
+    \caption{PCB ensamblada}
+    \label{fig:PCBEnsamblada}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/PCBEnsambladaDetras.jpeg} 
+    \caption{PCB ensamblada}
+    \label{fig:PCBEnsambladaDetras}
+\end{figure}
+
+Durante la fase preliminar de validación de hardware, la placa presentó incidencias operativas asociadas a la interfaz de comunicación serial y el circuito de autoprogramación. Tras un proceso de depuración y análisis de fallos, se ejecutaron las correcciones pertinentes a nivel de componentes, logrando estabilizar la carga del \textit{firmware}. Una vez superada esta etapa, se llevaron a cabo pruebas de accionamiento directo, verificando de manera satisfactoria la generación de señales PWM desde el ESP32 hacia los drivers, logrando así el control de giro y velocidad del motor N20 sin sobrecalentamientos ni interrupciones de señal.
+
+\subsection{Sistema de control}
+
+Para el desarrollo de la arquitectura de control del hexápodo secundario, se ejecutaron pruebas experimentales orientadas a la identificación paramétrica de la planta de corriente de los motores. A partir de la adquisición y análisis de la respuesta temporal del sistema frente a señales de excitación, se obtuvieron las siguientes aproximaciones dinámicas para modelar su comportamiento.
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/GraficaCorrientePlanta.png} 
+    \caption{Gráfica de corriente de prueba para identificación de modelo}
+    \label{fig:GraficaCorrientePlanta}
+\end{figure}
+
+\begin{equation*}
+    G_{21} = \frac{4.036s + 6.16}{s^2 + 2550s + 1.08e04}
+\end{equation*}
+\noindent Aproximación de modelo: $71.1\%$
+
+\vspace{0.8cm}
+
+\begin{equation*}
+    G_{22} = \frac{0.001184s^2 + 1.441s + 2.325}{s^2 + 904.4s + 3996}
+\end{equation*}
+\noindent Aproximación de modelo: $86.5\%$
+
+Al evaluar la fidelidad de las aproximaciones matemáticas obtenidas, el primer modelo arrojó un índice de ajuste del $71.1\%$, mientras que el segundo modelo alcanzó una precisión del $86.5\%$. Por consiguiente, se seleccionó el segundo modelo como la planta nominal para el lazo de corriente, garantizando así una representación más exacta y óptima para la posterior sintonización del controlador.
+
+En una segunda etapa, se llevó a cabo el procedimiento de identificación para el lazo de velocidad. De este análisis se derivaron dos funciones de transferencia candidatas, las cuales exhibieron porcentajes de aproximación altamente competitivos y similares entre sí, alcanzando valores de $97.5\%$ y $97.9\%$ respecto a la curva de datos experimentales.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/GraficaVelocidadPlanta.png} 
+    \caption{Gráfica de corriente de prueba para identificación de modelo}
+    \label{fig:GraficaVelocidadPlanta}
+\end{figure}
+
+\begin{equation*}
+    G_{10} = \frac{998.5}{s + 1.545}
+\end{equation*}
+\noindent Aproximación de modelo: $97.5\%$
+
+\vspace{0.8cm}
+
+\begin{equation*}
+    G_{20} = \frac{1.107e05}{s^2 + 110.1s + 172.3}
+\end{equation*}
+\noindent Aproximación de modelo: $97.9\%$
+
+
+Al evaluar las aproximaciones obtenidas durante la identificación del sistema, se determina que el modelo de primer orden $G_{10}$ presenta una carga computacional significativamente menor en comparación con el modelo de segundo orden $G_{20}$. En el contexto de su implementación digital dentro del microcontrolador, la discretización de una función de transferencia de primer orden demanda almacenar y calcular un menor número de estados pasados por cada iteración del lazo de control. Esto se traduce directamente en una reducción de las operaciones aritméticas y en una optimización del uso de registros y memoria en el hardware. Asimismo, se observa que el índice de aproximación del modelo $G_{20}$ ($97.9\%$) es apenas un $0.4\%$ superior al obtenido por $G_{10}$ ($97.5\%$). Por consiguiente, este incremento marginal en la fidelidad dinámica no justifica el aumento de la complejidad matemática, estableciendo a $G_{10}$ como la planta más idónea y eficiente para la ejecución del algoritmo de control en tiempo real.
+
+Posteriormente se procedió a identificar la planta para el lazo de posición. A partir del análisis se determinaron 2 plantas donde, al igual que en la identificación de plantas de velocidad, las aproximaciones de los modelos tuvieron procentajes parecidos de 99.1\% y 100\%
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/GraficaPosicionPlanta.png} 
+    \caption{Gráfica de corriente de prueba para identificación de modelo}
+    \label{fig:GraficaPosicionPlanta}
+\end{figure}
+
+El modelo de primer orden $G_{10}$ resulta la alternativa óptima para la implementación digital, ya que al requerir un único estado pasado en su discretización, reduce drásticamente la carga computacional y el uso de memoria frente al modelo de segundo orden $G_{22}$. Si bien $G_{22}$ alcanza un ajuste del $100\%$, su ganancia marginal del $0.9\%$ sobre el sobresaliente $99.1\%$ de $G_{10}$ no compensa la mayor complejidad matemática. Además, en la operación física, dicha diferencia es imperceptible frente al ruido de los sensores y las tolerancias mecánicas.
+
+
+Luego de la identificación de plantas se llegaron a los siguientes controladores usando PID Tunner como punto semilla para futuras sintonizaciones de otros controladores.
+
+\noindent Controlador corriente/duty cycle
+\begin{equation*}
+    PI_{current} = \frac{8.832s + 8.009e04}{s}
+\end{equation*}
+
+\vspace{0.8cm}
+
+\noindent Controlador Velocidad/Corriente
+\begin{equation*}
+    PI_{vel} = \frac{0.0284s + 0.01392}{s}
+\end{equation*}
+
+\vspace{0.8cm}
+
+\noindent Controlador Posición/Velocidad
+\begin{equation*}
+    PI_{pos} = \frac{6.166s + 3192}{s}
+\end{equation*}
+
+Luego, se simularon los desempeños de cada uno de los controladores para cada una de sus respectivas plantas, obteniendo los siguientes resultados
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/DesempeñoCorriente.png} 
+    \caption{Gráfica de desempeño planta corriente con controlador PI}
+    \label{fig:DesempeñoCorriente}
+\end{figure}
+
+A partir de la gráfica de respuesta al escalón del lazo de corriente, se extrajeron los siguientes parámetros de desempeño dinámico del controlador PI: un tiempo de subida ($t_r$) de $0.0181\text{ s}$, un tiempo de establecimiento ($t_s$) de $0.0671\text{ s}$, un sobreimpulso ($M_p$) del $0\%$ y un error en estado estacionario ($e_{ss}$) del $1.38\%$. En conclusión, la sintonización del controlador PI es altamente efectiva y segura para el sistema físico; la ausencia total de sobreimpulso protege los componentes electrónicos y los motores al evitar picos de corriente transitorios, mientras que su rápida estabilización y su mínimo error estacionario aseguran un seguimiento preciso de la referencia de torque necesaria para la locomoción del hexápodo.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/DesempeñoVelocidad.png} 
+    \caption{Gráfica de desempeño planta velocidad con controlador PI}
+    \label{fig:DesempeñoVelocidad}
+\end{figure}
+
+A partir de la gráfica de respuesta al escalón del lazo de velocidad, se obtuvieron los siguientes parámetros de desempeño dinámico del controlador PI: un tiempo de subida ($t_r$) de $0.0630\text{ s}$, un sobreimpulso ($M_p$) del $0\%$ y un error en estado estacionario ($e_{ss}$) del $2.79\%$. En conclusión, la sintonización del controlador es estable y adecuada para la dinámica del robot; la prevención total del sobreimpulso garantiza una transición de velocidad suave, lo cual es fundamental para evitar sacudidas mecánicas, picos de inercia o deslizamientos indeseados en los puntos de apoyo de las extremidades. Aunque se registra un ligero error estacionario, este valor inferior al $3\%$ es plenamente admisible, dado que en la operación física las propias fricciones del terreno y las tolerancias mecánicas del ensamblaje absorben esta desviación sin llegar a comprometer la coordinación ni la fluidez de la marcha del hexápodo.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/DesempeñoPosicion.png} 
+    \caption{Gráfica de desempeño planta posición con controlador PI}
+    \label{fig:DesempeñoPosicion}
+\end{figure}
+
+La evaluación de la respuesta al escalón del lazo de posición indica un tiempo de subida ($t_r$) de $0.0170\text{ s}$, un tiempo de establecimiento ($t_s$) de $0.0998\text{ s}$, un sobreimpulso ($M_p$) del $13.53\%$ y un error estacionario ($e_{ss}$) del $0.40\%$. En conclusión, el controlador PI garantiza un seguimiento de trayectoria sumamente rápido y preciso; aunque el sobreimpulso moderado podría inducir una leve exigencia mecánica inicial en las articulaciones, el rápido asentamiento dinámico y el error casi nulo aseguran la correcta postura y la fidelidad cinemática del hexápodo.
+
+Por último, tras la implementación física de las plantas dinámicas de corriente, velocidad y posición en lazo cerrado con sus respectivos controladores, se registraron los siguientes resultados de desempeño:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/DesempeñoCorrienteIMP.png} 
+    \caption{Gráfica de desempeño planta posición con controlador PI}
+    \label{fig:DesempeñoCorrienteIMP}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/DesempeñoVelocidadIMP.png} 
+    \caption{Gráfica de desempeño planta posición con controlador PI}
+    \label{fig:DesempeñoVelocidadIMP}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/DesempeñoPosicionIMP.png} 
+    \caption{Gráfica de desempeño planta posición con controlador PI}
+    \label{fig:DesempeñoPosicionIMP}
+\end{figure}
+
+La evaluación experimental de la arquitectura de control en cascada, implementada físicamente sobre los motores N20, demuestra la viabilidad y robustez del sistema en condiciones operativas reales. Al analizar el lazo de posición, se observa que la posición medida rastrea con alta fidelidad los perfiles escalonados de la referencia; los picos de error se manifiestan lógicamente durante las transiciones dinámicas, pero el controlador logra atenuarlos rápidamente hasta establecerse en una banda de tolerancia cercana a cero. Por su parte, el lazo intermedio de velocidad consigue seguir la demanda de la trayectoria, aunque su error PI exhibe oscilaciones de alta frecuencia inherentes al ruido de cuantificación de los encoders y a las tolerancias mecánicas de la caja reductora. Finalmente, el lazo interno de corriente evidencia la rápida actuación del controlador, donde el esfuerzo de control modula activamente la señal PWM (alcanzando picos cercanos al $40\%$) para garantizar que la corriente medida (CS) rastree los requerimientos de torque exigidos por el movimiento.
+
+La sintonización e implementación del triple lazo PI resulta altamente efectiva para el hardware del hexápodo secundario. A pesar del ruido característico en las lecturas de velocidad y corriente propio de los sistemas electromecánicos reales, el lazo externo de posición logra absorber y compensar estas perturbaciones. Esto garantiza un control articular estable, preciso y con un error en estado estacionario mínimo, cumpliendo con los requerimientos cinemáticos necesarios para ejecutar las secuencias de marcha coordinada sin sobrecargar los motores.

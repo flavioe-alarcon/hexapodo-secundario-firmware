@@ -1,0 +1,60 @@
+\chapter{MARCO METODOLÓGICO}
+
+La implementación de la arquitectura cooperativa terrestre--terrestre (A2) seleccionada en el Capítulo II requiere una secuencia de ingeniería que ordene el paso desde los requisitos normativos hasta las pruebas físicas de los dos hexápodos. Para evitar iteraciones empíricas inconexas entre mecánica, electrónica y control, el desarrollo del proyecto articula tres estándares complementarios: la directriz VDI 2206 como estructura general del ciclo mecatrónico~\cite{VDI2206_2004}, la norma ISO/IEC/IEEE 29148 para formular especificaciones verificables y la directriz VDI 2225 Blatt 3 para sustentar cuantitativamente la elección de materiales y componentes.
+
+
+\section{Caracterización de la investigación}
+
+Este trabajo corresponde a una investigación tecnológica aplicada, orientada al diseño, construcción e integración de un sistema robótico cooperativo para inspección ambiental y cartografía en galerías mineras subterráneas y secciones confinadas o parcialmente colapsadas~\cite{AdvancesMining_2023, MINEM_DS024_2016}. Su propósito práctico consiste en disponer de dos unidades caminantes hexápodas capaces de verificar atmósferas potencialmente peligrosas bajo protocolos de no ingreso (\textit{no-entry}), desplazándose con marcha en trípode sobre sustratos irregulares donde la entrada directa de cuadrillas representa un riesgo ocupacional severo.
+
+El estudio sigue un enfoque cuantitativo sustentado en el dimensionamiento cinemático de cadenas de tres grados de libertad, la estimación de pares estáticos e inerciales en las articulaciones, el balance eléctrico de potencia y la identificación experimental de funciones de transferencia. Los eslabones estructurales y las etapas de accionamiento se calculan a partir de umbrales explícitos de deflexión, masa máxima admisible y torque de bloqueo de los actuadores~\cite{Sensors2021_HexapodReview, N20_Datasheet}.
+
+En su dimensión empírica, la investigación se apoya en la fabricación y ensayo progresivo de prototipos funcionales en banco y pistas controladas de laboratorio. Estas pruebas permiten medir la resistencia de las uniones impresas en PLA, contrastar controladores articulares frente a consignas escalonadas, verificar la estabilidad del polígono de soporte en trípode y evaluar el enlace inalámbrico entre ambas plataformas.
+
+Por su propia naturaleza mecatrónica, el desarrollo integra de manera concurrente el modelado CAD estructural, el diseño de tarjetas electrónicas modulares de potencia y adquisición, el firmware embebido en tiempo real sobre microcontroladores ESP32 y la pila de navegación autónoma y SLAM sobre ROS 2 en el hexápodo primario~\cite{VDI2206_2004}.
+
+
+\section{Marco metodológico integrado y modelo de desarrollo mecatrónico}
+
+El flujo de trabajo del proyecto combina tres marcos normativos que cubren distintas escalas de decisión de ingeniería. En el nivel macro, la directriz alemana VDI 2206 organiza el desarrollo mediante el modelo en V, coordinando la descomposición de funciones entre los dominios mecánico, electrónico e informático y fijando su posterior ruta de integración y verificación~\cite{VDI2206_2004}. En el punto de partida de dicho ciclo, el estándar internacional ISO/IEC/IEEE 29148 rige la redacción de los requerimientos técnicos mediante magnitudes físicas, unidades y márgenes de tolerancia medibles.
+
+Durante la etapa descendente de síntesis conceptual y selección de hardware, se incorpora como herramienta auxiliar la directriz VDI 2225 Blatt 3 (\textit{Technisch-wirtschaftliche Bewertung}). Mientras la VDI 2206 traza la secuencia del ciclo de vida y la ISO/IEC/IEEE 29148 acota numéricamente las restricciones de entrada, la VDI 2225 Blatt 3 aporta matrices ponderadas de cinco niveles para comparar variantes constructivas bajo criterios técnicos y de presupuesto.
+
+\subsection{Arquitectura del ciclo de desarrollo en ``V'' (Norma VDI 2206)}
+
+La directriz VDI 2206 estructura el proyecto a través del modelo en V representado en la Figura~\ref{fig:vdi2206_modelo_v}, el cual vincula cada decisión de diseño con su respectiva prueba de validación~\cite{VDI2206_2004}. El recorrido inicia en el extremo superior izquierdo con la clarificación del problema operativo minero y desciende hacia el diseño detallado por disciplina; una vez fabricados los módulos físicos y programados los algoritmos, la rama derecha asciende integrando subsistemas hasta contrastar el sistema completo contra las especificaciones originales.
+
+En el nivel superior de sistema se establece el reparto funcional de la configuración cooperativa A2: un hexápodo primario dotado de cómputo embarcado, cámara RGB-D y sensor de gases para cartografiar la galería principal, acompañado de un hexápodo secundario compacto diseñado para penetrar en aberturas estrechas. Definida esta interfaz global, el problema se particiona en tres frentes paralelos: arquitectura mecánica y manufactura aditiva, electrónica de potencia e instrumentación modular, y software de control articular y navegación autónoma.
+
+En el vértice inferior del modelo se ejecutan microciclos iterativos de síntesis mediante matrices morfológicas, cálculos de dimensionamiento, diseño asistido por computadora (CAD/ECAD) e identificación experimental de plantas dinámicas. A continuación, la rama ascendente guía el ensamblaje progresivo: primero se verifican de manera aislada los lazos PI de cada articulación, la distribución de tensión y las secuencias posturales; luego se integran la percepción, la locomoción en trípode y el enlace inalámbrico para evaluar el desempeño conjunto en entorno controlado de laboratorio.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/metodología_hexapodo.png}
+    \caption{Esquema metodológico del ciclo de desarrollo en ``V'' adaptado de la directriz VDI 2206~\cite{VDI2206_2004}.}
+    \label{fig:vdi2206_modelo_v}
+\end{figure}
+
+
+\subsection{Formulación de requerimientos numéricos del sistema (Norma ISO/IEC/IEEE 29148)}
+
+Para evitar ambigüedades cualitativas al inicio del modelo en V, las exigencias operativas derivadas de la normativa minera y del entorno físico se traducen en requerimientos cuantitativos conforme al estándar ISO/IEC/IEEE 29148. Cada especificación se formula como una condición atómica y verificable que sirve posteriormente como umbral de aceptación durante los ensayos de laboratorio.
+
+Los requerimientos del sistema cooperativo se agrupan en sus tres dominios disciplinares:
+
+\begin{itemize}
+    \item \textbf{Dominio mecánico y estructural:} Acota la envergadura máxima en reposo, el despeje libre ventral sobre obstáculos, la fracción admisible de masa concentrada en las seis patas respecto al peso total, las tolerancias de ajuste en impresión 3D FDM y el techo de par articular impuesto por los micromotores N20 y servomotores MG996R.
+    \item \textbf{Dominio electrónico y de potencia:} Fija las tensiones reguladas de alimentación lógica y motriz, los límites de corriente pico y protección por puente H, las tasas de muestreo analógico con transferencia directa a memoria (DMA), la autonomía energética mínima del banco de baterías y los tiempos de iteración admisibles.
+    \item \textbf{Dominio de control, navegación y software:} Especifica las frecuencias deterministas de cierre de lazo para corriente, velocidad y posición en los ESP32, la estructura jerárquica de transformaciones espaciales (\texttt{tf2}) y comunicación DDS en ROS 2, las métricas de deriva o cierre de lazo en SLAM y la latencia del enlace cooperativo UDP.
+\end{itemize}
+
+Estos valores límite alimentan directamente los pesos de importancia empleados en las matrices de evaluación multicriterio del Capítulo VI, vinculando cada selección de componente con una restricción medible del prototipo.
+
+
+\subsection{Evaluación y selección multicriterio de alternativas (Norma VDI 2225)}
+
+Dado que la directriz VDI 2206 deja abierta la técnica específica para elegir entre soluciones candidatas dentro de cada subsistema, el proyecto emplea el procedimiento de evaluación técnico-económica VDI 2225 Blatt 3. Este método permite comparar objetivamente materiales estructurales, configuraciones electrónicas de procesamiento, sensores y esquemas de tracción generados en las matrices morfológicas.
+
+Para cada decisión de diseño se define un conjunto de criterios derivados de los requerimientos ISO/IEC/IEEE 29148 y se les asigna un peso entero de relevancia $g \in \{1, 2, 3, 4, 5\}$. Seguidamente, cada variante candidata recibe un puntaje ordinal $p \in \{0, 1, 2, 3, 4\}$, donde $0$ denota incumplimiento de la especificación, $1$ desempeño apenas aceptable, $2$ nivel suficiente, $3$ buen cumplimiento y $4$ comportamiento ideal frente al requerimiento evaluado.
+
+El puntaje ponderado acumulado de una alternativa $j$ se calcula como $\sum_i g_i p_{ij}$ y se normaliza dividiéndolo entre el puntaje máximo de la referencia ideal ($p_{\text{ideal}} = 4$ en todos los criterios), obteniendo un índice adimensional $X_j \in [0, 1]$. Esta métrica permite respaldar con trazabilidad numérica tanto la adopción del filamento PLA en la estructura de las extremidades como la arquitectura electrónica seleccionada para los hexápodos primario y secundario.

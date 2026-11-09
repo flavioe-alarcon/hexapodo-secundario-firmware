@@ -1,0 +1,172 @@
+\chapter{MARCO TEÓRICO}
+
+El desarrollo de la arquitectura cooperativa terrestre--terrestre (A2) seleccionada en el Capítulo II exige articular principios mecánicos, electrónicos y algorítmicos bajo las restricciones físicas de un socavón minero. A diferencia de los entornos industriales estructurados, una galería subterránea impone sustratos de roca suelta, ausencia total de señal satelital GNSS, atenuación severa de radiofrecuencia y atmósferas potencialmente tóxicas~\cite{AdvancesMining_2023, KimChoi_2025_MineMapping}. Por ello, el modelado de las extremidades caminantes no puede desligarse de la metrología de gases ni de las leyes de control que coordinan ambas unidades bajo protocolos de no ingreso (\textit{no-entry})~\cite{InsectInspired_2020, MINEM_DS024_2016, OSINERGMIN_BoletinGSM_Ventilacion_2020}.
+
+A partir de esta interdependencia física, los fundamentos teóricos del proyecto abarcan tres dominios complementarios. El análisis mecánico establece las relaciones de posición y velocidad de cadenas cinemáticas multiarticuladas, junto con los criterios de estabilidad estática propios de la locomoción hexápoda en trípode. El apartado electrónico examina los principios de transducción química para gases de mina, la percepción tridimensional del entorno y el acondicionamiento de señales en misiones desconectadas. Por último, el dominio de control integra la regulación articular en cascada, la localización y mapeo simultáneo (SLAM) y la asignación cooperativa de tareas con rutinas explícitas de seguridad ante fallos~\cite{siciliano2010robotics, thrun2005probabilistic, threeLoopControl1}.
+
+
+\section{Subsistema mecánico del sistema robótico cooperativo}
+\label{sec:subsistema_mecanico}
+
+La interacción física entre un robot caminante y el piso de una labor minera determina su tracción efectiva, su margen contra el vuelco en pendientes y el nivel de vibración transmitido a la carga útil. Dentro del sistema cooperativo propuesto, el diseño mecánico comprende dos plataformas hexápodas de distinta escala volumétrica: una unidad primaria de mayor porte, destinada a transportar el computador de navegación y el paquete principal de percepción, y una unidad exploradora compacta concebida para internarse en cruceros estrechos o frentes parcialmente colapsados. En ambos robots, la geometría del chasis, la proporción de los eslabones y el diseño de las puntas de contacto deben garantizar desplazamientos estables sin alterar la repetibilidad de las lecturas ambientales~\cite{AdvancesMining_2023, Sensors2021_HexapodReview}.
+
+\subsection{Cinemática de robots móviles}
+
+El modelado cinemático relaciona las coordenadas articulares de un mecanismo con la posición y orientación resultantes de su cuerpo central o de sus extremos distales, prescindiendo en primera instancia de las fuerzas e inercias involucradas~\cite{siciliano2010robotics, craig2005introduction}. En una plataforma móvil caminante, el estado geométrico completo queda definido por la pose espacial de seis grados de libertad del chasis respecto a un sistema de referencia inercial, sumada al vector de ángulos internos de cada cadena articular abierta que conforma las patas~\cite{InsectInspired_2020}. Como se ilustra en la Figura~\ref{fig:morfologia_3dof_hexapodo}, las extremidades bioinspiradas típicas emplean tres articulaciones rotacionales por pata (coxa, fémur y tibia), parametrizables de forma sistemática mediante la convención de Denavit--Hartenberg~\cite{denavit1955kinematic, spong2020robot}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/morfologia_3dof_hexapodo.png}
+    \caption{Ilustración conceptual de morfologías bioinspiradas de 3 grados de libertad (DoF) para robots caminantes de configuración cuadrúpeda y hexápoda, indicando la codificación de color por articulación y los ejes de orientación espacial (Adaptado de Billeschou et al., 2020).}
+    \label{fig:morfologia_3dof_hexapodo}
+\end{figure}
+
+El problema de \emph{cinemática directa} consiste en obtener la posición cartesiana del pie respecto al marco de la cadera o del centro del chasis a partir de los ángulos medidos en las articulaciones mediante transformaciones homogéneas sucesivas~\cite{craig2005introduction, corke2017robotics}. En contraste, la \emph{cinemática inversa} calcula los ángulos articulares $(q_1, q_2, q_3)$ necesarios para situar el extremo distal de la tibia en una coordenada espacial deseada durante las fases de transferencia o soporte~\cite{James2021_InsectLegDesign}. En patas de tres grados de libertad, este problema admite soluciones geométricas cerradas que reducen el costo computacional en microcontroladores y computadores embebidos~\cite{Wu2024_SpiderLegDesign}.
+
+A nivel de velocidades, el jacobiano geométrico $J(q)$ vincula las tasas de cambio articular $\dot{q}$ con la velocidad lineal del punto de contacto en el espacio cartesiano ($\dot{x} = J(q)\dot{q}$), además de mapear las fuerzas de reacción del terreno hacia los torques estáticos exigidos en cada actuador ($\tau = J^T(q)F$)~\cite{siciliano2010robotics, nakanishi2008operational}. El estudio del condicionamiento del jacobiano permite identificar singularidades cinemáticas (como la extensión colineal de fémur y tibia) y acotar el espacio de trabajo útil de la extremidad para evitar picos desproporcionados de corriente en los motores~\cite{wang2022kinematic, James2021_InsectLegDesign}.
+
+\subsection{Locomoción bioinspirada en insectos}
+
+Los insectos terrestres despliegan una notable capacidad para franquear sustratos fragmentados combinando exoesqueletos ligeros con seis extremidades articuladas dispuestas radialmente o de forma simétrica a ambos lados del tórax. En robótica caminante, esta configuración hexápoda ofrece una ventaja directa frente a los sistemas bípedos o cuadrúpedos: permite sostener el equilibrio estático en todo instante sin depender de maniobras de balanceo dinámico de alto consumo energético~\cite{InsectInspired_2020, Sensors2021_HexapodReview}.
+
+La condición geométrica de estabilidad estática exige que la proyección vertical del centro de masa del robot permanezca dentro del polígono convexo definido por las extremidades apoyadas en el suelo~\cite{Wu2024_SpiderLegDesign, PutraWidodo2023_Hexapod}. Los patrones de caminata (\textit{gaits}), tales como la marcha en onda (\textit{wave}), tetrápoda o en trípode, regulan la secuencia temporal de elevación y apoyo según la irregularidad del piso. Entre ellos, la marcha en trípode alcanza la mayor velocidad de avance manteniendo siempre tres puntos de sustentación simultáneos: el triplete conformado por las patas delantera y trasera de un flanco junto con la pata media del lado opuesto ($L_1\text{--}R_2\text{--}L_3$) alterna de forma simétrica con el triplete complementario ($R_1\text{--}L_2\text{--}R_3$), tal como muestran el polígono de soporte de la Figura~\ref{fig:poligono_triangulo_soporte} y el diagrama de fases de la Figura~\ref{fig:diagrama_marcha_tripode}~\cite{Wu2024_SpiderLegDesign, DungBeetle_2023_Cybernetics}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/poligono_triangulo_soporte.png}
+    \caption{Polígonos de estabilidad triangular formados por el grupo de extremidades en fase de apoyo ($L_1\text{--}R_2\text{--}L_3$ frente a $R_1\text{--}L_2\text{--}R_3$) durante la ejecución de la marcha en trípode (Adaptado de Wu et al., 2024~\cite{Wu2024_SpiderLegDesign}).}
+    \label{fig:poligono_triangulo_soporte}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/diagrama_marcha_tripode.png}
+    \caption{Diagrama de secuencias y fases de caminata (\textit{gait diagram}) para la marcha en trípode, ilustrando la alternancia simétrica entre la fase de balanceo (\textit{Swing}) y la fase de soporte (\textit{Support}) para cada extremidad (Adaptado de Wu et al., 2024~\cite{Wu2024_SpiderLegDesign}).}
+    \label{fig:diagrama_marcha_tripode}
+\end{figure}
+
+Dentro de la arquitectura cooperativa planteada, el principio de locomoción en trípode se aplica a las dos unidades hexápodas según su escala operativa. En el hexápodo primario, el polígono triangular ampliado estabiliza el horizonte óptico de la cámara de profundidad durante la reconstrucción tridimensional del túnel. En el hexápodo secundario, el contacto discreto multipodal permite apoyar las tibias en intersticios estrechos entre fragmentos de roca donde un vehículo continuo de ruedas u orugas quedaría atascado por falta de despeje ventral~\cite{campion1996structural, James2021_InsectLegDesign, Huang2022_micromachines}.
+
+\subsection{Interacción mecánica con terrenos accidentados}
+
+El piso de una labor minera subterránea presenta pendientes longitudinales de hasta $12\%$, cunetas de drenaje, lodo húmedo y fragmentos angulosos producto de las voladuras~\cite{MINEM_DS024_2016, AdvancesMining_2023}. Bajo estas condiciones, el desempeño mecánico de un explorador caminante queda gobernado por su despeje libre bajo el chasis, la distancia mínima del centro de masa a las aristas del polígono de soporte en rampa y la rigidez flexional de sus eslabones ante impactos repetitivos~\cite{Wang2022_Energies_Hexapod, PutraWidodo2023_Hexapod}.
+
+La geometría del extremo distal de la tibia condiciona la transferencia de fuerzas tangenciales sobre roca húmeda o polvorienta. Mientras que un contacto rígido puntual tiende a deslizar sobre superficies lisas o fracturadas, el recubrimiento elastomérico de la punta incrementa el coeficiente de fricción estática local y amortigua los transitorios mecánicos al cerrar la fase de balanceo~\cite{Zhou2023_BioinspiredSensors}. Asimismo, incorporar detección discreta de contacto en los apoyos permite confirmar el asentamiento real de la pata sobre desniveles imprevistos antes de transferir el peso del cuerpo, reduciendo la inclinación parásita del chasis donde van montados los sensores ópticos y químicos.
+
+En una misión compartida entre dos hexápodos independientes, la compatibilidad física pasa por diferenciar claramente sus envolventes de trabajo. La unidad primaria avanza por la sección principal de la galería manteniendo un margen holgado respecto a las cajas del túnel, hasta detenerse frente a ramales angostos, chimeneas o zonas con caída de roca. Desde ese punto seguro, la unidad secundaria aprovecha su baja huella transversal y su centro de gravedad reducido para ingresar de forma autónoma al sector restringido sin exponer la instrumentación principal a derrumbes locales~\cite{Obosu2025_Automation, AdvancesMining_2023}.
+
+\subsection{Implicancias para el diseño del sistema propuesto}
+
+Los principios cinemáticos y de contacto revisados fijan cuatro directrices concretas para el dimensionamiento mecánico desarrollado en los capítulos posteriores:
+
+\begin{itemize}
+    \item Ambas plataformas adoptan una configuración hexápoda de tres grados de libertad por extremidad con marcha en trípode, priorizando un centro de masa bajo y un despeje ventral suficiente para sortear roca suelta sin colisiones del chasis~\cite{Sensors2021_HexapodReview, Wu2024_SpiderLegDesign}.
+    \item Las proporciones entre coxa, fémur y tibia del explorador secundario deben acotar el brazo de palanca horizontal en la articulación proximal, manteniendo los pares gravitacionales por debajo del torque de bloqueo de los micromotores~\cite{James2021_InsectLegDesign, Wang2022_Energies_Hexapod}.
+    \item Las puntas distales requieren elementos elastoméricos de alta fricción y, en la plataforma primaria, sensores discretos de contacto para verificar el apoyo efectivo en superficies irregulares.
+    \item El modelo analítico de cinemática directa e inversa por extremidad debe formularse con bajo costo aritmético para ejecutarse de manera determinista en el lazo de locomoción~\cite{craig2005introduction, PutraWidodo2023_Hexapod}.
+\end{itemize}
+
+
+\section{Subsistema electrónico de percepción y sensado ambiental}
+\label{sec:subsistema_electronico}
+
+La electrónica de a bordo convierte las magnitudes químicas, ópticas e inerciales del entorno subterráneo en señales digitales acondicionadas, al tiempo que regula la energía suministrada a los actuadores de locomoción. En atmósferas de mina con alta humedad relativa, polvo en suspensión y conmutación continua de corrientes inductivas, la arquitectura de hardware debe separar las tierras y líneas de potencia motriz de los canales analógicos sensibles, preservando la validez metrológica exigida por la regulación de seguridad minera~\cite{MINEM_DS024_2016, OSINERGMIN_BoletinGSM_Ventilacion_2020, TorresSalazar2021_Diesel}.
+
+\subsection{Sensores de gases y condiciones ambientales}
+
+La vigilancia atmosférica en labores subterráneas se concentra en cuantificar monóxido de carbono ($\text{CO}$), dióxido de carbono ($\text{CO}_2$), óxidos de nitrógeno ($\text{NO}$, $\text{NO}_2$) y sulfuro de hidrógeno ($\text{H}_2\text{S}$), junto con la fracción volumétrica de oxígeno ($\text{O}_2$), la temperatura y la humedad relativa~\cite{MINEM_DS024_2016, OSINERGMIN_BoletinGSM_Ventilacion_2020, EU_ExposureDirective_2020}. Según el principio físico de transducción, la instrumentación portátil y robótica recurre a celdas electroquímicas amperométricas para gases tóxicos en partes por millón, sensores ópticos infrarrojos no dispersivos (NDIR) para $\text{CO}_2$ y transductores semiconductores de óxido metálico (MOS) para detección rápida de $\text{CO}$ e hidrocarburos combustibles~\cite{Cepa2023_sensors, CruzUlloa2024_Nose}.
+
+El montaje de estos transductores sobre plataformas caminantes requiere atender la dinámica de difusión del gas alrededor del cabezal de muestreo. La ubicación de la toma de aire y el aislamiento frente al calor disipado por reguladores o motores evitan gradientes térmicos artificiales que distorsionen la lectura. A su vez, la etapa de adquisición debe supervisar el régimen operativo del elemento sensible, incluidos los tiempos de precalentamiento en sensores semiconductores o posibles saturaciones de escala, antes de dar por válida una concentración ambiental~\cite{Cepa2023_sensors, Deveau2015_OEL}.
+
+En el plano circuital, la lectura de sensores resistivos o amperométricos exige divisores de precisión, filtrado pasabajos frente al ruido de conmutación PWM y conversión analógico-digital (ADC) con resolución suficiente para distinguir variaciones cercanas a los límites de exposición ocupacional~\cite{EU_ExposureDirective_2020}. Dado que el hollín diésel y la condensación degradan progresivamente las membranas porosas de captación, el diseño debe contemplar rutinas de compensación ambiental y reemplazo modular de los cabezales en campo~\cite{TorresSalazar2021_Diesel, Cortez2016_GEI_Minas}.
+
+\subsection{Sensores de navegación y percepción del entorno}
+
+Para estimar su desplazamiento y reconstruir la geometría del túnel sin cobertura GNSS, un robot subterráneo combina sensores propioceptivos y exteroceptivos~\cite{thrun2005probabilistic, cadena2016past}. En el nivel propioceptivo, las unidades de medición inercial (IMU) registran aceleraciones lineales y velocidades angulares de tres ejes, mientras que los encoders magnéticos de cuadratura acoplados a los ejes motrices cuantifican el giro real de cada articulación y permiten medir corrientes de armadura asociadas al esfuerzo mecánico.
+
+En el nivel exteroceptivo, la captura tridimensional de galerías se apoya en escáneres láser (LiDAR) o cámaras de profundidad RGB-D basadas en visión estereoscópica activa, complementadas por sensores ópticos de tiempo de vuelo (ToF) multizona para evasión cercana de obstáculos~\cite{KimChoi_2025_MineMapping}. Mientras que el LiDAR ofrece largo alcance radial con mayor peso y consumo eléctrico, las cámaras RGB-D compactas proporcionan nubes de puntos densas y textura visual simultánea con un presupuesto de masa y potencia compatible con robots caminantes de escala media.
+
+La disposición física de los sensores ópticos depende directamente de la cinemática descrita en la Sección~\ref{sec:subsistema_mecanico}. El cabeceo y balanceo del chasis durante la marcha introducen desenfoque por movimiento y desplazamientos bruscos del campo visual; por ello, la cámara de profundidad debe anclarse cerca del eje longitudinal de menor oscilación y sincronizarse por marca de tiempo en hardware o software con la IMU integrada~\cite{cadena2016past, KimChoi_2025_MineMapping}.
+
+\subsection{Arquitectura electrónica en la configuración cooperativa}
+
+En la configuración cooperativa adoptada, el presupuesto de masa y volumen obliga a repartir asimétricamente los recursos electrónicos entre ambas unidades. El hexápodo primario aloja un computador de placa reducida con capacidad para procesar nubes de puntos en tiempo real, un controlador dedicado para la generación libre de fluctuaciones (\textit{jitter}) de los pulsos PWM de sus servomotores, el módulo de percepción RGB-D y convertidores conmutados DC-DC independientes para lógica y actuación.
+
+Por el contrario, el hexápodo secundario prescinde de módulos voluminosos de propósito general e implementa una electrónica distribuida en placas de circuito impreso (PCB) diseñadas a medida por extremidad. Integrar localmente el microcontrolador, los puentes H con sensado de corriente proporcional y las entradas de cuadratura para los tres motores de cada pata suprime mazos extensos de cables a través del chasis, reduce las caídas óhmicas y eleva la inmunidad frente a vibraciones mecánicas~\cite{AdvancesMining_2023}.
+
+Esta partición modular acota los modos de falla del sistema completo: los componentes de mayor costo computacional permanecen resguardados sobre la unidad primaria en la galería principal, mientras que las tarjetas intercambiables del explorador secundario facilitan la reparación rápida por sustitución directa ante daños eventuales en cavidades rocosas.
+
+\subsection{Comunicaciones, sincronización y registro de datos}
+
+La propagación de ondas de radio en galerías subterráneas sufre pérdidas severas por difracción en recodos, absorción en roca húmeda y desvanecimiento multicamino~\cite{Obosu2025_Automation}. En concordancia con los requisitos normativos establecidos en el Capítulo II y las restricciones mecánicas de la Sección~\ref{sec:subsistema_mecanico}, el enlace entre plataformas no puede depender de una conexión permanente con el exterior de la mina~\cite{OSINERGMIN_BoletinGSM_2020, MINEM_DS024_2016}.
+
+Para operar bajo enlace degradado, la red local emplea comunicación inalámbrica de corto alcance (Wi-Fi sobre transporte UDP de baja latencia) entre el hexápodo primario y el secundario en tramos con línea de vista parcial, respaldada por almacenamiento local no volátil en cada unidad. Cada paquete de telemetría encapsula marca temporal interna, identificador del nodo, lectura cruda y procesada de gas, pose estimada y banderas de diagnóstico eléctrico. Al restablecerse la vecindad inalámbrica o finalizar la incursión, los registros almacenados permiten reconstruir mapas espaciales de concentración auditables por el área de ventilación minera~\cite{OSINERGMIN_BoletinGSM_Ventilacion_2020, EU_ExposureDirective_2020}.
+
+La coherencia metrológica exige que las marcas de tiempo entre los flujos de navegación y los canales químicos mantengan una referencia monótona común. De este modo, aun sin sincronización con servidores externos durante el recorrido subterráneo, cada medición de concentración conserva una correspondencia espacial unívoca respecto al grafo de poses del túnel.
+
+\subsection{Implicancias para el diseño del sistema propuesto}
+
+Las consideraciones electrónicas y metrológicas anteriores se traducen en cuatro criterios de implementación de hardware:
+
+\begin{itemize}
+    \item Los buses de potencia de actuación y los rieles lógicos deben desacoplarse mediante reguladores conmutados independientes y protecciones contra sobrecorriente, evitando reinicios del procesador ante picos de arranque de los 18 motores~\cite{AdvancesMining_2023}.
+    \item La instrumentación de gases requiere etapas de acondicionamiento analógico filtradas y ubicación alejada de fuentes locales de calor para cumplir con los criterios de supervisión atmosférica~\cite{MINEM_DS024_2016, Cepa2023_sensors, EU_ExposureDirective_2020}.
+    \item El explorador secundario demanda tarjetas PCB modulares e idénticas por extremidad que integren microcontrolador, drivers de puente H con medición de corriente y decodificación de encoders sin cableado suelto.
+    \item El intercambio de telemetría entre unidades debe combinar tramas ligeras de baja latencia con registro local persistente para evitar pérdida de datos ante cortes de radiofrecuencia~\cite{OSINERGMIN_BoletinGSM_2020, Cortez2016_GEI_Minas}.
+\end{itemize}
+
+
+\section{Subsistema de control y programación}
+\label{sec:subsistema_control}
+
+La arquitectura algorítmica articula los lazos cerrados de accionamiento electromecánico con la estimación probabilística del entorno y la coordinación de misión entre ambos hexápodos. En la base de la jerarquía operan los reguladores digitales de tiempo real encargados de hacer cumplir las referencias angulares de cada pata; en la capa superior, los nodos de percepción, localización y planificación determinan las velocidades del cuerpo y gestionan las respuestas preventivas frente a umbrales peligrosos de gas~\cite{siciliano2010robotics, thrun2005probabilistic, KimChoi_2025_MineMapping}.
+
+\subsection{Control de movimiento y seguimiento de trayectorias}
+
+El accionamiento preciso de articulaciones motorizadas con caja reductora suele estructurarse mediante una topología de control en cascada de tres lazos anidados: un lazo interno de corriente (par electromagnético), un lazo intermedio de velocidad angular y un lazo externo de posición articular~\cite{threeLoopControl1, threeLoopControl2, threeLoopControl3}. Como esquematiza la Figura~\ref{fig:lazo_corriente}, el regulador interno actúa sobre la dinámica eléctrica de armadura, cuya constante de tiempo es mucho menor que la mecánica, modulando el ciclo de trabajo PWM para acotar sobrecorrientes y rechazar perturbaciones de carga antes de que afecten la postura de la extremidad~\cite{TexasInstruments_CurrentLoop, RobetGautier_CascadedLoops_2014}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/lazo_corriente.png}
+    \caption{Modelo simplificado del lazo de corriente en el dominio frecuencial (Adaptado de Zhang et al., 2023~\cite{threeLoopControl1}).}
+    \label{fig:lazo_corriente}
+\end{figure}
+
+Para que el desacoplamiento dinámico entre lazos sea efectivo, la frecuencia de muestreo y el ancho de banda del lazo interno de corriente deben superar en un orden de magnitud a los del lazo de velocidad, y estos a su vez a los del lazo externo de posición, empleando habitualmente controladores Proporcional-Integral (PI) discretizados con limitación anti-saturación (\textit{anti-windup})~\cite{Budai_CascadeControl_2020, threeLoopControl3}. Sobre esta base articular, el generador cinemático de marcha interpola trayectorias suaves para las fases de balanceo y soporte y las convierte, mediante la cinemática inversa de la Sección~\ref{sec:subsistema_mecanico}, en consignas angulares periódicas para las seis patas~\cite{Wu2024_SpiderLegDesign, PutraWidodo2023_Hexapod}.
+
+Cuando la plataforma emplea servomotores integrados de posición, como ocurre en el hexápodo primario, el cierre de lazo articular reside internamente en el actuador y un controlador dedicado sintetiza las tramas PWM multicanal a partir de comandos de velocidad del cuerpo $(v_x, v_y, \omega_z)$. En pendientes húmedas o tramos con escombros, limitar las aceleraciones comandadas y ajustar la altura de paso previene el deslizamiento de los apoyos y reduce las oscilaciones del chasis~\cite{AdaptiveControl_Mines_2025, MINEM_DS024_2016}.
+
+\subsection{Navegación autónoma y planificación de la misión}
+
+La navegación autónoma en galerías ciegas requiere resolver simultáneamente el mapa del entorno y la ubicación del robot dentro de él mediante algoritmos de SLAM~\cite{thrun2005probabilistic, cadena2016past}. En arquitecturas basadas en cámaras RGB-D e IMU, la odometría visual-inercial estima el movimiento incremental cuadro a cuadro y se fusiona mediante un Filtro de Kalman Extendido (EKF) para atenuar la deriva de corto plazo; en paralelo, un optimizador basado en grafos de poses identifica cierres de lazo (\textit{loop closures}) al reconocer zonas previamente visitadas, corrigiendo globalmente la cartografía 2D/3D del túnel~\cite{cadena2016past, KimChoi_2025_MineMapping}.
+
+Sobre el mapa de ocupación resultante, la planificación de movimiento opera en dos escalas espaciales~\cite{lavalle2006planning}. Un planificador global traza una ruta libre de colisiones hacia los puntos de muestreo asignados, mientras que un controlador local genera perfiles de velocidad factibles a partir de mapas de costos (\textit{costmaps}) actualizados con las lecturas de profundidad cercanas, respetando la huella geométrica del hexápodo y las márgenes de seguridad respecto a los hastiales de la galería~\cite{borenstein1991vector, AdvancesMining_2023, MINEM_DS024_2016}.
+
+La supervisión lógica de estas etapas se modela mediante árboles de comportamiento (\textit{Behavior Trees}) o máquinas de estados finitos~\cite{brooks1986robust}. Esta estructura jerárquica permite alternar de manera determinista entre exploración nominal, maniobras locales de desatasco, estacionamiento para muestreo estacionario de gases o retorno inmediato ante condiciones anómalas.
+
+\subsection{Coordinación y cooperación entre plataformas terrestres}
+
+En un sistema multirrobot heterogéneo, la cooperación se formula mediante descomposición funcional de tareas e intercambio acotado de estados entre agentes~\cite{olfati2007consensus, ren2007information}. Dentro del esquema terrestre--terrestre adoptado, el hexápodo primario asume la exploración de la galería troncal, construye el mapa métrico de referencia y funge como nodo coordinador; el hexápodo secundario ejecuta incursiones focalizadas en cavidades laterales o secciones estrechas cuya geometría impide el paso seguro del robot mayor~\cite{InsectInspired_2020, DungBeetle_2023_Cybernetics}.
+
+El acoplamiento informativo entre ambos robots se apoya en la red inalámbrica local descrita en la Sección~\ref{sec:subsistema_electronico}. Antes de separarse o durante ventanas de proximidad con enlace activo, la unidad primaria registra el punto relativo de partida del explorador secundario y recibe sus vectores de estado y lecturas ambientales, referenciándolos respecto al marco coordenado común del mapa~\cite{olfati2007consensus}. Este diseño evita exigir ancho de banda elevado o cobertura continua a lo largo de toda la galería~\cite{OSINERGMIN_BoletinGSM_2020}.
+
+Asimismo, las reglas de coordinación incorporan arbitraje por seguridad: si cualquiera de las dos plataformas detecta concentraciones de $\text{CO}$ o gases combustibles por encima de los umbrales de alerta, el supervisor cancela la submisión activa, marca la coordenada de riesgo en la bitácora y ordena el repliegue hacia una estación ventilada~\cite{MINEM_DS024_2016, EU_ExposureDirective_2020}.
+
+\subsection{Estrategias de seguridad y gestión de fallos}
+
+La operación en espacios confinados sin intervención humana directa exige dotar al software de rutinas autónomas de detección, aislamiento y recuperación ante fallos. Bajo el enfoque preventivo de la normativa minera nacional, el sistema robótico debe evitar convertirse en un obstáculo inerte dentro de una vía de acceso o entregar lecturas espurias que induzcan decisiones erróneas sobre la ventilación auxiliar~\cite{MINEM_DS024_2016, MINEM_Yanaquihua_2023}.
+
+Esta tolerancia a fallos se implementa definiendo modos operativos degradados según el subsistema afectado. Si la cámara de profundidad pierde características visuales por penumbra extrema o polvo denso pero la IMU y el control articular siguen activos, el navegador detiene el avance exploratorio y ejecuta una rutina conservadora de retroceso sobre el último tramo libre registrado. De igual modo, ante la activación de banderas de sobrecorriente en los puentes H de una extremidad o lecturas fuera de rango en el canal de gases, el firmware aísla la condición anómala y almacena el evento con marca de tiempo para diagnóstico posterior~\cite{OSINERGMIN_BoletinGSM_Ventilacion_2020, Cortez2016_GEI_Minas}.
+
+En la interfaz con el operador en estación segura, el software prioriza comandos directos de inicio, pausa y aborto de emergencia, junto con la visualización clara de trayectorias, estado energético y niveles de concentración medidos, facilitando su empleo por personal técnico de seguridad y ventilación~\cite{AdvancesMining_2023}.
+
+\subsection{Implicancias para el diseño del sistema propuesto}
+
+La síntesis teórica de control, navegación y coordinación establece los siguientes criterios para la arquitectura lógica del proyecto:
+
+\begin{itemize}
+    \item El hexápodo secundario requiere un control digital en cascada de corriente, velocidad y posición ejecutado localmente en cada módulo articular para compensar la dinámica de los micromotores DC con reductora~\cite{threeLoopControl1, Budai_CascadeControl_2020}.
+    \item El hexápodo primario debe desplegar un marco modular basado en ROS 2 que integre odometría fusionada por EKF, SLAM RGB-D con cierre de lazo y planificación local/global de trayectorias compatible con un generador de marcha en trípode~\cite{cadena2016past, KimChoi_2025_MineMapping}.
+    \item El protocolo cooperativo entre ambas plataformas debe operar mediante mensajes ligeros por UDP y tolerar desconexiones temporales sin pérdida de trazabilidad temporal ni espacial~\cite{OSINERGMIN_BoletinGSM_2020, EU_ExposureDirective_2020}.
+    \item Las máquinas de decisión deben codificar límites de corriente, supervisión de sensores y maniobras automáticas de repliegue acordes con los protocolos de seguridad ocupacional en minería subterránea~\cite{MINEM_DS024_2016, MINEM_Yanaquihua_2023}.
+\end{itemize}

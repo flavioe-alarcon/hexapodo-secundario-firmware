@@ -1,0 +1,66 @@
+
+%\customchapter
+\chapter{INTRODUCCIÓN} 
+
+\introsection{Presentación del Proyecto}
+
+El empleo de cinemática bioinspirada en robots caminantes busca sortear las limitaciones de tracción que presentan las plataformas convencionales de ruedas u orugas sobre terrenos no estructurados~\cite{James2021_InsectLegDesign, DungBeetle_2023_Cybernetics}. En la minería subterránea, este desafío mecánico coincide con un entorno de alto riesgo ocupacional: las galerías estrechas concentran emanaciones de monóxido de carbono ($\text{CO}$) y óxidos de nitrógeno ($\text{NO}_x$) generados por la combustión de maquinaria pesada, donde una ventilación deficiente eleva la probabilidad de intoxicación del personal o paraliza las operaciones~\cite{AdvancesMining_2023, AdaptiveControl_Mines_2025}. En el contexto peruano, la heterogeneidad entre la minería formal y la de pequeña escala acentúa la falta de protocolos de monitoreo automatizados y accesibles. Frente a ello, los esquemas robóticos con morfología de insecto permiten distribuir puntos de apoyo en sustratos rocosos inestables y actuar como soporte instrumental para tareas de inspección y registro ambiental, evitando la exposición directa de cuadrillas a atmósferas no respirables~\cite{KimChoi_2025_MineMapping, Zhou2023_BioinspiredSensors, Liu2025_PiezoBioinspired}.
+
+
+\introsection{Descripción de la situación problemática}
+
+
+En las labores mineras subterráneas, las actividades de perforación, voladura y acarreo de material se realizan principalmente con maquinaria pesada de motor diésel, como jumbos perforadores, scooptrams y camiones de acarreo, cuyos gases de combustión —principalmente monóxido de carbono (CO), dióxido de carbono (CO$_2$) y óxidos de nitrógeno (NO$_x$)— pueden generar atmósferas nocivas para los trabajadores \cite{EconomiaCircular_Maquinaria_2023, EmisionesDiesel_2021}. En el contexto peruano, se ha identificado que estas emisiones contribuyen significativamente a la contaminación del aire en minas subterráneas y exigen un manejo adecuado de la ventilación \cite{GEI_MinasPeru_2022}. Cuando las operaciones avanzan hacia nuevas galerías o zonas de difícil acceso, la circulación del aire es limitada, lo que agrava la acumulación de gases y reduce el oxígeno disponible. Desde la perspectiva de la ingeniería, la combinación de ventilación insuficiente, acumulación de contaminantes y geometría de las labores subterráneas configura un problema complejo, en el que intervienen la dinámica del flujo de aire, el diseño de los circuitos de ventilación y las capacidades de monitoreo en espacios confinados. Los informes técnicos y el reglamento nacional de seguridad minera reconocen este riesgo y establecen la obligación de mantener condiciones adecuadas de ventilación en toda labor subterránea \cite{OSINERGMIN_BoletinGSM_2020, MINEM_DS024_2016}.
+
+
+La exposición prolongada a estas condiciones representa una amenaza directa para la salud de los trabajadores, ya que la presencia de monóxido de carbono y otros gases tóxicos puede generar intoxicaciones agudas y dificultades respiratorias si no se detectan oportunamente. Este riesgo ha sido ampliamente documentado tanto en el contexto nacional como internacional, donde se reconoce que la medición precisa de concentraciones bajas de CO y NO$_2$ en minería subterránea sigue siendo un desafío técnico \cite{EU_ExposureDirective_2020}. Por esta razón, la normativa nacional exige que se realicen mediciones atmosféricas antes del ingreso a las zonas de trabajo, a fin de verificar la concentración de oxígeno y gases contaminantes. Sin embargo, los informes técnicos de supervisión han identificado casos en los que estas verificaciones se ejecutan de manera tardía o sin el rigor requerido, lo que incrementa el riesgo de accidentes e intoxicaciones en el personal \cite{MINEM_Yanaquihua_2023, OSINERGMIN_BoletinGSM_2020, MINEM_DS024_2016}.
+
+
+\introsection{Formulación del problema}
+
+
+En las operaciones mineras subterráneas del país, el personal se enfrenta a condiciones atmosféricas que pueden tornarse peligrosas por la ventilación insuficiente y la acumulación de gases como el monóxido de carbono y los óxidos de nitrógeno. Estas situaciones, señaladas de manera reiterada en los informes de supervisión y en el marco normativo vigente —principalmente el Decreto Supremo N° 024-2016-EM emitido por el Ministerio de Energía y Minas (MINEM) y los boletines técnicos de supervisión de OSINERGMIN—, representan un riesgo constante para la salud y seguridad de los trabajadores \cite{OSINERGMIN_BoletinGSM_2020, MINEM_DS024_2016}. A pesar de los controles establecidos, eventos recientes evidencian que la exposición a estos contaminantes continúa siendo un problema crítico en diversas operaciones subterráneas del país \cite{MINEM_Yanaquihua_2023}.
+
+
+
+Actualmente, la verificación de la calidad del aire en las galerías se realiza, en la mayoría de operaciones, mediante rondas efectuadas por trabajadores que portan detectores portátiles de gases. Este procedimiento, aunque establecido por la normativa nacional, expone al personal a atmósferas potencialmente tóxicas cuando la ventilación es insuficiente o las mediciones se ejecutan sin el rigor requerido \cite{MINEM_DS024_2016, OSINERGMIN_BoletinGSM_2020}. Además, estudios recientes señalan que la detección precisa de concentraciones bajas de monóxido de carbono y óxidos de nitrógeno continúa siendo un desafío técnico en ambientes subterráneos, lo que aumenta la vulnerabilidad de quienes realizan estas inspecciones \cite{EU_ExposureDirective_2020}.
+
+
+Estas limitaciones evidencian la necesidad de incorporar tecnologías que permitan realizar la medición de gases y el control ambiental de forma remota y automatizada, reduciendo la exposición directa del personal durante las inspecciones iniciales en galerías subterráneas. La implementación de mecanismos más seguros y eficientes para el monitoreo atmosférico se plantea como un aspecto prioritario para mejorar las condiciones de seguridad en la minería subterránea \cite{OSINERGMIN_BoletinGSM_2020, MINEM_DS024_2016}.
+
+En este contexto, la inspección y el monitoreo remoto de atmósferas subterráneas pueden abordarse mediante distintas configuraciones tecnológicas, como plataformas terrestres, aéreas o esquemas cooperativos entre múltiples robots. La evaluación comparativa de estas alternativas y la selección de la solución más adecuada para las condiciones de la minería subterránea peruana se desarrollan en el Capítulo II, tomando en cuenta criterios ingenieriles, regulatorios y operativos.
+
+
+
+\introsection{Objetivos del Proyecto}
+
+\textbf{Objetivo general} \\
+Diseñar un sistema robótico cooperativo bioinspirado en insectos, conformado por dos unidades autónomas, capaz de realizar mapeo del terreno y detección de gases tóxicos en zonas de difícil acceso en minería subterránea, integrando criterios derivados de la literatura reciente y de la normativa vigente en ventilación, seguridad ocupacional y monitoreo ambiental.
+
+
+\textbf{Objetivos específicos}
+\begin{itemize}
+    \item Desarrollar e implementar la arquitectura mecánica del sistema robótico, mediante la adaptación de la unidad principal y el diseño de la unidad secundaria garantizando estabilidad operacional y resistencia ante perturbaciones externas.
+    \item Diseñar e implementar la placa de control basada en un chip electrónico para los motores.
+    \item Desarrollar los algoritmos de control, navegación y comunicación que permitan la coordinación cooperativa entre las dos unidades durante las tareas de exploración.
+    \item Desarrollar el sistema de monitoreo y detección de gases tóxicos
+    \item Integrar y evaluar experimentalmente el sistema cooperativo en condiciones controladas de laboratorio, verificando la efectividad en la detección de gases tóxicos, la precisión del mapeo y la estabilidad de la comunicación entre unidades.
+\end{itemize}
+
+
+El desarrollo de un sistema robótico cooperativo bioinspirado en insectos se justifica por la necesidad de reducir la exposición del personal a atmósferas peligrosas y zonas de difícil acceso, donde la ventilación deficiente o la presencia de gases tóxicos representan un riesgo constante. En la minería subterránea peruana se han reportado accidentes asociados a estas condiciones, lo que evidencia la urgencia de mejorar los procedimientos de inspección inicial y verificación ambiental \cite{OSINERGMIN_BoletinGSM_2020, MINEM_Yanaquihua_2023}. 
+En este contexto, la incorporación de tecnologías autónomas permite realizar una exploración previa sin exponer directamente al personal, ofreciendo una alternativa más segura para la recopilación de información ambiental. El enfoque bioinspirado aporta ventajas como la eficiencia y la estabilidad \cite{InsectInspired_2020, DungBeetle_2021}. De este modo, la propuesta busca responder a una necesidad tecnológica real: disponer de sistemas capaces de evaluar condiciones atmosféricas y topográficas en entornos subterráneos con el menor riesgo posible para el operador humano.
+
+Esta necesidad se encuentra respaldada tanto por estudios científicos como por documentos técnicos y normativos recientes. La literatura sobre emisiones diésel, calidad del aire en espacios cerrados y gestión de gases de efecto invernadero en minas subterráneas evidencia la persistencia de atmósferas potencialmente peligrosas y la dificultad de garantizar condiciones seguras de manera consistente \cite{EmisionesDiesel_2021,GEI_MinasPeru_2022,Cepa2023_sensors}. En paralelo, los boletines técnicos de supervisión y el Reglamento de Seguridad y Salud Ocupacional en Minería establecen obligaciones explícitas en cuanto a ventilación, verificación previa de atmósferas y registro trazable de las mediciones \cite{OSINERGMIN_BoletinGSM_2020b,MINEM_DS024_2016,MINEM_Yanaquihua_2023}. Estas fuentes convergen en la necesidad de soluciones tecnológicas que permitan reducir la exposición humana directa, mejorar la calidad del dato y fortalecer la toma de decisiones en seguridad.
+
+
+El diseño propuesto, conformado por dos unidades robóticas que trabajan de manera coordinada, busca ofrecer una alternativa innovadora frente a los métodos convencionales de inspección en entornos de difícil acceso. La inspiración biológica se basa en el comportamiento de insectos que presentan locomoción eficiente y coordinación colectiva en ambientes complejos, como los escarabajos y las hormigas, capaces de desplazarse coordinadamente  y cooperar para alcanzar objetivos comunes \cite{InsectInspired_2020}. 
+Estos principios se trasladan al sistema mediante la interacción entre plataformas ligeras y autónomas, orientadas a mejorar la cobertura, rapidez y confiabilidad de las mediciones ambientales \cite{FlappingFlight_2021}. De esta manera, se busca adaptar la eficiencia observada en la naturaleza a un contexto industrial donde la seguridad humana y la trazabilidad de los datos son factores prioritarios.
+
+
+\introsection{Alcance y limitaciones}
+
+El alcance del trabajo contempla el diseño y desarrollo de un sistema robótico terrestre cooperativo bioinspirado en insectos, integrado por una unidad robótica principal y una unidad robótica secundaria. Se desarrollará una arquitectura de comunicación e intercambio de información entre ambas unidades robóticas para garantizar la coordinación durante la misión. Asimismo, se evaluará el funcionamiento integral del sistema mediante pruebas experimentales en entornos controlados de laboratorio, considerando las variables de locomoción, comunicación, localización, navegación y adquisición de variables ambientales.
+
+Por otro lado, el desempeño de la cooperación entre las unidades robóticas estará estrictamente condicionado por la disponibilidad, alcance, latencia y estabilidad del enlace de comunicación inalámbrico. La autonomía operativa del sistema estará limitada por la capacidad energética de las baterías frente al consumo acumulado de los sistemas de actuación, sensado, cómputo y comunicación. Finalmente, la investigación se limita al desarrollo de un prototipo a nivel experimental, por lo que el sistema no está diseñado ni certificado normativamente para su operación inmediata en ambientes clasificados como peligrosos o minas subterráneas reales~\cite{OSINERGMIN_DS024_Compilado,OSINERGMIN_BoletinGSM_2020}.
+

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico Visual de Encoders - ESP32</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --border: #334155;
+    --text: #f8fafc;
+    --accent: #38bdf8;
+    --green: #22c55e;
+    --red: #ef4444;
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .container {
+    max-width: 800px;
+    width: 100%;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .header h1 {
+    margin: 0 0 8px 0;
+    color: var(--accent);
+    font-size: 24px;
+  }
+  .btn-connect {
+    background: #0284c7;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+    transition: all 0.2s;
+  }
+  .btn-connect:hover {
+    background: #0369a1;
+  }
+  .status-bar {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #94a3b8;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .card-full {
+    grid-column: span 2;
+  }
+  .pin-title {
+    font-size: 14px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .logic-indicator {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    margin: 0 auto 12px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 800;
+    transition: all 0.1s;
+    background: #1e293b;
+    border: 3px solid #475569;
+    color: #475569;
+  }
+  .logic-1 {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: var(--green);
+    color: var(--green);
+    box-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
+  }
+  .logic-0 {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: var(--red);
+    color: var(--red);
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
+  }
+  .ticks-display {
+    font-size: 56px;
+    font-weight: 900;
+    font-family: monospace;
+    color: var(--accent);
+    margin: 10px 0;
+  }
+  .direction-pill {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 16px;
+    text-transform: uppercase;
+  }
+  .dir-cw { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid #38bdf8; }
+  .dir-ccw { background: rgba(244, 63, 94, 0.2); color: #f43f5e; border: 1px solid #f43f5e; }
+  .dir-stop { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid #64748b; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Visor de Encoders en Tiempo Real (ESP32)</h1>
+    <p style="color:#94a3b8; margin-top:0;">Gira el eje del motor suavemente con la mano para ver los pulsos</p>
+    <button class="btn-connect" id="btnConnect" onclick="conectarSerial()">🔌 Conectar al ESP32 (WebSerial)</button>
+    <div class="status-bar" id="statusBar">Desconectado. Presiona el botón para seleccionar COM11.</div>
+  </div>
+
+  <div class="grid">
+    <!-- Canal C1 (D25) -->
+    <div class="card">
+      <div class="pin-title">Canal C1 (GPIO 25 / D25)</div>
+      <div class="logic-indicator" id="indC1">0</div>
+      <div style="font-size:12px; color:#94a3b8;">Pulso Principal</div>
+    </div>
+
+    <!-- Canal C2 (D26) -->
+    <div class="card">
+      <div class="pin-title">Canal C2 (GPIO 26 / D26)</div>
+      <div class="logic-indicator" id="indC2">0</div>
+      <div style="font-size:12px; color:#94a3b8;">Fase / Sentido</div>
+    </div>
+
+    <!-- Ticks y Dirección -->
+    <div class="card card-full">
+      <div class="pin-title">Conteo de Ticks Acumulados</div>
+      <div class="ticks-display" id="ticksVal">0</div>
+      <div id="dirBadge" class="direction-pill dir-stop">EN REPOSO</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let port;
+let reader;
+let lastTicks = 0;
+let lastTime = Date.now();
+
+async function conectarSerial() {
+  if (!("serial" in navigator)) {
+    alert("Tu navegador no soporta WebSerial. Abre este archivo en Chrome o Edge.");
+    return;
+  }
+
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    document.getElementById("btnConnect").style.display = "none";
+    document.getElementById("statusBar").innerHTML = "🟢 <b style='color:#22c55e;'>Conectado al ESP32</b> a 115200 baudios.";
+
+    const textDecoder = new TextDecoderStream();
+    port.readable.pipeTo(textDecoder.writable);
+    reader = textDecoder.readable.getReader();
+
+    let buffer = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += value;
+      let lines = buffer.split("\n");
+      buffer = lines.pop();
+
+      for (let line of lines) {
+        line = line.trim();
+        if (line.startsWith("RAW:")) {
+          actualizarUI(line.replace("RAW:", ""));
+        }
+      }
+    }
+  } catch (err) {
+    document.getElementById("statusBar").innerText = "Error: " + err.message;
+  }
+}
+
+function actualizarUI(dataStr) {
+  const parts = dataStr.split(",");
+  if (parts.length !== 3) return;
+
+  const c1 = parseInt(parts[0]);
+  const c2 = parseInt(parts[1]);
+  const ticks = parseInt(parts[2]);
+
+  // Actualizar indicadores C1 y C2
+  const indC1 = document.getElementById("indC1");
+  indC1.innerText = c1;
+  indC1.className = "logic-indicator " + (c1 === 1 ? "logic-1" : "logic-0");
+
+  const indC2 = document.getElementById("indC2");
+  indC2.innerText = c2;
+  indC2.className = "logic-indicator " + (c2 === 1 ? "logic-0" : "logic-0");
+  indC2.className = "logic-indicator " + (c2 === 1 ? "logic-1" : "logic-0");
+
+  // Actualizar Ticks
+  document.getElementById("ticksVal").innerText = ticks;
+
+  // Sentido
+  const badge = document.getElementById("dirBadge");
+  if (ticks > lastTicks) {
+    badge.innerText = "↻ GIRO ADELANTE / HORARIO";
+    badge.className = "direction-pill dir-cw";
+  } else if (ticks < lastTicks) {
+    badge.innerText = "↺ GIRO ATRÁS / ANTIHORARIO";
+    badge.className = "direction-pill dir-ccw";
+  } else {
+    badge.innerText = "EN REPOSO";
+    badge.className = "direction-pill dir-stop";
+  }
+  lastTicks = ticks;
+}
+</script>
+</body>
+</html>
