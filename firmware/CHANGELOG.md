@@ -22,6 +22,22 @@ Este archivo documenta la trazabilidad de versiones de código para los microcon
 
 ## 🔬 Firmware de Inspección y Gas (ESP32-S3-DevKitC-1 N16R8)
 
+### ⭐ [VALIDADO_EXITOSO] - 2026-11-09 (Módulo Standalone de Visión UVC Robusto para Raspberry Pi 5 / ROS 2 Jazzy)
+- **Estado:** **100% FUNCIONAL Y VERIFICADO EXPERIMENTALMENTE EN ROBOT**
+- **Archivos Destacados:**
+  - Firmware ESP32-S3: `firmware/esp32s3_camara_gas/VALIDADO_EXITOSO_firmware_esp32s3_camara_solo.c`
+  - Nodo Raspberry Pi 5: `pruebas/integradas_camara_gas/pruebas_para_raspberry/VALIDADO_EXITOSO_nodo_camara_solo_raspberry.py`
+  - Lanzador Bash Raspberry: `pruebas/integradas_camara_gas/pruebas_para_raspberry/ejecutar_camara_solo_en_raspberry.sh`
+  - Visor Laptop OpenCV: `pruebas/camara_usb/VALIDADO_EXITOSO_visor_camara_solo_laptop.py`
+- **Resultados de Validación Física:**
+  - Enlace Wi-Fi SoftAP `ESP32S3-CAM` (`192.168.4.1`) transmitiendo stream MJPEG por TCP en **puerto 81 (`/stream`)**.
+  - **Prueba de Robustez Ante Desconexión/Apagado de Cámara:**
+    - Al desconectar o desenergizar la cámara, el firmware emite el cuadro de espera (*Standby Frame*) de 16x16 px a 2 Hz, manteniendo la conexión TCP activa sin provocar *socket timeout* ni bloquear el semáforo del ESP32.
+    - Al volver a enchufar la cámara (*Hot-Plug*), el ESP32 detecta el dispositivo USB y conmuta de inmediato a la transmisión de video real a 480x320 px sin reiniciar el microcontrolador.
+  - **Integración con ROS 2 Jazzy en Raspberry Pi 5:**
+    - El nodo en la Raspberry recibe los fotogramas y los publica con éxito en `/secondary_robot/camera/compressed` (`sensor_msgs/msg/CompressedImage`).
+    - Visualización validada en tiempo real mediante **RViz 2** (`Fixed Frame: camera_link_secondary`) y **`rqt_image_view`**.
+
 ### [V2 Maestro - v8] - 2026-11-06 (Versión Completa con Control de Luz LED)
 - **Ubicación:** `pruebas/integradas_camara_gas/firmware_camara_gas/` y `firmware/esp32s3_camara_gas/`
 - **Control de Iluminación en GPIO 48:** 

@@ -15,7 +15,7 @@
 | **EDT 2** (S4-S6) | Diseño mecánico (CAD), electrónico (ECAD) y simulación dinámica en Gazebo | **100% (Completado)** | Alesky / Alfredo / Flavio |
 | **EDT 3** (S7-S9) | Fabricación preliminar (impresión 3D, PCBs modulares) e identificación de plantas | **100% (Completado)** | Flavio / Alesky |
 | **EDT 4** (S9-S11) | Pruebas de locomoción, ensamble integral y control articular | **100% (Completado)** | Flavio / Alesky / Alfredo |
-| **EDT 5** (S11-S14) | Sensado ambiental, integración cooperativa Wi-Fi/UDP y ROS 2 | **85% (Fase final de cierre)** | Alesky (Primario) / Flavio (Secundario) |
+| **EDT 5** (S11-S14) | Sensado ambiental, integración cooperativa Wi-Fi/UDP y ROS 2 | **90% (Validación física exitosa)** | Alesky (Primario) / Flavio (Secundario) |
 | **EDT 6** (S14-S16) | Consolidación de resultados, memoria final en Overleaf y sustentación (S16) | **50% (En redacción activa)** | Todos |
 
 ---
@@ -47,6 +47,7 @@
   - Telemetría analógica del sensor MiCS-5524 por UDP (p5005 a 20 Hz) con filtro de mediana ($N=5$).
   - Mecanismo *Hot-Plug* con cuadro de espera JPEG (*Standby Frame*) que previene caídas del servidor ante desconexión física.
   - Iluminación de inspección LED direccionable WS2812 (GPIO 48) vía periférico hardware RMT a 10 MHz con control remoto `/light`.
+  - **Prueba Física Validada y Exitosa con Raspberry Pi 5 (09/11/2026):** Verificación integral del módulo standalone de cámara (`VALIDADO_EXITOSO_firmware_esp32s3_camara_solo.c` y `VALIDADO_EXITOSO_nodo_camara_solo_raspberry.py`), publicando fluidamente en el tópico ROS 2 Jazzy `/secondary_robot/camera/compressed` y comprobado en tiempo real en RViz 2 y `rqt_image_view`. Robustez comprobada: soporta desconexión física de cámara sin interrumpir el socket TCP ni colgar el microcontrolador.
 
 ---
 

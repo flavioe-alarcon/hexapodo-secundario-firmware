@@ -330,6 +330,31 @@ Esta sección documenta la integración del control de iluminación para ambient
 3. **Robustez ante Sensor de Gas Desconectado:**
    - La desconexión física del sensor MiCS-5524 deja el pin GPIO 4 (ADC) flotante; el firmware lo maneja con clamp seguro entre $0.05\text{ V}$ y $3.10\text{ V}$ sin interrumpir el streaming de video ni el control de la luz.
 
+---
+
+## 📷 Bitácora de Validación Física Exitosa: Módulo Standalone de Visión UVC (ESP32-S3 + Raspberry Pi 5 + ROS 2 Jazzy)
+
+Esta sección documenta la prueba física **100% exitosa** del módulo standalone de cámara UVC realizada en laboratorio el **09/11/2026**:
+
+### 1. Componentes y Código Validado
+- **Firmware ESP32-S3:** [`firmware/esp32s3_camara_gas/VALIDADO_EXITOSO_firmware_esp32s3_camara_solo.c`](firmware/esp32s3_camara_gas/VALIDADO_EXITOSO_firmware_esp32s3_camara_solo.c)
+- **Receptor Raspberry Pi 5:** [`pruebas/integradas_camara_gas/pruebas_para_raspberry/VALIDADO_EXITOSO_nodo_camara_solo_raspberry.py`](pruebas/integradas_camara_gas/pruebas_para_raspberry/VALIDADO_EXITOSO_nodo_camara_solo_raspberry.py)
+- **Lanzador Bash Raspberry:** [`pruebas/integradas_camara_gas/pruebas_para_raspberry/ejecutar_camara_solo_en_raspberry.sh`](pruebas/integradas_camara_gas/pruebas_para_raspberry/ejecutar_camara_solo_en_raspberry.sh)
+- **Visor Laptop OpenCV:** [`pruebas/camara_usb/VALIDADO_EXITOSO_visor_camara_solo_laptop.py`](pruebas/camara_usb/VALIDADO_EXITOSO_visor_camara_solo_laptop.py)
+
+### 2. Resultados de la Prueba Física
+1. **Enlace de Red y Streaming TCP:**
+   - SoftAP Wi-Fi `ESP32S3-CAM` (`192.168.4.1`) en canal 6.
+   - Stream MJPEG dedicado por TCP en puerto 81 (`/stream`), logrando tasa fluida y sostenida.
+2. **Robustez ante Desconexión o Apagado de Cámara (*Standby Frame*):**
+   - Cuando la cámara USB no está conectada o está sin energía, el ESP32 transmite un micro-frame JPEG negro estándar de 16x16 px (631 bytes) a 2 Hz.
+   - Esto mantiene la conexión HTTP/TCP activa sin causar desconexiones ni bloquear el semáforo `s_stream_client`.
+   - Al conectar la cámara (*Hot-Plug*), el ESP32 la detecta y conmuta automáticamente a la señal de video real a 480x320 px sin reiniciar el microcontrolador.
+3. **Publicación y Visualización en ROS 2 Jazzy:**
+   - El nodo en Raspberry Pi 5 publica sin latencia en el tópico `/secondary_robot/camera/compressed` (`sensor_msgs/msg/CompressedImage`).
+   - Imagen visualizada con éxito en tiempo real en **`rqt_image_view`** y en **RViz 2** configurando `Fixed Frame: camera_link_secondary` y `Transport Hint: compressed`.
+
+
 
 
 

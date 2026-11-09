@@ -84,6 +84,22 @@ A diferencia de la unidad primaria de supervisión y mapeo central (Raspberry Pi
 
 ## 🚀 Puesta en Marcha y Diagnóstico
 
+### ⭐ Módulo Validado y Exitoso: Streaming de Cámara UVC y Publicador ROS 2 Jazzy
+Este módulo ha sido **probado físicamente con éxito** conectando el ESP32-S3 y la Raspberry Pi 5 con visualización en tiempo real en RViz 2 y rqt_image_view:
+
+* **Firmware ESP32-S3:** [`firmware/esp32s3_camara_gas/VALIDADO_EXITOSO_firmware_esp32s3_camara_solo.c`](firmware/esp32s3_camara_gas/VALIDADO_EXITOSO_firmware_esp32s3_camara_solo.c)
+* **Nodo Receptor Raspberry Pi 5:** [`pruebas/integradas_camara_gas/pruebas_para_raspberry/VALIDADO_EXITOSO_nodo_camara_solo_raspberry.py`](pruebas/integradas_camara_gas/pruebas_para_raspberry/VALIDADO_EXITOSO_nodo_camara_solo_raspberry.py)
+* **Lanzador rápido en Raspberry:**
+  ```bash
+  cd pruebas/integradas_camara_gas/pruebas_para_raspberry
+  ./ejecutar_camara_solo_en_raspberry.sh
+  ```
+* **Visualización en ROS 2:**
+  ```bash
+  ros2 run rqt_image_view rqt_image_view /secondary_robot/camera/compressed
+  ```
+  *(O en RViz 2 configurando `Fixed Frame: camera_link_secondary` y agregando el display `Image` con `Transport Hint: compressed`).*
+
 ### Visores de Telemetría en Tiempo Real (Python)
 Para monitorear el subsistema de visión y gas desde una laptop conectada a la red Wi-Fi `ESP32S3-CAM`:
 
