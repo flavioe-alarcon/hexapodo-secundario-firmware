@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galería de Imágenes No Usadas en la Tesis</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0b1120; color: #f1f5f9; margin: 0; padding: 32px 24px; }
+  .header { max-width: 1300px; margin: 0 auto 28px; }
+  h1 { font-size: 26px; color: #38bdf8; margin: 0 0 8px 0; font-weight: 700; letter-spacing: -0.5px; }
+  p.subtitle { color: #94a3b8; font-size: 14px; margin: 0 0 20px 0; line-height: 1.5; }
+  .stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+  .stat-card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 18px; font-size: 13px; color: #94a3b8; }
+  .stat-card strong { font-size: 20px; color: #38bdf8; display: block; margin-bottom: 2px; }
+  .section { max-width: 1300px; margin: 32px auto; }
+  .section-title { font-size: 17px; color: #fbbf24; border-bottom: 2px solid #334155; padding-bottom: 8px; margin-bottom: 18px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s; }
+  .card:hover { transform: translateY(-3px); border-color: #38bdf8; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  .img-box { background: #020617; height: 230px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-bottom: 1px solid #334155; cursor: zoom-in; }
+  .img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .card-body { padding: 16px; flex-grow: 1; display: flex; flex-direction: column; }
+  .badge { align-self: flex-start; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px; }
+  .badge-dup { background: #ef444422; color: #f87171; border: 1px solid #ef444444; }
+  .badge-control { background: #8b5cf622; color: #c084fc; border: 1px solid #8b5cf644; }
+  .badge-elec { background: #06b6d422; color: #22d3ee; border: 1px solid #06b6d444; }
+  .badge-arch { background: #10b98122; color: #34d399; border: 1px solid #10b98144; }
+  .name { font-weight: 600; font-size: 14px; color: #f8fafc; word-break: break-all; margin-bottom: 4px; }
+  .meta { font-size: 12px; color: #64748b; margin-bottom: 10px; }
+  .desc { font-size: 13px; color: #cbd5e1; line-height: 1.45; margin-bottom: 12px; flex-grow: 1; }
+  .path { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11.5px; color: #94a3b8; background: #020617; padding: 6px 10px; border-radius: 6px; border: 1px solid #1e293b; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🖼️ Catálogo de Imágenes No Utilizadas en la Tesis</h1>
+  <p class="subtitle">Auditoría automática de <code>main.tex</code> y todas sus secciones activas. Se identificaron <strong>20 archivos</strong> que existen en el repositorio de Overleaf pero que no están referenciados mediante <code>\includegraphics</code> en el informe compilado.</p>
+  <div class="stats">
+    <div class="stat-card"><strong>57</strong> Total imágenes en Overleaf</div>
+    <div class="stat-card"><strong>37</strong> Imágenes compiladas en uso</div>
+    <div class="stat-card"><strong>20</strong> Imágenes sin usar (18 únicas + 2 copias)</div>
+    <div class="stat-card"><strong>~4.8 MB</strong> Espacio total no referenciado</div>
+  </div>
+</div>
+<div class="section"><div class="section-title"><span>1. Archivos Duplicados o Huérfanos</span><span>2 archivos</span></div><div class="grid">
+        <div class="card">
+          <div class="img-box" onclick="window.open('2a6a42af763651aee2fc78d2ca275a3aaadb16c9.png', '_blank')">
+            <img src="2a6a42af763651aee2fc78d2ca275a3aaadb16c9.png" alt="2a6a42af763651aee2fc78d2ca275a3aaadb16c9.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-dup">dup</span>
+            <div class="name">2a6a42af763651aee2fc78d2ca275a3aaadb16c9.png</div>
+            <div class="meta">77 KB &bull; 925&times;608 px &bull; PNG</div>
+            <div class="desc">Copia binaria exacta de Diagrama_de_conexiones_de_hardware.png. Generada automáticamente por Overleaf al pegar una imagen desde el portapapeles.</div>
+            <div class="path">2a6a42af763651aee2fc78d2ca275a3aaadb16c9.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('secciones/ArbolTransformaciones.png', '_blank')">
+            <img src="secciones/ArbolTransformaciones.png" alt="ArbolTransformaciones.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-dup">dup</span>
+            <div class="name">ArbolTransformaciones.png</div>
+            <div class="meta">12 KB &bull; 572&times;50 px &bull; PNG</div>
+            <div class="desc">Copia binaria idéntica de images/ArbolTransformaciones.png. En la tesis se compila la versión ubicada en la carpeta images/ gracias a \graphicspath{images/}; esta copia en secciones/ quedó suelta.</div>
+            <div class="path">secciones/ArbolTransformaciones.png</div>
+          </div>
+        </div>
+        </div></div><div class="section"><div class="section-title"><span>2. Diagramas de Control y Modelado Matemático</span><span>7 archivos</span></div><div class="grid">
+        <div class="card">
+          <div class="img-box" onclick="window.open('secciones/Controlador_de_corriente.png', '_blank')">
+            <img src="secciones/Controlador_de_corriente.png" alt="Controlador_de_corriente.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-control">control</span>
+            <div class="name">Controlador_de_corriente.png</div>
+            <div class="meta">64 KB &bull; 1484&times;285 px &bull; PNG</div>
+            <div class="desc">Diagrama de bloques en lazo cerrado para el controlador PI de corriente del micromotor N20 (PWM a 1 kHz, ADC DMA a 200 kS/s).</div>
+            <div class="path">secciones/Controlador_de_corriente.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('secciones/Controlador_de_velocidad.png', '_blank')">
+            <img src="secciones/Controlador_de_velocidad.png" alt="Controlador_de_velocidad.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-control">control</span>
+            <div class="name">Controlador_de_velocidad.png</div>
+            <div class="meta">91 KB &bull; 1760&times;338 px &bull; PNG</div>
+            <div class="desc">Diagrama de bloques del lazo intermedio de velocidad a 100 Hz con realimentación del encoder magnético.</div>
+            <div class="path">secciones/Controlador_de_velocidad.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('secciones/Controlador_de_posicion_triple_lazo_cascada.png', '_blank')">
+            <img src="secciones/Controlador_de_posicion_triple_lazo_cascada.png" alt="Controlador_de_posicion_triple_lazo_cascada.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-control">control</span>
+            <div class="name">Controlador_de_posicion_triple_lazo_cascada.png</div>
+            <div class="meta">91 KB &bull; 1769&times;330 px &bull; PNG</div>
+            <div class="desc">Diagrama de bloques completo de los 3 lazos anidados en cascada (corriente -> velocidad -> posición). En el informe activo se utiliza en su lugar images/ControlArticularCascada.png.</div>
+            <div class="path">secciones/Controlador_de_posicion_triple_lazo_cascada.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('images/DiagTripleLazo.jpeg', '_blank')">
+            <img src="images/DiagTripleLazo.jpeg" alt="DiagTripleLazo.jpeg" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-control">control</span>
+            <div class="name">DiagTripleLazo.jpeg</div>
+            <div class="meta">59 KB &bull; 1600&times;417 px &bull; JPEG</div>
+            <div class="desc">Esquema alternativo en formato JPEG del control de triple lazo en cascada.</div>
+            <div class="path">images/DiagTripleLazo.jpeg</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('secciones/Diagrama_de_bloques_de_control_servomotor.png', '_blank')">
+            <img src="secciones/Diagrama_de_bloques_de_control_servomotor.png" alt="Diagrama_de_bloques_de_control_servomotor.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-control">control</span>
+            <div class="name">Diagrama_de_bloques_de_control_servomotor.png</div>
+            <div class="meta">115 KB &bull; 1063&times;314 px &bull; PNG</div>
+            <div class="desc">Diagrama de bloques del control articular para los 18 servomotores metálicos MG996R del hexápodo primario.</div>
+            <div class="path">secciones/Diagrama_de_bloques_de_control_servomotor.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('images/dcl_extremidad_extendida.png', '_blank')">
+            <img src="images/dcl_extremidad_extendida.png" alt="dcl_extremidad_extendida.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-control">control</span>
+            <div class="name">dcl_extremidad_extendida.png</div>
+            <div class="meta">19 KB &bull; 724&times;228 px &bull; PNG</div>
+            <div class="desc">Diagrama de Cuerpo Libre (DCL) de la pata articulada 3 DoF (coxa, fémur, tibia) en condición de máxima extensión horizontal.</div>
+            <div class="path">images/dcl_extremidad_extendida.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('images/modelo_simplificado.png', '_blank')">
+            <img src="images/modelo_simplificado.png" alt="modelo_simplificado.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-control">control</span>
+            <div class="name">modelo_simplificado.png</div>
+            <div class="meta">186 KB &bull; 1092&times;767 px &bull; PNG</div>
+            <div class="desc">Modelo esquemático simplificado de eslabones y masas para el análisis estático y dinámico de la marcha.</div>
+            <div class="path">images/modelo_simplificado.png</div>
+          </div>
+        </div>
+        </div></div><div class="section"><div class="section-title"><span>3. Electrónica, Conexiones y PCB</span><span>4 archivos</span></div><div class="grid">
+        <div class="card">
+          <div class="img-box" onclick="window.open('images/Diagrama_de_conexiones_de_hardware.png', '_blank')">
+            <img src="images/Diagrama_de_conexiones_de_hardware.png" alt="Diagrama_de_conexiones_de_hardware.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-elec">elec</span>
+            <div class="name">Diagrama_de_conexiones_de_hardware.png</div>
+            <div class="meta">77 KB &bull; 925&times;608 px &bull; PNG</div>
+            <div class="desc">Diagrama esquemático de interconexión eléctrica entre el microcontrolador ESP32, los puentes H DRV8876 y los micromotores N20.</div>
+            <div class="path">images/Diagrama_de_conexiones_de_hardware.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('images/diagrama_conexiones_esp32_drv8876_acs712_n20.png', '_blank')">
+            <img src="images/diagrama_conexiones_esp32_drv8876_acs712_n20.png" alt="diagrama_conexiones_esp32_drv8876_acs712_n20.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-elec">elec</span>
+            <div class="name">diagrama_conexiones_esp32_drv8876_acs712_n20.png</div>
+            <div class="meta">246 KB &bull; 1147&times;757 px &bull; PNG</div>
+            <div class="desc">Esquema preliminar de banco de pruebas utilizando sensor de corriente Hall ACS712 externo antes de adoptar el sensado integrado analógico IPROPI.</div>
+            <div class="path">images/diagrama_conexiones_esp32_drv8876_acs712_n20.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('images/2dpcb.png', '_blank')">
+            <img src="images/2dpcb.png" alt="2dpcb.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-elec">elec</span>
+            <div class="name">2dpcb.png</div>
+            <div class="meta">93 KB &bull; 356&times;792 px &bull; PNG</div>
+            <div class="desc">Vista previa 2D de diseño del PCB de la pata modular con trazado de pistas y distribución de conectores.</div>
+            <div class="path">images/2dpcb.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('images/pcb.jpeg', '_blank')">
+            <img src="images/pcb.jpeg" alt="pcb.jpeg" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-elec">elec</span>
+            <div class="name">pcb.jpeg</div>
+            <div class="meta">98 KB &bull; 671&times;792 px &bull; JPEG</div>
+            <div class="desc">Renderizado 3D alternativo de la placa electrónica modular.</div>
+            <div class="path">images/pcb.jpeg</div>
+          </div>
+        </div>
+        </div></div><div class="section"><div class="section-title"><span>4. Arquitectura de Sistema, Locomoción y Gestión</span><span>7 archivos</span></div><div class="grid">
+        <div class="card">
+          <div class="img-box" onclick="window.open('images/SistemROS.png', '_blank')">
+            <img src="images/SistemROS.png" alt="SistemROS.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-arch">arch</span>
+            <div class="name">SistemROS.png</div>
+            <div class="meta">1319 KB &bull; 3056&times;2380 px &bull; PNG</div>
+            <div class="desc">Diagrama detallado de alta resolución (1.3 MB, 3056x2380 px) del grafo computacional de nodos, tópicos y transformaciones TF en ROS 2 Jazzy.</div>
+            <div class="path">images/SistemROS.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('images/Sistem_robotics.png', '_blank')">
+            <img src="images/Sistem_robotics.png" alt="Sistem_robotics.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-arch">arch</span>
+            <div class="name">Sistem_robotics.png</div>
+            <div class="meta">216 KB &bull; 2732&times;1492 px &bull; PNG</div>
+            <div class="desc">Diagrama de bloques funcional del sistema robótico cooperativo (subsistemas de percepción, computación, locomoción y comunicación).</div>
+            <div class="path">images/Sistem_robotics.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('images/Mod_locomotion.png', '_blank')">
+            <img src="images/Mod_locomotion.png" alt="Mod_locomotion.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-arch">arch</span>
+            <div class="name">Mod_locomotion.png</div>
+            <div class="meta">500 KB &bull; 4528&times;2208 px &bull; PNG</div>
+            <div class="desc">Esquema panorámico de alta resolución (4528x2208 px) con secuencias de apoyo y fases de marcha en trípode (tripod gait).</div>
+            <div class="path">images/Mod_locomotion.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('images/PataSimple.png', '_blank')">
+            <img src="images/PataSimple.png" alt="PataSimple.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-arch">arch</span>
+            <div class="name">PataSimple.png</div>
+            <div class="meta">135 KB &bull; 2044&times;1728 px &bull; PNG</div>
+            <div class="desc">Render CAD 3D de alta resolución de la pata articulada individual con acoples y motores N20.</div>
+            <div class="path">images/PataSimple.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('images/Matriz_Decision_Multicriterio.png', '_blank')">
+            <img src="images/Matriz_Decision_Multicriterio.png" alt="Matriz_Decision_Multicriterio.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-arch">arch</span>
+            <div class="name">Matriz_Decision_Multicriterio.png</div>
+            <div class="meta">144 KB &bull; 1303&times;690 px &bull; PNG</div>
+            <div class="desc">Imagen exportada de la matriz de evaluación técnica-económica VDI 2225 (en el informe activo se encuentra maquetada directamente como tabla nativa de LaTeX).</div>
+            <div class="path">images/Matriz_Decision_Multicriterio.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('secciones/Diagrama_Gantt.png', '_blank')">
+            <img src="secciones/Diagrama_Gantt.png" alt="Diagrama_Gantt.png" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-arch">arch</span>
+            <div class="name">Diagrama_Gantt.png</div>
+            <div class="meta">375 KB &bull; 1834&times;621 px &bull; PNG</div>
+            <div class="desc">Cronograma de ejecución en formato Diagrama de Gantt (375 KB). En el Capítulo 9 de la tesis se documenta a través de tablas de Estructura de Desglose de Trabajo - EDT.</div>
+            <div class="path">secciones/Diagrama_Gantt.png</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="img-box" onclick="window.open('Anexo_ING_7.jpg', '_blank')">
+            <img src="Anexo_ING_7.jpg" alt="Anexo_ING_7.jpg" loading="lazy">
+          </div>
+          <div class="card-body">
+            <span class="badge badge-arch">arch</span>
+            <div class="name">Anexo_ING_7.jpg</div>
+            <div class="meta">361 KB &bull; 1104&times;1071 px &bull; JPEG</div>
+            <div class="desc">Ficha técnica o plano de ingeniería correspondiente al Anexo 7 (361 KB, 1104x1071 px).</div>
+            <div class="path">Anexo_ING_7.jpg</div>
+          </div>
+        </div>
+        </div></div>
+</body>
+</html>

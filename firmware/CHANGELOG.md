@@ -22,6 +22,20 @@ Este archivo documenta la trazabilidad de versiones de código para los microcon
 
 ## 🔬 Firmware de Inspección y Gas (ESP32-S3-DevKitC-1 N16R8)
 
+### ⭐ [VALIDADO_EXITOSO] - 2026-11-14 (Sistema Integral Wi-Fi STA: Cámara UVC + Gas MiCS-5524 + Luz WS2812 + RPi 5 Hotspot)
+- **Estado:** **100% FUNCIONAL Y VERIFICADO EXPERIMENTALMENTE EN ENLACE COOPERATIVO ROBOT-RPI5**
+- **Archivos Destacados:**
+  - Firmware ESP32-S3 Integral: `firmware/esp32s3_camara_gas/VALIDADO_EXITOSO_firmware_esp32s3_sta_camara_gas_luz.c`
+  - Firmware ESP32-S3 Arduino (Solo Gas): `firmware/esp32s3_camara_gas/firmware_arduino_solo_gas_sta_rpi.ino`
+  - Monitor TUI Raspberry Pi 5 (SSH): `pruebas/integradas_camara_gas/monitor_hexapodo.py`
+  - Visor Laptop OpenCV: `pruebas/integradas_camara_gas/visor_integrado_python.py`
+- **Resultados de Validación Física y Enlace Inalámbrico:**
+  - **Modo Estación (STA) Automático:** El ESP32-S3 se conecta al Hotspot de la Raspberry Pi 5 (`aleskypi-5`, IP `10.42.0.1`) recibiendo IP fija/dinámica `10.42.0.53`. Cuenta con reconexión persistente infinita ante caídas de enlace o reinicios de batería portátil.
+  - **Subsistema de Visión UVC (Core 1):** Streaming MJPEG $480 \times 320$ px a **$14.9\text{ FPS}$ y $220\text{ KB/s}$ continuos** en puerto 81 TCP (`/stream`), con desacoplamiento total en PSRAM octal y cuadro standby de espera de 16x16 px ante desconexión física de cámara.
+  - **Telemetría de Gases MEMS (Core 0):** Muestreo analógico calibrado de MiCS-5524 en GPIO 4 con filtros Mediana ($N=5$) y EMA ($\alpha=0.20$), transmitiendo datagramas UDP a $20\text{ Hz}$ directo al puerto $5005$ de la RPi (`10.42.0.1:5005`).
+  - **Actuador de Luz de Inspección:** Control de LED RGB direccionable WS2812 en **GPIO 48** mediante periférico hardware **RMT** a 10 MHz. Conmutación en tiempo real por comando de teclado `[L]` desde la terminal SSH de la Raspberry Pi o endpoint HTTP `/light` en puerto 80.
+  - **Calibración Remota de R0:** Auto-cero mediante tecla `[C]` en la terminal de la Pi o endpoint `/calibrate`.
+
 ### ⭐ [VALIDADO_EXITOSO] - 2026-11-09 (Módulo Standalone de Visión UVC Robusto para Raspberry Pi 5 / ROS 2 Jazzy)
 - **Estado:** **100% FUNCIONAL Y VERIFICADO EXPERIMENTALMENTE EN ROBOT**
 - **Archivos Destacados:**

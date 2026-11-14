@@ -175,8 +175,10 @@ Esta sección documenta la validación experimental y de filtrado digital del su
    - Código firmware: `pruebas/sensor_gas/firmware_mics5524/firmware_mics5524.ino`
    - Interfaz web: `pruebas/sensor_gas/visor_gas_mics5524.html`
    - Visor OpenCV en Python (Serial y Wi-Fi): [`visor_gas_python.py`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/visor_gas_python.py)
+   - Graficador y Analizador de CSV en Python: [`graficar_csv_gas.py`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/graficar_csv_gas.py)
+   - Lanzador Graficador CSV (.bat): [`graficar_datos_gas.bat`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/graficar_datos_gas.bat)
    - Lanzador Serial (.bat): [`iniciar_visor_gas_serial.bat`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/iniciar_visor_gas_serial.bat)
-   - Lanzador Wi-Fi (.bat): [`iniciar_visor_gas_wifi.bat`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/iniciar_visor_gas_wifi.bat)
+   - Lanzador Wi-Fi (.bat): [`iniciar_visor_gas_wifi.bat`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/iniciar_visor_gas_wifi.bat)
    - Registro en Notion: Documentado en `Universidad / 2026-2 / Tesis 2 / Avances / Sensor de gases`.
 
 ---

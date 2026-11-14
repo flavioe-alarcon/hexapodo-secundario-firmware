@@ -23,7 +23,7 @@ import urllib.request
 import cv2
 import numpy as np
 
-DEFAULT_HOST = "192.168.4.1"
+DEFAULT_HOST = "10.42.0.53"
 GAS_UDP_PORT = 5005
 
 # Compatibilidad UTF-8 en consolas Windows
@@ -170,9 +170,10 @@ class VideoStreamReceiver:
 
 
 class GasTelemetryReceiverUDP:
-    """Hilo receptor de telemetría de gases por datagramas UDP (Puerto 5005, Cero Sobrecarga)"""
-    def __init__(self, port=GAS_UDP_PORT):
+    """Hilo receptor de telemetría de gases: intenta UDP directo y con fallback HTTP /data automático"""
+    def __init__(self, port=GAS_UDP_PORT, fallback_url=None):
         self.port = port
+        self.fallback_url = fallback_url
         self.running = False
         self.connected = False
         self.lock = threading.Lock()
@@ -207,47 +208,71 @@ class GasTelemetryReceiverUDP:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             sock.bind(('0.0.0.0', self.port))
-            sock.settimeout(1.0) # 1 segundo sin datos indica desconexion
+            sock.settimeout(0.3)
             safe_print(f"[GAS-UDP] Socket UDP escuchando activamente en 0.0.0.0:{self.port}")
         except Exception as e:
-            safe_print(f"[GAS-UDP] Error vinculando puerto UDP {self.port}: {e}")
-            return
+            safe_print(f"[GAS-UDP] Aviso socket UDP {self.port}: {e} (Usando canal HTTP /data)")
+            sock = None
+
+        last_http_poll = 0.0
 
         while self.running:
-            try:
-                raw_bytes, addr = sock.recvfrom(2048)
-                if raw_bytes:
-                    payload = raw_bytes.decode('utf-8', errors='replace')
-                    d = json.loads(payload)
-                    d["timestamp"] = time.time()
+            got_packet = False
+            if sock:
+                try:
+                    raw_bytes, addr = sock.recvfrom(2048)
+                    if raw_bytes:
+                        payload = raw_bytes.decode('utf-8', errors='replace')
+                        d = json.loads(payload)
+                        d["timestamp"] = time.time()
+                        self._update_data(d)
+                        got_packet = True
+                except (socket.timeout, Exception):
+                    pass
 
-                    with self.lock:
-                        self.data = d
-                        self.connected = True
-                        self.history_v_ema.append(d.get("v_ema", 0.0))
-                        self.history_v_med.append(d.get("v_med", 0.0))
-                        if len(self.history_v_ema) > 120:
-                            self.history_v_ema.pop(0)
-                            self.history_v_med.pop(0)
+            # Si no llegan paquetes UDP a la laptop, recurrir a HTTP /data a 10 Hz
+            if not got_packet and self.fallback_url:
+                now = time.time()
+                if now - last_http_poll >= 0.1:
+                    last_http_poll = now
+                    try:
+                        req = urllib.request.Request(self.fallback_url, headers={'User-Agent': 'ESP32Visor-HTTP'})
+                        with urllib.request.urlopen(req, timeout=0.5) as r:
+                            payload = r.read().decode('utf-8')
+                            d = json.loads(payload)
+                            d["timestamp"] = now
+                            self._update_data(d)
+                    except Exception:
+                        with self.lock:
+                            if now - self.data.get("timestamp", 0) > 2.0:
+                                self.connected = False
 
-                        self.records_to_export.append({
-                            "t": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3],
-                            "v_raw": d.get("v_raw", 0.0),
-                            "v_med": d.get("v_med", 0.0),
-                            "v_ema": d.get("v_ema", 0.0),
-                            "rs": d.get("rs", 0.0),
-                            "r0": d.get("r0", 0.0),
-                            "ratio": d.get("ratio", 0.0),
-                            "gas_pct": d.get("gas_pct", 0.0),
-                            "seq": d.get("seq", 0)
-                        })
-            except socket.timeout:
-                with self.lock:
-                    self.connected = False
-            except Exception:
-                pass
+            time.sleep(0.02)
 
-        sock.close()
+        if sock:
+            sock.close()
+
+    def _update_data(self, d):
+        with self.lock:
+            self.data = d
+            self.connected = True
+            self.history_v_ema.append(d.get("v_ema", 0.0))
+            self.history_v_med.append(d.get("v_med", 0.0))
+            if len(self.history_v_ema) > 120:
+                self.history_v_ema.pop(0)
+                self.history_v_med.pop(0)
+
+            self.records_to_export.append({
+                "t": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3],
+                "v_raw": d.get("v_raw", 0.0),
+                "v_med": d.get("v_med", 0.0),
+                "v_ema": d.get("v_ema", 0.0),
+                "rs": d.get("rs", 0.0),
+                "r0": d.get("r0", 0.0),
+                "ratio": d.get("ratio", 0.0),
+                "gas_pct": d.get("gas_pct", 0.0),
+                "seq": d.get("seq", 0)
+            })
 
 
 def draw_hud(canvas, video_rx, gas_rx, calib_message_time):
@@ -459,9 +484,18 @@ def export_csv(records):
 
 
 def main():
-    arg_target = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_HOST
+    host_ip = DEFAULT_HOST
+    # Parser de argumentos flexible: soporta --ip 10.42.0.53, -i 10.42.0.53, o 10.42.0.53 directo
+    if len(sys.argv) > 1:
+        for idx, arg in enumerate(sys.argv[1:], 1):
+            if arg in ("--ip", "-i") and idx < len(sys.argv) - 1:
+                host_ip = sys.argv[idx + 1]
+                break
+            elif not arg.startswith("-"):
+                host_ip = arg
+                break
 
-    clean_host = arg_target.replace("http://", "").replace("https://", "").split("/")[0]
+    clean_host = host_ip.replace("http://", "").replace("https://", "").split("/")[0]
     if ":" in clean_host:
         host_ip = clean_host.split(":")[0]
     else:
@@ -469,6 +503,7 @@ def main():
 
     stream_url = f"http://{host_ip}:81/stream"
     calib_url = f"http://{host_ip}:80/calibrate"
+    data_url = f"http://{host_ip}:80/data"
 
     print("=" * 75)
     print(" [*] Visor Hibrido ESP32-S3: Camara UVC (TCP) & Gas MiCS-5524 (UDP)")
@@ -485,9 +520,9 @@ def main():
     window_name = "ESP32-S3 · Hexapodo Secundario: Camara UVC & Gas MiCS-5524"
     cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
 
-    # Iniciar hilos desacoplados (Video TCP + Gas UDP)
+    # Iniciar hilos desacoplados (Video TCP + Gas UDP / Fallback HTTP)
     video_rx = VideoStreamReceiver(stream_url)
-    gas_rx = GasTelemetryReceiverUDP(port=GAS_UDP_PORT)
+    gas_rx = GasTelemetryReceiverUDP(port=GAS_UDP_PORT, fallback_url=data_url)
 
     video_rx.start()
     gas_rx.start()
