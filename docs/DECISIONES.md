@@ -74,3 +74,27 @@ Este documento recopila las justificaciones técnicas, normativas y metodológic
   - **Video por TCP (puerto 81):** La fragmentación de tramas JPEG sobre UDP puro saturaba la cola DMA de transmisión del chip Wi-Fi ante pérdidas de paquetes. TCP con HTTP multipart garantiza integridad frame a frame sin congelamientos.
   - **Gas por UDP (puerto 5005):** Como los paquetes de gas son ligeros (50 bytes a 20 Hz), UDP garantiza entrega de mínima latencia ($<5\text{ ms}$) sin bloquear el procesador ni esperar confirmaciones ACK.
   - **Standby Frame (Hot-Plug):** Si la cámara UVC no está conectada físicamente al arrancar, el servidor HTTP despacha un frame JPEG dummy de $16 \times 16\text{ px}$ a 2 Hz, manteniendo la sesión HTTP activa y permitiendo la reconexión instantánea en caliente sin reiniciar el microcontrolador.
+
+---
+
+### Decisión 9: Topología de Red Cooperativa: Modo Estación (STA) en Secundario hacia Hotspot del Primario (Raspberry Pi 5)
+- **Contexto:** En la operación de campo en túneles mineros colapsados, la Raspberry Pi 5 del robot primario actúa como la estación base y pasarela central de procesamiento. Mantener al secundario como SoftAP obligaba al primario a desconectarse de su propia red o requería doble interfaz en el primario.
+- **Alternativas evaluadas:**
+  1. *Secundario como Access Point (SoftAP) y Primario como cliente:* Inviable si el primario necesita coordinar múltiples robots o dar acceso al operador.
+  2. *Router externo intermedio:* Agrega peso, batería adicional y punto único de fallo en la mina.
+  3. *Primario como Hotspot (`aleskypi-5`, IP `10.42.0.1`) y Secundario como Estación (STA, IP `10.42.0.53`):* Ganadora unánime.
+- **Justificación:** Centraliza la red en el robot con mayor potencia de cómputo y batería (Li-ion 3S 4500 mAh). El ESP32-S3 se asocia automáticamente al arrancar (tiempo de conexión 6–10 s con bucle de reconexión infinito) y emite los datagramas UDP directo a `10.42.0.1:5005`, permitiendo además que la laptop del operador se conecte a la misma red mediante un adaptador USB dedicado (TP-Link TL-WN725N) con latencia de 6 ms, sin interferir con la conexión a internet institucional.
+
+---
+
+### Decisión 10: Localización Cooperativa del Secundario: Relocalización Visual Monocular 2D-to-3D (PnP-RANSAC) vs. SLAM Monocular Independiente
+- **Contexto:** El robot secundario debe ubicarse dentro de la mina para georreferenciar las concentraciones de gases tóxicos ($CO$, $CO_2$) en el mapa 3D, pero sus restricciones de peso ($<650\text{ g}$) y volumen le impiden cargar una cámara de profundidad RGB-D o LIDAR.
+- **Alternativas evaluadas:**
+  1. *SLAM Monocular a bordo del secundario (ej. ORB-SLAM3 monocular):* Alta ambigüedad de escala métrica (*scale drift*), consumo computacional prohibitivo para microcontroladores y pérdida de trayectoria en giros cerrados.
+  2. *Marcadores fiduciales pasivos (AprilTag / ArUco en el secundario):* Requieren que el robot primario mantenga al secundario permanentemente dentro de su campo visual directo (línea de vista). Si el explorador penetra una hendidura colapsada o dobla una esquina, se pierde la localización.
+  3. *Relocalización Visual Monocular sobre Mapa Previo 3D (2D-to-3D PnP-RANSAC):* Seleccionada.
+- **Justificación:** 
+  - El robot primario mapea previamente el túnel en 3D métrico con la Orbbec Gemini 2 y almacena los Keyframes con descriptores ORB y coordenadas métricas $(X,Y,Z)$ en RTAB-Map.
+  - Cuando el secundario penetra la zona con su cámara monocular UVC ligera ($<15\text{ g}$), la Raspberry Pi 5 procesa sus fotogramas 2D, encuentra correspondencias con la base de datos visual previa mediante *Bag of Words* (BoW) y resuelve la pose 6-DoF mediante **PnP con RANSAC** utilizando la matriz intrínseca $\mathbf{K}$ de la cámara.
+  - Esto proporciona escala métrica absoluta sin deriva, no requiere sensores pesados en el explorador y permite mapear con precisión tridimensional la dispersión de gases contaminantes en la mina.
+

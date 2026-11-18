@@ -352,5 +352,98 @@ Para responder a los requerimientos de inspección visual en galerías y ductos 
    - Incluye cliente HTTP asíncrono para encender/apagar la luz del robot secundario a distancia.
    - Habilita la suscripción al tópico ROS 2 `/hexapodo/cmd_luz` (`std_msgs/msg/Bool`), permitiendo a los algoritmos de navegación y exploración autónoma activar la iluminación al detectar zonas de baja visibilidad.
 
+---
+
+## 12. Validación Experimental del Enlace Inalámbrico Cooperativo en Modo Estación (STA) y Actuadores (Semana 13)
+
+Esta sección documenta la validación del enlace inalámbrico de campo donde el robot secundario opera como nodo cliente (Modo Estación - STA) conectado a la red local autónoma generada por el robot primario (Raspberry Pi 5 Hotspot), garantizando la total independencia de infraestructuras externas.
+
+### 12.1 Configuración de Red Host en Robot Primario (Raspberry Pi 5)
+- **SSID del Hotspot:** `aleskypi-5`
+- **Contraseña:** `alesky69` (WPA2-Personal, CCMP, Canal 6 en 2.4 GHz)
+- **IP del Gateway (Robot Primario):** `10.42.0.1`
+- **Subred asignada por DHCP:** `10.42.0.0/24`
+- **Configuración de Persistencia en NetworkManager (`nmcli`):**
+  Para evitar que la Raspberry Pi desactive el modo Access Point al detectar redes Wi-Fi institucionales o al reiniciar, se fijó el perfil con máxima prioridad:
+  ```bash
+  sudo nmcli connection modify Hotspot connection.autoconnect yes
+  sudo nmcli connection modify Hotspot connection.autoconnect-priority 100
+  sudo nmcli connection modify Hotspot connection.id aleskypi-5
+  ```
+
+### 12.2 Estación de Control Laptop con Doble Interfaz Wi-Fi (Enrutamiento Simultáneo)
+Para permitir el monitoreo en tiempo real del robot sin perder conexión a Internet en la computadora del operador, se integró el adaptador USB Wi-Fi **TP-Link TL-WN725N** (Realtek RTL8188EU, $802.11\text{n}$):
+- **Interfaz 1 (`Wi-Fi` - Intel Wi-Fi 6 AX101):** Conectada a la red de internet institucional (`UTEC-Alumnos`, canal 5 GHz). Métrica de gateway predeterminada activa para tráfico WAN global.
+- **Interfaz 2 (`Wi-Fi 2` - TP-Link RTL8188EU):** Conectada exclusivamente al Hotspot `aleskypi-5` (`10.42.0.178`).
+- **Rendimiento Medido:** Latencia hacia la Raspberry Pi 5 (`10.42.0.1`) de **$6\text{ ms}$**, y latencia hacia Internet de **$34\text{ ms}$** operando de forma simultánea e ininterrumpida.
+
+### 12.3 Firmwares Validados y Estandarizados (Repositorio GitHub)
+1. **Firmware Integral Maestro (`VALIDADO_EXITOSO_firmware_esp32s3_sta_camara_gas_luz.c`):**
+   - Framework: **ESP-IDF v5.4.4** nativo en C con FreeRTOS multicore.
+   - **Navegación y Autonomía:** Conexión automática en modo STA a `aleskypi-5` con bucle de reconexión persistente infinito. Asignación IP fija/dinámica `10.42.0.53`.
+   - **Visión UVC (Core 1):** Driver UVC Host nativo negociando MJPEG $480 \times 320$ px a **$14.9\text{ FPS}$ y $\approx 220\text{ KB/s}$ estables** en puerto 81 TCP (`/stream`). Mecanismo de cuadro de espera (*Standby Frame*) de 16x16 px a 2 Hz ante desconexión física de la cámara (*Hot-Plug* tolerante).
+   - **Telemetría de Gas (Core 0):** Muestreo analógico ADC1 CH3 (GPIO 4) del MiCS-5524 a 20 Hz con calibración por eFuses, filtro de mediana ($N=5$) y filtro exponencial EMA ($\alpha=0.20$). Emisión continua de datagramas UDP JSON hacia `10.42.0.1:5005`.
+   - **Actuador de Luz de Inspección:** LED direccionable WS2812 en **GPIO 48** modulado mediante periférico hardware **RMT** a 10 MHz. Conmutación en caliente mediante `GET /light?state=1` o `state=toggle` en puerto 80 HTTP.
+   - **Calibración Remota de $R_0$:** Endpoint `/calibrate` para fijar el auto-cero en aire limpio.
+2. **Firmware Ligero de Gas Arduino (`firmware_arduino_solo_gas_sta_rpi.ino`):**
+   - Diseñado para pruebas rápidas de laboratorio o ensayos ambientales donde no se requiera la cámara UVC. Conexión STA a `aleskypi-5` y emisión UDP a 20 Hz hacia `10.42.0.1:5005`.
+3. **Monitor TUI para Raspberry Pi 5 (`monitor_hexapodo.py`):**
+   - Interfaz en terminal de texto offline (sin entorno gráfico X11) que corre sobre la Raspberry Pi 5 vía SSH.
+   - Decodifica telemetría UDP a 20 Hz, mide FPS reales del flujo TCP de la cámara y permite controlar la luz con la tecla `[L]` y calibrar con la tecla `[C]`.
+4. **Validación con Banco de Baterías Portátil:**
+   - Se validó el arranque en frío y la operación móvil del ESP32-S3 alimentado por un banco de baterías USB portátil, confirmando que el ciclo de inicialización completa la asociación Wi-Fi en $\sim 6\text{ a }10\text{ s}$ y mantiene la transmisión ininterrumpida sin sufrir apagados por corte de baja corriente (*low-current cutoff*).
+
+---
+
+## 13. Arquitectura Propuesta: Localización Visual Monocular Cooperativa sobre Mapa Previo 3D (2D-to-3D Relocalization / PnP-RANSAC)
+
+### 13.1 Fundamentación Teórica del Problema Multi-Agente
+En escenarios de colapso estructural o minería subterránea (*no-entry inspection*), el robot primario (mayor envergadura y capacidad de cómputo) genera un mapa métrico tridimensional mediante su sensor RGB-D **Orbbec Gemini 2** y el algoritmo **RTAB-Map SLAM**. Sin embargo, el robot secundario (de mínima envolvente para penetrar ductos estrechos) no puede cargar una cámara de profundidad masiva ni un escáner LIDAR debido a restricciones de peso ($<650\text{ g}$) y volumen.
+
+Para resolver la estimación de la pose tridimensional del robot explorador dentro del mapa de la mina, se formula el esquema de **Relocalización Visual Monocular 2D-to-3D**:
+
+```
+[ ROBOT PRIMARIO: MAPEO 3D RGB-D ]             [ ROBOT SECUNDARIO: EXPLORACIÓN ]
+Cámara Orbbec Gemini 2 (RGB-D + IMU)            Cámara Monocular Mini UVC (1 MP)
+                 │                                               │
+                 ▼                                               ▼
+     RTAB-Map 3D (hexapod_mapa.db)                 Fotogramas 2D (480x320 @ 15 FPS)
+  - Keyframes con descriptores ORB/SIFT                          │
+  - Landmarks 3D métricos: P_3D = (X, Y, Z)                       │
+  - Diccionario Bag of Words (BoW)                               │
+                 │                                               │
+                 └───────────────────────┬───────────────────────┘
+                                         ▼
+                     [ PROCESAMIENTO EN RASPBERRY PI 5 ]
+                     1. Búsqueda de lugar en BoW (Loop Closure)
+                     2. Correspondencias 2D ↔ 3D (Feature Matching)
+                     3. Estimación geométrica PnP-RANSAC con matriz K
+                                         │
+                                         ▼
+                    Pose 6-DoF del Secundario en el Marco Global:
+                    TF: map ──► secondary_robot/base_link
+```
+
+### 13.2 Formulación Matemática (Perspective-n-Point con RANSAC)
+1. **Base de Datos 3D de Referencia:**
+   El mapa generado por el primario almacena un conjunto de puntos tridimensionales $\mathbf{P}_i = [X_i, Y_i, Z_i]^T \in \mathbb{R}^3$ expresados en el marco global del mapa (`map`), asociados a descriptores visuales invariantes a escala y rotación (ORB).
+2. **Observación Monocular 2D del Secundario:**
+   La cámara del secundario captura una imagen donde se extraen puntos 2D $\mathbf{p}_i = [u_i, v_i]^T$ en coordenadas de píxel.
+3. **Optimización PnP (Perspective-n-Point):**
+   Conocida la matriz de parámetros intrínsecos de la cámara monocular $\mathbf{K}$:
+   $$\mathbf{K} = \begin{bmatrix} f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix}$$
+   el algoritmo busca la matriz de rotación $\mathbf{R} \in \mathbb{SO}(3)$ y el vector de traslación $\mathbf{t} \in \mathbb{R}^3$ que minimizan el error de reproyección cuadrático medio:
+   $$\{\mathbf{R}^*, \mathbf{t}^*\} = \arg\min_{\mathbf{R}, \mathbf{t}} \sum_{i \in \text{inliers}} \left\| \mathbf{p}_i - \pi\left( \mathbf{K} \cdot (\mathbf{R} \mathbf{P}_i + \mathbf{t}) \right) \right\|^2$$
+   donde $\pi([x, y, z]^T) = [x/z, y/z]^T$ es la función de proyección en perspectiva estándar, y el filtro **RANSAC (Random Sample Consensus)** descarta correspondencias falsas generadas por reflejos o polvo minero.
+
+### 13.3 Requisitos de Implementación e Integración en ROS 2 Jazzy
+1. **Calibración Intrínseca de la Cámara Monocular:** Se debe realizar una calibración geométrica de la cámara UVC mediante un patrón de ajedrez (*checkerboard*) con el nodo oficial `camera_calibration` de ROS 2 para fijar la matriz $\mathbf{K}$ y los coeficientes de distorsión radial-tangencial $(k_1, k_2, p_1, p_2)$.
+2. **Condiciones Operativas de Campo:**
+   - **Iluminación Activa:** La cámara monocular del secundario depende de la reflectancia de la roca; por ello, la activación del **LED WS2812 de 100% brillo blanco (GPIO 48)** es condición obligatoria para la extracción de descriptores visuales en galerías subterráneas.
+   - **Traslape Visual de Escena:** La relocalización opera cada vez que el robot secundario apunta su campo visual hacia un sector del túnel previamente registrado por la Orbbec del robot primario.
+3. **Fusión Multirrobot en ROS 2:**
+   Una vez resuelta la pose, el nodo puente publica la transformada `map -> secondary_robot/base_link` y asocia las lecturas de gas del sensor MiCS-5524 para renderizar un **Mapa de Calor 3D de Toxicidad de Gases (Gas Concentration Heatmap)** directamente sobre la nube de puntos de la mina en RViz 2.
+
+
 
 

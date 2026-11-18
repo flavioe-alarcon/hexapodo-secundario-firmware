@@ -360,3 +360,140 @@ Esta sección documenta la prueba física **100% exitosa** del módulo standalon
 
 
 
+
+
+---
+
+## 🦾 Bitácora de Análisis Estructural y de Fuerzas del Fémur (Cálculo Analítico y Justificación de Sección Crítica)
+
+Esta sección documenta el modelo analítico estructural completo, los parámetros geométricos, los cálculos de flexión y deflexión, y la justificación de la sección crítica para la extremidad (fémur,  = 60\text{ mm}$) del robot hexápodo secundario.
+
+### 1. Parámetros Geométricos y Propiedades de Sección Crítica (Pieza Ocre)
+- **Componente evaluado:** Acople central rígido (pieza ocre) que une el soporte proximal (motor Coxa, blanco) con el soporte distal (motor Tibia, rosado).
+- **Dimensiones exteriores:** Ancho  = 18.90\text{ mm}$, Altura  = 9.00\text{ mm}$ (dirección de flexión vertical).
+- **Alivios / Taladros pasantes:** 2 orificios cilíndricos de diámetro  = 5.975\text{ mm}$.
+- **Ancho neto resistente:** {\text{neto}} = B - 2d = 18.90 - 2(5.975) = 6.95\text{ mm}$.
+- **Espesor de nervaduras:** 3 paredes paralelas de {\text{pared}} \approx 2.31\text{ mm}$.
+- **Validación de manufactura aditiva (100% sólido real):**
+  - Configuración: Boquilla de .40\text{ mm}$, 3 perímetros de pared exteriores e interiores.
+  - Espesor macizo de perímetros: {\text{sol}} = 2 \times (3 \times 0.40\text{ mm}) = 2.40\text{ mm} > 2.31\text{ mm}$.
+  - Las 3 paredes son **100% macizas** sin depender del relleno (*infill*), validando el modelo de viga elástica continua.
+- **Momento de Inercia Neto:**
+  I_{x,\text{neto}} = \frac{B_{\text{neto}} \cdot H^3}{12} = \frac{6.95 \cdot (9.00)^3}{12} = 422.21\text{ mm}^4
+- **Módulo de Sección Elástico:**
+  c = \frac{H}{2} = 4.50\text{ mm} \implies Z = \frac{I_{x,\text{neto}}}{c} = \frac{422.21}{4.50} = \mathbf{93.82\text{ mm}^3}
+
+### 2. Factor de Concentración de Esfuerzos ($) y Orientación de Impresión
+- **Discontinuidad geométrica:** Relación /B = 5.975 / 18.90 \approx 0.316$.
+- **Sustento teórico:** Peterson's Stress Concentration Factors y Roark's Formulas para placas con orificios transversales bajo flexión $\implies \mathbf{K_t = 2.00}$.
+- **Esfuerzo máximo concentrado:** $\sigma_{\text{max}} = K_t \cdot \sigma_{\text{nom}} = 2.00 \cdot (M / Z)$.
+- **Orientación de impresión:** Fabricación sobre cara lateral, alineando los filamentos continuos de PLA con el eje longitudinal de tracción por flexión ( \approx 40\text{ MPa}$), eliminando el riesgo de falla por delaminación interlaminar Z.
+
+### 3. Casos de Carga y Factores de Seguridad ($)
+- **Caso 1: Reacción al Stall del Motor N20 (300:1):**
+  - Torque límite: {\text{stall}} \approx 3.5\text{ kg}\cdot\text{cm} = 350\text{ N}\cdot\text{mm}$.
+  - $\sigma_{\text{nom}} = 3.73\text{ MPa}$, $\sigma_{\text{max}} = 7.46\text{ MPa} \implies \mathbf{FoS = 5.36}$ (Ampliamente seguro).
+- **Caso 2: Marcha Normal en Postura Agachada ({\text{pie}} = 10\text{ N}$):**
+  - Peso del robot: .5\text{ kg}$ (.7\text{ N}$), distribuido en 3 patas ($\sim 5\text{ N}$ estático), factor dinámico .0\times \implies F_{\text{pie}} = 10\text{ N}$.
+  - Brazo horizontal efectivo al empotramiento: {\text{arm}} \approx 50\text{ mm} \implies M = 500\text{ N}\cdot\text{mm}$.
+  - $\sigma_{\text{nom}} = 5.33\text{ MPa}$, $\sigma_{\text{max}} = 10.66\text{ MPa} \implies \mathbf{FoS = 3.75}$ (Óptimo / Fatiga nula).
+- **Caso 3: Impacto Severo / Extensión Máxima ({\text{pie}} = 10\text{ N}$, {\text{arm}} = 100\text{ mm}$):**
+  - Momento flector:  = 1000\text{ N}\cdot\text{mm}$.
+  - $\sigma_{\text{nom}} = 10.66\text{ MPa}$, $\sigma_{\text{max}} = 21.32\text{ MPa} \implies \mathbf{FoS = 1.88}$ (Seguro, cumple norma  \ge 1.50$).
+
+### 4. Rigidez y Deflexión Elástica ($\delta$)
+- Ecuación de flecha máxima en voladizo:
+  \delta = \frac{F_{\text{pie}} \cdot L^3}{3 \cdot E \cdot I_{x,\text{neto}}} = \frac{10 \times (60)^3}{3 \times 3500 \times 422.21} = \frac{2\,160\,000}{4\,433\,205} \approx \mathbf{0.49\text{ mm}}
+- Flecha $< 0.82\%$ de la longitud del eslabón, garantizando precisión cinemática articular.
+
+### 5. Justificación Metodológica de la Sección Crítica (Pieza Ocre vs. Ensamble)
+Ante preguntas del jurado sobre por qué no se modelaron las piezas blanca y rosada:
+1. **Método de la Sección Crítica (*Shigley*, Cap. 1 & 3):** La integridad global de un ensamble está gobernada por la sección que minimiza el Factor de Seguridad local ({\text{global}} = \min \{ FoS(x) \}$).
+2. **Comparativa dimensional ( = 9.00\text{ mm}$ común):**
+   - **Pieza Ocre (Central):** {\text{neto}} = 6.95\text{ mm} \implies Z = 93.82\text{ mm}^3$ (Base).
+   - **Pieza Rosada (Distal):** {\text{efectivo}} = 9.90\text{ mm} \implies Z = 133.65\text{ mm}^3$ (**+42.5% más resistente**).
+   - **Pieza Blanca (Proximal):** {\text{efectivo}} = 10.40\text{ mm} \implies Z = 140.40\text{ mm}^3$ (**+49.6% más resistente**).
+3. **Severidad por Concentración ($\psi = K_t / Z$):**
+   - Ocre ( = 2.00$ por 2 taladros pasantes): $\psi = 0.0213\text{ mm}^{-3}$.
+   - Rosada y Blanca ( \approx 1.15$, perfiles continuos): $\psi = 0.0086\text{ mm}^{-3}$ y .0082\text{ mm}^{-3}$.
+   - **La pieza ocre soporta un esfuerzo pico concentrado $\mathbf{\approx 2.5\times\text{ a }2.6\times}$ mayor** que las demás piezas.
+4. **Acotamiento Inferior:** Como la pieza ocre cumple con  = 3.75$ (marcha) y  = 1.88$ (impacto), las piezas blanca y rosada operan con  > 4.5$ y $> 9.0$, haciendo redundante su cálculo detallado.
+
+### 6. Referencias Académicas Formales
+1. **Budynas, R. G., & Nisbett, J. K. (2020).** *Shigley's Mechanical Engineering Design* (11th ed.). McGraw-Hill Education. (Cap. 1 y 3: Critical Section Method, stress analysis).
+2. **Beer, F. P., Johnston, E. R., DeWolf, J. T., & Mazurek, D. F. (2020).** *Mecánica de Materiales* (8.ª ed.). McGraw-Hill Interamericana. (Cap. 4 y 5: Flexión pura, módulo de sección $).
+3. **Pilkey, W. D., Pilkey, D. F., & Bi, Z. (2020).** *Peterson's Stress Concentration Factors* (4th ed.). John Wiley & Sons. (Sección 3.3.3: Placas en flexión con orificios transversales).
+4. **Norton, R. L. (2020).** *Diseño de Máquinas: Un enfoque integrado* (5.ª ed.). Pearson Educación. (Cap. 3 y 4: Concentración de esfuerzos y teorías de falla estática).
+- **Documentación en Notion:** Registrado en la página Universidad / 2026-2 / Tesis 2 / Avances / Analisis de fuerzas (ID: 41a28ed0-9985-805f-8b7a-f30da3455050).
+
+
+---
+
+## 🦿 Bitácora de Análisis Estructural y de Pandeo de la Tibia (Cálculo Analítico y Matriz Maestra Fémur vs. Tibia)
+
+Esta sección documenta el modelo analítico estructural completo para el eslabón distal de la extremidad (**tibia**, {	ext{total}} = 114.11\text{ mm}$) del robot hexápodo secundario.
+
+### 1. Geometría y Parámetros Dimensionales Reales
+- **Orientación:** Vista Lateral = plano de flexión vertical ( = 10.20\text{ mm}$); Vista Superior = plano de celosía aligerada ({\text{neto}} = 4.00\text{ mm}$).
+- **Tramos:**  = 89.00\text{ mm}$ (recto) y  = 29.00\text{ mm}$ (punta inclinada) con ángulo interno de codo $\alpha = 150^\circ$ ($	heta = 30^\circ$).
+- **Proyecciones:**  = 114.11\text{ mm}$,  = 14.50\text{ mm}$.
+- **Propiedades de Sección:**
+  - {\text{vertical}} = \frac{4.00 \cdot (10.20)^3}{12} = 353.74\text{ mm}^4$
+  -  = 5.10\text{ mm} \implies Z_v = 69.36\text{ mm}^3$
+  - {\text{mín}} = \frac{10.20 \cdot (4.00)^3}{12} = 54.40\text{ mm}^4$ (eje débil lateral)
+
+### 2. Resultados de Esfuerzos, Pandeo y Deflexión
+- **Flexión Vertical en Marcha (\text{ N}$, \text{ N}\cdot\text{mm}$):** $\sigma_{\text{nom}} = 7.21\text{ MPa}$, $\sigma_{\text{max}} = 10.82\text{ MPa}$ ( = 1.50$) $\implies \mathbf{FoS = 3.70}$.
+- **Extensión / Choque Severo (.1\text{ N}\cdot\text{mm}$):** $\sigma_{\text{max}} = 24.68\text{ MPa} \implies \mathbf{FoS = 1.62}$ ($> 1.50$ normativo).
+- **Carga Crítica de Pandeo de Euler ( = 0.8$,  = 91.29\text{ mm}$):**
+  P_{\text{cr}} = \frac{\pi^2 \cdot 3500 \cdot 54.40}{(91.29)^2} = 225.48\text{ N} \implies \mathbf{FoS_{\text{pandeo}} = 22.55} (Totalmente inmune al pandeo lateral).
+- **Flecha Elástica en Punta:** $\delta = 0.40\text{ mm}$ ($< 0.35\%$ de $).
+
+### 3. Matriz Comparativa Maestra: Fémur vs. Tibia
+| Métrica Estructural | Fémur (Pieza Ocre) | Tibia (Pieza Amarilla) | Evaluación del Ensamble |
+| :--- | :---: | :---: | :--- |
+| **Longitud ($)** | .00\text{ mm}$ | .11\text{ mm}$ | Proporción biomimética 1:2 |
+| **Peralte Vertical ($)** | .00\text{ mm}$ | .20\text{ mm}$ | Compensación geométrica por esbeltez |
+| **Ancho Neto ({\text{neto}}$)** | .95\text{ mm}$ | .00\text{ mm}$ | Aligeramiento progresivo |
+| **Módulo Elástico ($)** | .82\text{ mm}^3$ | .36\text{ mm}^3$ | Diseñados según gradiente flector |
+| **$ en Marcha Normal** | **.75$** | **.70$** | **Equilibrio estructural idóneo ( \approx 3.7$)** |
+| **$ en Impacto Severo** | **.88$** | **.62$** | Ambos superan el mínimo normativo ($> 1.50$) |
+| **$ frente a Pandeo** | No aplica | **.55$** | Seguro ante inestabilidad elástica |
+| **Flecha Relativa ($\% L$)** | .82\%$ | .35\%$ | Cadena cinemática de alta rigidez |
+
+---
+
+## 📡 Bitácora de Validación del Enlace Cooperativo Wi-Fi STA, Actuadores y Relocalización Visual 3D
+
+Esta sección documenta la validación experimental del sistema de comunicación en modo Estación (STA), la telemetría simultánea hacia la Raspberry Pi 5 y la arquitectura de relocalización cooperativa sobre el mapa tridimensional.
+
+### 1. Enlace Inalámbrico en Modo Estación (STA) - Red de Misión Autónoma
+- **Hotspot de la Raspberry Pi 5:** SSID: `aleskypi-5`, Contraseña: `alesky69`, Gateway: `10.42.0.1`.
+- **Configuración Persistente en NetworkManager (`nmcli`):**
+  ```bash
+  sudo nmcli connection modify Hotspot connection.autoconnect yes
+  sudo nmcli connection modify Hotspot connection.autoconnect-priority 100
+  sudo nmcli connection modify Hotspot connection.id aleskypi-5
+  ```
+- **Adaptador USB Wi-Fi TP-Link TL-WN725N (Realtek RTL8188EU):**
+  - Permite enlace multirred en la laptop de supervisión: `Wi-Fi` (Intel AX101) conectado a Internet (`UTEC-Alumnos`), mientras `Wi-Fi 2` (TP-Link) se enlaza a `aleskypi-5` (`10.42.0.178`).
+  - Ping medido a Raspberry Pi 5 (`10.42.0.1`): **6 ms**.
+  - Ping medido a Internet (`8.8.8.8`): **34 ms** simultáneo.
+
+### 2. Códigos de Éxito Validados en GitHub (`hexapodo-secundario-firmware`)
+- **`VALIDADO_EXITOSO_firmware_esp32s3_sta_camara_gas_luz.c` (ESP-IDF v5.4.4):**
+  - **Streaming UVC (Core 1):** $480 \times 320$ px MJPEG a **$14.9\text{ FPS}$ y $220\text{ KB/s}$ estables** en puerto 81 TCP (`/stream`). Mecanismo de cuadro de espera (*Standby Frame*) de 16x16 px a 2 Hz ante desconexión física de cámara.
+  - **Sensor de Gas MiCS-5524 (Core 0):** Muestreo en GPIO 4 a 20 Hz con filtros Mediana ($N=5$) y EMA ($\alpha=0.20$), emitiendo datagramas UDP JSON continuos hacia `10.42.0.1:5005`.
+  - **Luz de Inspección LED WS2812 (GPIO 48):** Driver nativo por hardware **RMT** a 10 MHz. Conmutación remota por HTTP (`/light?state=1`, `0`, `toggle`).
+  - **Calibración Remota de $R_0$:** Endpoint `/calibrate` para auto-cero en aire limpio.
+  - **Operación Móvil Autónoma:** Validado con banco de batería portátil USB (arranque en frío en 6–10 s con reconexión persistente infinita).
+- **`firmware_arduino_solo_gas_sta_rpi.ino`:** Firmware alternativo ligero para ensayos ambientales exclusivos sin video.
+- **`monitor_hexapodo.py`:** Tablero TUI para consola SSH en Raspberry Pi 5 (offline, sin GUI). Muestra nivel de gas a 20 Hz, mide FPS reales del video y permite conmutar la luz con `[L]` y calibrar con `[C]`.
+
+### 3. Arquitectura de Localización Visual Monocular sobre Mapa Previo 3D (2D-to-3D Relocalization / PnP-RANSAC)
+- **Concepto:** El robot primario genera un mapa métrico 3D (`hexapod_mapa.db`) con su cámara RGB-D Orbbec Gemini 2 y RTAB-Map SLAM (Keyframes con descriptores ORB y coordenadas métricas $X,Y,Z$ globales). El robot secundario (sin cámara de profundidad por restricciones de peso $<650\text{ g}$) transmite fotogramas 2D monocular UVC a 15 FPS.
+- **Formulación:** La Raspberry Pi 5 reconoce la escena mediante Bag of Words (BoW), empareja los puntos 2D del secundario $(u, v)$ con los puntos 3D del mapa $(X, Y, Z)$ y resuelve la pose 6-DoF mediante el algoritmo **Perspective-n-Point con RANSAC (`solvePnPRansac`)**:
+  $$\min_{\mathbf{R}, \mathbf{t}} \sum_{i} \left\| \begin{bmatrix} u_i \\ v_i \end{bmatrix} - \pi(\mathbf{K} \cdot (\mathbf{R} \mathbf{P}_{3D, i} + \mathbf{t})) \right\|^2$$
+- **Salida:** Publicación de la transformada TF `map -> secondary_robot/base_link` y generación del mapa de calor de gases tridimensional en RViz 2.
+- **Requisitos Críticos:** Calibración geométrica intrínseca de la cámara monocular $\mathbf{K}$, e iluminación activa obligatoria mediante el LED WS2812 en GPIO 48 para extracción de características en túneles oscuros.
+
