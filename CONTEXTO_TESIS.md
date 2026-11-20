@@ -95,6 +95,7 @@ El sistema está compuesto por dos unidades hexápodas complementarias con march
   - Potencia continua: $34.85\text{ W}$, potencia pico: $85.55\text{ W}$.
   - Convertidor Buck DC-DC 1 (11.1V $\to$ 5.1V, 5A continuo, $\eta \ge 92\%$) para Raspberry Pi 5 y cámara Orbbec.
   - Convertidor Buck DC-DC 2 (11.1V $\to$ 6.0V, 10A continuo / 15A pico, $\eta \ge 90\%$) exclusivo para los servos MG996R.
+  - **Monitoreo de Corriente y Potencia Total (Allegro ACS758LCB-050B):** Mide el amperaje neto en serie con la batería LiPo. **REGLA DE SEGURIDAD:** Prohibida la conexión analógica directa a GPIOs de Raspberry Pi 5 (3.3V no tolerante a 5V y sin ADC). El sensado analógico lo ejecuta un **Arduino Nano como co-procesador ADC esclavo** a 5V nativo, transmitiendo telemetría por USB Serial hacia ROS 2 (`/chipo/battery_state`).
 - **Pila de Software (ROS 2 Humble / Jazzy):**
   - **Árbol TF:** `map` $\xrightarrow{RTAB-Map}$ `odom` $\xrightarrow{EKF}$ `base_link` $\xrightarrow{URDF}$ `camera_link`.
   - **Odometría:** `rgbd_odometry` + IMU fusionadas con Filtro de Kalman Extendido (`robot_localization`).

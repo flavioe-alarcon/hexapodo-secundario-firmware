@@ -27,6 +27,11 @@
   - Chasis Chipo operativo con 18 servos metálicos MG996R y batería Li-ion/LiPo 3S 4500 mAh.
   - Raspberry Pi 5 acoplada vía USB a controladora Pololu Mini Maestro de 18 canales.
   - Sensor RGB-D Orbbec Gemini 2 montado y calibrado con soporte de trayectorias.
+  - **Subsistema de Telemetría de Potencia y Sensado de Gas (Validado 18-20/11/2026):**
+    - Sensor de corriente de efecto Hall Allegro **ACS758LCB-050B** ($\pm 50\text{ A}$, $40\text{ mV/A}$) conectado en serie con la batería LiPo 3S (Pin `A1`).
+    - Sensor de gases semiconductores **MQ-9** (Etanol / Monóxido de Carbono / Combustibles) con lectura analógica en Pin `A0` y alarma digital LM393 en Pin `D2`.
+    - Firmware integrado en Arduino Nano (`firmware_mq9_corriente_nano.ino`) emitiendo tramas JSON a 115200 baudios (20 Hz) vía USB (`/dev/ttyUSB0`) hacia la **Raspberry Pi 5** y PC.
+    - Herramientas validadas: monitor de consola en RPi (`monitor_sensores_rpi.py`), visor interactivo con osciloscopio en OpenCV (`visor_gas_mq9.py`) y documentación completa en `pruebas/sensor_gas/firmware_mq9_corriente_nano/README.md`.
 * **Software y ROS 2:**
   - Repositorio `ros2_ws` sincronizado (último commit: `bd419a4`).
   - Drivers de control en `MasterPololu` (perfiles HOME S2, cinemática y trayectorias de 36 s).

@@ -1,0 +1,28 @@
+# Calibracion de camara monocular UVC 720p (ESP32-S3)
+# Resolucion: 640 x 480 (o 480 x 320 segun perfil seleccionado)
+image_width: 640
+image_height: 480
+camera_name: camara_secundaria
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [525.0,   0.0, 320.0,
+           0.0, 525.0, 240.0,
+           0.0,   0.0,   1.0]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [0.0, 0.0, 0.0, 0.0, 0.0]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1.0, 0.0, 0.0,
+         0.0, 1.0, 0.0,
+         0.0, 0.0, 1.0]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [525.0,   0.0, 320.0, 0.0,
+           0.0, 525.0, 240.0, 0.0,
+           0.0,   0.0,   1.0, 0.0]

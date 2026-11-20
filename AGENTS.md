@@ -497,3 +497,103 @@ Esta sección documenta la validación experimental del sistema de comunicación
 - **Salida:** Publicación de la transformada TF `map -> secondary_robot/base_link` y generación del mapa de calor de gases tridimensional en RViz 2.
 - **Requisitos Críticos:** Calibración geométrica intrínseca de la cámara monocular $\mathbf{K}$, e iluminación activa obligatoria mediante el LED WS2812 en GPIO 48 para extracción de características en túneles oscuros.
 
+---
+
+## ⚡ Bitácora de Validación del Sensor de Corriente (Allegro ACS758LCB-050B + Arduino Nano)
+
+Esta sección documenta la puesta en marcha, calibración metrológica y arquitectura de adquisición del sensor de consumo total de potencia para el robot primario Chipo (batería LiPo 3S 4500 mAh):
+
+### 1. Hardware, Encapsulado y Mapa de Pines Validado
+- **Módulo:** Placa de circuito impreso morada (tipo CJMCU-758 / HW-525).
+- **Sensor Principal:** Circuito integrado de efecto Hall lineal **Allegro MicroSystems ACS758LCB-050B** (montado en el reverso, encapsulado de potencia CB de 5 pines, aislamiento galvánico $> 3000\text{ V}_{\text{RMS}}$, resistencia del conductor primario $\sim 100\,\mu\Omega$).
+- **Acondicionamiento Superior:** Amplificador operacional doble de 8 pines (TLC2272 o equivalente) en configuración buffer seguidor de tensión ($A_v = 1$).
+- **Tarjeta Adquisidora:** Arduino Nano (ATmega328P @ 16 MHz, chip USB FTDI FT232RL reconocido en Windows como `USB Serial Port (COM15)` a 115200 baudios).
+
+| Pin del Sensor (Placa Morada) | Conexión en Arduino Nano / Sistema | Función y Justificación Técnica |
+| :--- | :--- | :--- |
+| **`IP+` (Terminal grueso)** | En serie con cable rojo (+ Batería LiPo 3S) | Entrada de corriente de la batería hacia el bus de potencia del robot. |
+| **`IP-` (Terminal grueso)** | En serie hacia interruptor general y Buck converters | Retorno/salida de corriente hacia los reguladores Buck (5.1V RPi y 6.0V Servos). |
+| **`VCC` (Pad 4, junto a LED D1)** | **Pin 5V** del Arduino Nano | Alimentación ratiométrica de 5.0 V para el núcleo Hall y el op-amp. |
+| **`GND` (Pad 3)** | **Pin GND** del Arduino Nano | **CRÍTICO:** Tierra lógica de referencia. **NO unir a la tierra de la batería ni a los motores** para preservar el aislamiento galvánico de 3 kV y evitar bucles de masa (*ground loops*). |
+| **`OU1` (Pad 2, central)** | **Pin A1** del Arduino Nano | **Salida analógica directa** del pin 3 ($V_{IOUT}$) del ACS758 con filtro pasivo RC. Señal pura, libre de saturación activa. |
+| **`OU2` (Pad 1, extremo superior)**| **DESCONECTADO (sin uso)** | Salida bufferizada por el amplificador operacional. Se descartó por saturación y oscilaciones espurias ante caídas de tensión en el riel USB de 5V. |
+
+### 2. Lecciones Aprendidas y Solución de Errores Críticos
+1. **Fenómeno del Pin Flotante y Ondas Senoidales Espurias:**
+   - *Síntoma:* Al inicio, la pantalla mostraba oscilaciones suaves continuas en forma de onda senoidal de baja frecuencia (~0.33 Hz) entre $-1.5\text{ A}$ y $+2.5\text{ A}$, sin importar si la batería estaba apagada o encendida, e incluso al desconectar el cable de señal.
+   - *Causa:* El pin analógico del microcontrolador quedó en alta impedancia (flotante / circuito abierto), actuando como una antena CMOS que captaba el ruido electromagnético ambiental y cargaba/descargaba el condensador interno de muestreo del ADC.
+   - *Solución:* Se reasignó el canal en firmware al **Pin A1**, asegurando continuidad de cables con multímetro y conectándolo firmemente al pin **`OU1`** (salida directa de baja impedancia del sensor).
+2. **Validación Metrológica con Multímetro (Ground-Truth):**
+   - Con la batería apagada y el sensor alimentado a 5V desde el Nano, la medición física con multímetro DC entre `GND` y `OU1` confirmó una tensión fija y constante de **$2.50\text{ V} \pm 0.01\text{ V}$**, verificando que el sensor físico está 100% operativo y en reposo absoluto.
+3. **Protocolo Estricto de Calibración de Cero (`[C]` - Zero Tare):**
+   - **Condición obligatoria:** La calibración de cero debe ejecutarse con la **batería APAGADA** y la Raspberry Pi sin enviar señales PWM parásitas a los servos (corriente real = $0.00\text{ A}$).
+   - Si se calibra con el robot encendido, se ignora el consumo base del sistema, falseando el cálculo de autonomía de la batería LiPo.
+   - Al pulsar `[C]`, el sistema fija el offset ($V_{offset} \approx 2.505\text{ V}$) y centra la corriente exactamente en **$0.00\text{ A}$**.
+
+### 3. Frecuencias de Muestreo, Digitalización y Resolución Efectiva
+- **Frecuencia de Muestreo Físico Interno (Burst Sampling):** **$\approx 4.7\text{ kHz}$**.
+  - Cada 50 ms, el firmware ejecuta un ciclo de **50 muestras analógicas sucesivas**:
+    $$t_{\text{muestra}} = t_{\text{conv}} (\sim 112\,\mu\text{s}) + t_{\text{delay}} (100\,\mu\text{s}) \approx 212\,\mu\text{s} \implies f_s = \frac{1}{212\,\mu\text{s}} \approx \mathbf{4716\text{ Hz}}$$
+  - Este sobremuestreo promedia y cancela en hardware el rizado de conmutación de alta frecuencia generado por el PWM de los 18 servomotores MG996R.
+- **Frecuencia de Telemetría y Grabación CSV:** **$20\text{ Hz}$ ($\Delta t = 50\text{ ms}$)**.
+  - Tasa de refresco a la que se emiten las tramas JSON por serial y se graban las filas en el archivo de misión.
+- **Resolución Efectiva de Corriente:**
+  - Resolución teórica del ADC (10 bits a 5V): $\Delta V = \frac{5.0\text{V}}{1023} \approx 4.887\text{ mV} \implies \Delta I = \frac{4.887\text{ mV}}{40\text{ mV/A}} = 0.122\text{ A}$ ($122\text{ mA}$).
+  - Con el sobremuestreo de 50 muestras, la resolución efectiva mejora a **$< 35\text{ mA}$**.
+- **Protocolo de Validación contra Osciloscopio:**
+  - Acoplamiento DC, base de tiempo de 20 ms/div o 50 ms/div, promedio de trazas (`Average 16x/64x`) activado en el osciloscopio para comparar la componente media DC.
+  - Error relativo esperado respecto a osciloscopio de banco calibrado: **$< 2.5\%$**.
+
+### 4. Arquitectura de Software y Herramientas del Módulo
+- **Firmware C++ (Arduino Nano):** [`firmware_acs758_nano.ino`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_corriente/firmware_acs758_nano/firmware_acs758_nano.ino)
+  - Configurado en Pin A1 a 115200 baudios, calibración en caliente por comando serial `'c'`, tramas JSON con marca de tiempo milimétrica, voltaje $V_{out}$, offset $V_0$, corriente instantánea $I$ y potencia instantánea $P$ (11.1V).
+- **Visor Gráfico en Tiempo Real (OpenCV):** [`visor_corriente_python.py`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_corriente/visor_corriente_python.py)
+  - Osciloscopio con eje de cero centralizado, selector dinámico de escalas mediante tecla **`[E]`** ($\pm 50\text{ A}$, $\pm 20\text{ A}$ y $\pm 5\text{ A}$), tecla **`[C]`** para tara de cero, tecla **`[I]`** para invertir signo, tecla **`[R]`** para iniciar/pausar grabación CSV y **`[S]`** para capturas PNG.
+- **Lanzador de un Clic (.bat):** [`iniciar_visor_corriente.bat`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/iniciar_visor_corriente.bat)
+- **Generador de Gráficas de Publicación para Tesis:** [`graficar_datos_corriente.bat`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/graficar_datos_corriente.bat) y [`graficar_csv_corriente.py`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_corriente/graficar_csv_corriente.py). Genera figuras de 3 subplots (Corriente, Potencia y Consumo en mAh) a 300 DPI.
+- **Registros de Ensayos:** Guardados automáticamente en `pruebas/datos_mision/registro_corriente_<fecha_hora>.csv`.
+
+### 5. ADVERTENCIA CRÍTICA: Prohibición de Conexión Directa a GPIO de Raspberry Pi 5
+- **REGLA DE SEGURIDAD ABSOLUTA:** **Queda estrictamente PROHIBIDO conectar la salida analógica del sensor (`OU1` o `OU2`) de forma directa a los pines GPIO de la Raspberry Pi 5.**
+- **Justificación Física y de Hardware:**
+  1. **Incompatibilidad de Voltaje (Riesgo de Destrucción del Silicio):** Los 40 pines GPIO de la Raspberry Pi 5 operan exclusivamente a niveles lógicos de **$3.3\text{ V}$** con un límite máximo absoluto de **$3.6\text{ V}$** (NO son tolerantes a 5V). La salida analógica del ACS758 entrega $2.5\text{V}$ en reposo y hasta **$5.0\text{ V}$** ante picos de corriente o arranques. Conectar $> 3.3\text{V}$ directo al GPIO inyecta sobretensión que destruye de forma irreversible el chip controlador de I/O **RP1** o el SoC de la Raspberry Pi 5 (\$80+ USD).
+  2. **Ausencia de ADC en Raspberry Pi 5:** La Raspberry Pi 5 carece de convertidor analógico-digital interno (todos sus pines son estrictamente digitales: `HIGH`/`LOW`).
+- **Arquitectura Oficial de Integración (Co-procesador USB en Chipo / ROS 2):**
+  - El **Arduino Nano se mantiene permanentemente como co-procesador esclavo de adquisición analógica** (operando nativamente a 5.0 V seguro con inmunidad total a sobretensiones).
+  - El Arduino Nano se conecta a la Raspberry Pi 5 **exclusivamente mediante cable USB** (`/dev/ttyUSB0` a 115200 baudios).
+  - Esta topología aísla galvánicamente la Raspberry Pi, delega el sobremuestreo rápido ($4.7\text{ kHz}$) fuera del CPU principal, y permite que un nodo ROS 2 en la Pi 5 publique la telemetría en el tópico estándar `/battery_state` (`sensor_msgs/msg/BatteryState`).
+  - *Alternativa secundaria autorizada (sin Arduino):* Convertidor ADC externo I2C de 16 bits **ADS1115** con divisor de tensión resistivo $10\text{ k}\Omega / 20\text{ k}\Omega$ en la entrada de señal.
+
+---
+
+## 🧪 Bitácora de Validación: Sensor de Gases MQ-9 + Corriente ACS758 (Arduino Nano + RPi 5)
+
+Esta sección documenta la arquitectura integrada para la adquisición concurrente del sensor de gas **MQ-9** y el sensor de corriente **ACS758LCB-050B** sobre un único Arduino Nano esclavo:
+
+### 1. Mapa de Pines Validado y Conexiones
+```text
+                        ┌────────────────────────┐
+                        │      ARDUINO NANO      │
+                        │                        │
+  [MQ-9 Gas]            │                        │   [ACS758 Corriente]
+  VCC ──────────────────┤ 5V                  5V ├── VCC
+  GND ──────────────────┤ GND                GND ├── GND
+  A0 (Voltaje Gas) ─────┤ A0                  A1 ├── OUT / OU1 (Voltaje Corriente)
+  D0 (Alarma Digital) ──┤ D2                     │
+                        └────────────────────────┘
+```
+- **MQ-9 (Gas):** VCC a 5V (consumo calefactor $\approx 150-180\text{ mA}$), GND común, A0 a **Pin A0**, D0 a **Pin D2** (umbral digital LM393).
+- **ACS758 (Corriente):** VCC a 5V, GND común, OUT a **Pin A1** ($40\text{ mV/A}$).
+- **Regla Eléctrica en Estrella:** Conectar VCC y GND de ambos sensores de forma independiente desde los pines 5V y GND del Arduino para evitar que la corriente del calefactor genere caídas de tensión parásitas sobre la medición ratiométrica del ACS758.
+
+### 2. Software y Herramientas del Módulo
+- **Firmware C++ (Arduino Nano):** [`firmware_mq9_corriente_nano.ino`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/firmware_mq9_corriente_nano/firmware_mq9_corriente_nano.ino)
+  - Emite JSON a 115200 baudios (20 Hz): `{"t":1227,"gas_v":0.850,"gas_raw":174.0,"gas_ratio":1.000,"gas_alerta":0,"i_amp":0.00,"i_v":2.500,"pot_w":0.00}`.
+- **Monitor en Consola para Raspberry Pi 5:** [`monitor_sensores_rpi.py`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/monitor_sensores_rpi.py)
+  - Conexión por USB (`/dev/ttyUSB0`) a 115200 baudios, visualización en columnas limpias.
+- **Visor Gráfico en Tiempo Real (OpenCV en PC):** [`visor_gas_mq9.py`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/visor_gas_mq9.py) y lanzador [`iniciar_visor_gas_mq9.bat`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/iniciar_visor_gas_mq9.bat).
+- **Documentación Técnica para el Equipo:** [`README.md`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/firmware_mq9_corriente_nano/README.md).
+
+
+
+
