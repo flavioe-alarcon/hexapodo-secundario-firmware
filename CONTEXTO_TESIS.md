@@ -378,7 +378,47 @@ Para permitir el monitoreo en tiempo real del robot sin perder conexión a Inter
 - **Interfaz 2 (`Wi-Fi 2` - TP-Link RTL8188EU):** Conectada exclusivamente al Hotspot `aleskypi-5` (`10.42.0.178`).
 - **Rendimiento Medido:** Latencia hacia la Raspberry Pi 5 (`10.42.0.1`) de **$6\text{ ms}$**, y latencia hacia Internet de **$34\text{ ms}$** operando de forma simultánea e ininterrumpida.
 
-### 12.3 Firmwares Validados y Estandarizados (Repositorio GitHub)
+### 12.3 Procedimiento de Acceso y Control Remoto a la Raspberry Pi 5 por Terminal (SSH sobre Wi-Fi)
+Para operar el robot primario o ejecutar scripts de monitoreo sin cables ni pantallas externas:
+
+1. **Credenciales y Parámetros de Enlace:**
+   - **Red Wi-Fi (Hotspot):** `aleskypi-5` (Contraseña: `alesky69`).
+   - **IP de la Raspberry Pi 5:** `10.42.0.1` (o resolución mDNS `aleskypi-5.local`).
+   - **Puerto:** `22` (SSH estándar).
+   - **Usuario:** `alesky`
+   - **Contraseña de usuario SSH:** `alesky69`
+
+2. **Comando de Conexión (desde PowerShell en Windows o Terminal en Linux/Mac):**
+   ```powershell
+   ssh alesky@10.42.0.1
+   ```
+   *(Alternativa mDNS si la IP no está a mano: `ssh alesky@aleskypi-5.local`).*
+
+3. **Transferencia Rápida de Archivos desde la Laptop a la Pi (`scp`):**
+   ```powershell
+   # Enviar un script a la carpeta home del Raspberry Pi:
+   scp ruta/del/archivo.py alesky@10.42.0.1:~/
+
+   # Descargar datos o logs de la Pi a la laptop:
+   scp alesky@10.42.0.1:~/registro_mision_hexapodo.csv ./
+   ```
+
+4. **Comandos Críticos de Operación en Sesión Remota:**
+   - **Lanzar Monitor TUI de Telemetría (Cámara + Gas + Luz):**
+     ```bash
+     python3 monitor_hexapodo.py
+     ```
+   - **Verificar Estado de Red y Clientes Conectados:**
+     ```bash
+     nmcli device status
+     arp -a
+     ```
+   - **Reactivar Hotspot si fue desactivado manualmente:**
+     ```bash
+     sudo nmcli connection up aleskypi-5
+     ```
+
+### 12.4 Firmwares Validados y Estandarizados (Repositorio GitHub)
 1. **Firmware Integral Maestro (`VALIDADO_EXITOSO_firmware_esp32s3_sta_camara_gas_luz.c`):**
    - Framework: **ESP-IDF v5.4.4** nativo en C con FreeRTOS multicore.
    - **Navegación y Autonomía:** Conexión automática en modo STA a `aleskypi-5` con bucle de reconexión persistente infinito. Asignación IP fija/dinámica `10.42.0.53`.

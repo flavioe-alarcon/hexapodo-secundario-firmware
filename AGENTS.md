@@ -479,6 +479,20 @@ Esta sección documenta la validación experimental del sistema de comunicación
   - Permite enlace multirred en la laptop de supervisión: `Wi-Fi` (Intel AX101) conectado a Internet (`UTEC-Alumnos`), mientras `Wi-Fi 2` (TP-Link) se enlaza a `aleskypi-5` (`10.42.0.178`).
   - Ping medido a Raspberry Pi 5 (`10.42.0.1`): **6 ms**.
   - Ping medido a Internet (`8.8.8.8`): **34 ms** simultáneo.
+- **Acceso por Terminal SSH a la Raspberry Pi 5 desde Laptop (Wi-Fi):**
+  - Comando directo (PowerShell / Terminal):
+    ```powershell
+    ssh alesky@10.42.0.1
+    ```
+    *(Contraseña: `alesky69` | Alternativa mDNS: `ssh alesky@aleskypi-5.local`)*
+  - Transferencia de archivos (`scp`):
+    ```powershell
+    scp script.py alesky@10.42.0.1:~/
+    ```
+  - Ejecutar monitor TUI de telemetría:
+    ```bash
+    python3 monitor_hexapodo.py
+    ```
 
 ### 2. Códigos de Éxito Validados en GitHub (`hexapodo-secundario-firmware`)
 - **`VALIDADO_EXITOSO_firmware_esp32s3_sta_camara_gas_luz.c` (ESP-IDF v5.4.4):**
