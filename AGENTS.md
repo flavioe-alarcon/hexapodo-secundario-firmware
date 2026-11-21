@@ -484,7 +484,7 @@ Esta sección documenta la validación experimental del sistema de comunicación
     ```powershell
     ssh alesky@10.42.0.1
     ```
-    *(Contraseña: `alesky69` | Alternativa mDNS: `ssh alesky@aleskypi-5.local`)*
+    *(Contraseña de usuario SSH: **`alesky`** [sin el 69] | Contraseña del Wi-Fi: **`alesky69`** | Alternativa mDNS: `ssh alesky@aleskypi-5.local`)*
   - Transferencia de archivos (`scp`):
     ```powershell
     scp script.py alesky@10.42.0.1:~/

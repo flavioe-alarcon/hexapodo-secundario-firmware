@@ -382,11 +382,11 @@ Para permitir el monitoreo en tiempo real del robot sin perder conexión a Inter
 Para operar el robot primario o ejecutar scripts de monitoreo sin cables ni pantallas externas:
 
 1. **Credenciales y Parámetros de Enlace:**
-   - **Red Wi-Fi (Hotspot):** `aleskypi-5` (Contraseña: `alesky69`).
+   - **Red Wi-Fi (Hotspot del RPi):** `aleskypi-5` (Contraseña de Wi-Fi: **`alesky69`**).
    - **IP de la Raspberry Pi 5:** `10.42.0.1` (o resolución mDNS `aleskypi-5.local`).
    - **Puerto:** `22` (SSH estándar).
-   - **Usuario:** `alesky`
-   - **Contraseña de usuario SSH:** `alesky69`
+   - **Usuario SSH:** `alesky`
+   - **Contraseña de usuario SSH / Sudo:** **`alesky`** *(sin el 69)*.
 
 2. **Comando de Conexión (desde PowerShell en Windows o Terminal en Linux/Mac):**
    ```powershell
