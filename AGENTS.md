@@ -608,6 +608,49 @@ Esta sección documenta la arquitectura integrada para la adquisición concurren
 - **Visor Gráfico en Tiempo Real (OpenCV en PC):** [`visor_gas_mq9.py`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/visor_gas_mq9.py) y lanzador [`iniciar_visor_gas_mq9.bat`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/iniciar_visor_gas_mq9.bat).
 - **Documentación Técnica para el Equipo:** [`README.md`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/firmware_mq9_corriente_nano/README.md).
 
+---
+
+## 🦾 Bitácora de Locomoción del Hexápodo Primario: Control de Servos (Pololu Maestro), Marcha HOME3 y Acceso SSH
+
+Esta sección documenta el control físico y la cinemática del robot primario operado desde la Raspberry Pi 5:
+
+### 1. Conectividad y Control Autónomo por SSH
+- **Enlace de Red:** Punto de acceso Wi-Fi autónomo generado por la Raspberry Pi 5 (SSID: `aleskypi-5`, IP Gateway: `10.42.0.1`).
+  - *Clave de Wi-Fi:* `alesky69`
+  - *Usuario Linux / Sudo:* `alesky` (clave del SO: `alesky`).
+- **Autenticación sin Contraseña:** Par de llaves SSH ed25519 instalado en `~/.ssh/id_ed25519` (PC) y `~/.ssh/authorized_keys` (RPi 5). El agente y los scripts ejecutan comandos de forma no interactiva con `ssh alesky@10.42.0.1`.
+
+### 2. Mapeo Físico de Canales Pololu Mini Maestro (18 Servomotores MG996R)
+- **Controlador:** Pololu Mini Maestro 18 canales conectado por USB nativo (`/dev/ttyACM0` comando, `/dev/ttyACM1` TTL).
+- **Riel de Potencia:** Batería 3S con convertidor Buck a 6.0V (10A cont / 15A pico), monitoreado en corriente por el Arduino Nano en `/dev/ttyUSB0`.
+- **Mapeo Articular por Pata:**
+  | Extremidad | Coxa | Fémur | Tibia | Sensor Contacto Pie (BCM) |
+  | :--- | :---: | :---: | :---: | :---: |
+  | **Pata 1 (Trasera Derecha)** | CH0 | CH1 | CH2 | GPIO 17 |
+  | **Pata 2 (Media Derecha)** | CH3 | CH4 | CH5 | GPIO 27 |
+  | **Pata 3 (Delantera Derecha)** | CH6 | CH7 | CH8 | GPIO 22 |
+  | **Pata 4 (Delantera Izquierda)** | CH9 | CH10 | CH11 | GPIO 25 |
+  | **Pata 5 (Media Izquierda)** | CH12 | CH13 | CH14 | GPIO 24 |
+  | **Pata 6 (Trasera Izquierda)** | CH15 | CH16 | CH17 | GPIO 23 |
+- **Parámetros de Calibración:**
+  - Pulso neutro ($0^\circ$): $1504\,\mu\text{s}$ (6016 en cuartos de microsegundo).
+  - Factor de escala angular: $631.5268\,\mu\text{s/rad} \approx 11.02\,\mu\text{s/grado}$.
+
+### 3. Evolución Cinemática de la Marcha: De HOME2 a HOME3 (Postura Semi-extendida)
+- **Problema Crítico de Torque en HOME2 (Postura Agachada):**
+  - En HOME2, los fémures estaban a $\approx +30^\circ$ y las tibias muy flexionadas a $\approx -81^\circ$ (casi $90^\circ$).
+  - La distancia horizontal efectiva (brazo de palanca) entre el eje articular del fémur y la punta de apoyo del pie alcanzaba los **$153\text{ mm}$**.
+  - Con una masa total de $3\text{ kg}$ en marcha trípode ($12.5\text{ N}$ en la pata central), el par estático requerido en el fémur llegaba a **$1.89\text{ N}\cdot\text{m}$ ($19.3\text{ kgf}\cdot\text{cm}$)**.
+  - El servomotor **MG996R a 6V** especifica un par de bloqueo (*stall torque*) de $1.08\text{ N}\cdot\text{m}$ ($11\text{ kgf}\cdot\text{cm}$), siendo el par continuo admisible muy inferior. Como resultado, los servos de los fémures operaban en sobrecarga extrema, recalentándose y perdiendo retención (falla detectada en Fémur 6).
+- **Solución Implementada: HOME3 (Postura Semi-extendida):**
+  - **Ángulos de Articulación:** Fémur a $\approx -50.7^\circ / +49.3^\circ$ y Tibia a $\approx -46.0^\circ / +48.0^\circ$ (ambos eslabones semi-extendidos de forma equilibrada).
+  - **Reducción del Brazo de Palanca:** Eleva el cuerpo (despeje de $194\text{ mm}$ bajo `base_link`) y recoge los pies hacia adentro, reduciendo el brazo horizontal efectivo del fémur de $153\text{ mm}$ a solo **$36 - 37\text{ mm}$**.
+  - **Impacto en el Torque:**
+    - Par estático pico en Fémur: Reducido de $1.89\text{ N}\cdot\text{m} \to \mathbf{0.46\text{ N}\cdot\text{m}}$ ($\approx 4.7\text{ kgf}\cdot\text{cm}$, **reducción del $75.6\%$**).
+    - Par estático pico en Tibia: Reducido de $1.04\text{ N}\cdot\text{m} \to \mathbf{0.20\text{ N}\cdot\text{m}}$ ($\approx 2.0\text{ kgf}\cdot\text{cm}$, **reducción del $80.8\%$**).
+  - **Beneficio Operativo:** Permite que los MG996R operen holgadamente dentro de su rango térmico y dinámico seguro, eliminando el riesgo de desconexión o desgranamiento de piñones metálicos durante la marcha trípode continua.
+
+
 
 
 

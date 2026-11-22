@@ -485,6 +485,28 @@ Cámara Orbbec Gemini 2 (RGB-D + IMU)            Cámara Monocular Mini UVC (1 M
 3. **Fusión Multirrobot en ROS 2:**
    Una vez resuelta la pose, el nodo puente publica la transformada `map -> secondary_robot/base_link` y asocia las lecturas de gas del sensor MiCS-5524 para renderizar un **Mapa de Calor 3D de Toxicidad de Gases (Gas Concentration Heatmap)** directamente sobre la nube de puntos de la mina en RViz 2.
 
+---
+
+## 14. Cinemática y Control Articular del Hexápodo Primario: Postura Semi-extendida (HOME 3)
+
+### 14.1 Justificación Mecánica: De HOME 2 a HOME 3
+En los ensayos preliminares de marcha trípode con la postura agachada (**HOME 2**), se evidenció una degradación térmica y sobrecarga mecánica en los servomotores MG996R del fémur:
+- **Geometría en HOME 2:** Fémur a $\approx +30^\circ$, Tibia plegada a $\approx -81^\circ$. El brazo de palanca horizontal entre el eje del fémur y el punto de contacto del pie era de **$153\text{ mm}$**.
+- **Demanda de Par:** En un robot de $3\text{ kg}$ en marcha trípode ($12.5\text{ N}$ en la extremidad central de apoyo), el torque estático exigido al fémur alcanzaba:
+  $$\tau_{\text{fémur, HOME2}} \approx 12.5\text{ N} \times 0.153\text{ m} \approx 1.89\text{ N}\cdot\text{m} \quad (19.3\text{ kgf}\cdot\text{cm})$$
+- Como el par de bloqueo (*stall*) del servo MG996R a 6V es de solo $1.08\text{ N}\cdot\text{m}$ ($11\text{ kgf}\cdot\text{cm}$), los motores entraban en régimen de fatiga térmica con pérdida de sujeción articular (falla experimental observada en Fémur 6).
+
+### 14.2 Formulación de la Postura Semi-extendida (HOME 3)
+Para preservar la integridad de los actuadores y optimizar la autonomía energética:
+1. **Configuración Articular:** Fémures a $\approx \pm 50^\circ$ y Tibias a $\approx \mp 47^\circ$ (relación semiextendida equilibrada en ambos eslabones).
+2. **Elevación y Despeje:** Eleva el chasis (`base_link`) a $194\text{ mm}$ sobre el terreno y recoge radialmente los puntos de apoyo hacia el centro de gravedad.
+3. **Reducción del Brazo de Palanca:** El brazo de momento horizontal del fémur se reduce de $153\text{ mm}$ a **$36 - 37\text{ mm}$**.
+4. **Alivio de Par:**
+   $$\tau_{\text{fémur, HOME3}} \approx 0.46\text{ N}\cdot\text{m} \quad (4.7\text{ kgf}\cdot\text{cm}) \implies \mathbf{75.6\%\text{ de reducción de par}}$$
+   $$\tau_{\text{tibia, HOME3}} \approx 0.20\text{ N}\cdot\text{m} \quad (2.0\text{ kgf}\cdot\text{cm}) \implies \mathbf{80.8\%\text{ de reducción de par}}$$
+5. **Resultado Operativo:** Los 18 servomotores MG996R operan por debajo del $45\%$ de su capacidad nominal, eliminando sobrecalentamientos y garantizando estabilidad estática con un margen al triángulo de apoyo de $> 72\text{ mm}$.
+
+
 
 
 
