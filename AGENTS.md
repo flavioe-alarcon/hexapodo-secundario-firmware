@@ -650,6 +650,32 @@ Esta sección documenta el control físico y la cinemática del robot primario o
     - Par estático pico en Tibia: Reducido de $1.04\text{ N}\cdot\text{m} \to \mathbf{0.20\text{ N}\cdot\text{m}}$ ($\approx 2.0\text{ kgf}\cdot\text{cm}$, **reducción del $80.8\%$**).
   - **Beneficio Operativo:** Permite que los MG996R operen holgadamente dentro de su rango térmico y dinámico seguro, eliminando el riesgo de desconexión o desgranamiento de piñones metálicos durante la marcha trípode continua.
 
+### 4. Bitácora de Pruebas Físicas de Locomoción Ejecutadas en el Robot Primario (21/11/2026)
+- **Infraestructura de Prueba:** Raspberry Pi 5 conectada por USB al Pololu Mini Maestro 18 (`/dev/ttyACM0`) y al Arduino Nano (`/dev/ttyUSB0` con ACS758/ACS712 a 115200 baud). Riel de 6V alimentado y supervisado.
+- **Pruebas Completadas con Éxito:**
+  1. **Movimiento Articular Coxa 2:** Rotación angular suave de $+20^\circ$ ($1504\,\mu\text{s} \to 1724\,\mu\text{s} \to 1504\,\mu\text{s}$) con velocidad limitada a 25 y aceleración a 8 para mitigar estrés en engranajes.
+  2. **Ensayo de Articulaciones Pata 6 (Trasera Izquierda):**
+     - Movimiento amplio de Fémur 6 ($1504\,\mu\text{s} \to 1700\,\mu\text{s} \to 1200\,\mu\text{s} \to 1504\,\mu\text{s}$).
+     - Movimiento amplio de Tibia 6 ($1504\,\mu\text{s} \to 1300\,\mu\text{s} \to 1850\,\mu\text{s} \to 1504\,\mu\text{s}$).
+     - Picos de corriente registrados por el sensor Hall: $0.37\text{ A}$ a $0.57\text{ A}$.
+  3. **Simulación de Marcha en el Aire Pata 6 con Interrupción de Seguridad:**
+     - 3 ciclos completos de marcha (Vuelo $\to$ Avance $\to$ Descenso $\to$ Propulsión).
+     - Supervisión continua a 100 Hz del sensor de contacto en punta en **GPIO 23 BCM**.
+     - Comprobada la lógica de parada inmediata de emergencia si el switch se activa durante el movimiento.
+  4. **Retracción y Desenergización de Pata 6:**
+     - Comprobación de imposibilidad de lectura de potenciómetro en servos estándar MG996R (Maestro devuelve $0.0\,\mu\text{s}$ en canales apagados como Pata 5: CH12, CH13, CH14).
+     - Repliegue suave de Pata 6 hacia el chasis y corte de pulsos PWM (`target = 0`) para dejar la pata libre y sin consumo eléctrico.
+  5. **Simulación de Marcha en el Aire Pata 1 (Trasera Derecha):**
+     - Canales: Coxa (CH0), Fémur (CH1), Tibia (CH2).
+     - 3 ciclos completos de marcha coordinada:
+       - Vuelo: Fémur arriba ($1750\,\mu\text{s}$), Tibia recogida ($1400\,\mu\text{s}$).
+       - Avance: Coxa adelante ($1350\,\mu\text{s}$).
+       - Descenso: Apoyo simulado ($1550\,\mu\text{s}$ / $1600\,\mu\text{s}$).
+       - Propulsión: Coxa empujando hacia atrás ($1650\,\mu\text{s}$).
+     - Supervisión de seguridad activa a 100 Hz en el switch de pie en **GPIO 17 BCM**.
+     - Retorno suave a neutral ($1504\,\mu\text{s}$). Ejecución 100% exitosa.
+
+
 
 
 

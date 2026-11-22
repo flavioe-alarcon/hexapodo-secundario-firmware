@@ -38,6 +38,23 @@
   - Submódulo oficial `OrbbecSDK_ROS2` (v2.10.6) operativo.
   - Paquete `hexapod_mapping` con RTAB-Map configurado para cierre de lazo con odometría visual-inercial.
   - Configuración DDS por FastDDS Ethernet (`fastdds_ethernet.xml`) para enlace directo con la laptop de control.
+* **Control Articular Físico, Mapeo y Pruebas de Marcha (Validado 21/11/2026):**
+  - **Acceso Remoto Autónomo:** Configurado acceso SSH no interactivo mediante par de llaves criptográficas `ed25519` desde PC hacia la Raspberry Pi 5 (`alesky@10.42.0.1`) sobre el hotspot `aleskypi-5`.
+  - **Mapeo Físico de Canales Pololu Mini Maestro (18 Servomotores MG996R):**
+    - Pata 1: CH0 (Coxa), CH1 (Fémur), CH2 (Tibia) | Contacto: GPIO 17 BCM.
+    - Pata 2: CH3 (Coxa), CH4 (Fémur), CH5 (Tibia) | Contacto: GPIO 27 BCM.
+    - Pata 3: CH6 (Coxa), CH7 (Fémur), CH8 (Tibia) | Contacto: GPIO 22 BCM.
+    - Pata 4: CH9 (Coxa), CH10 (Fémur), CH11 (Tibia) | Contacto: GPIO 25 BCM.
+    - Pata 5: CH12 (Coxa), CH13 (Fémur), CH14 (Tibia) | Contacto: GPIO 24 BCM.
+    - Pata 6: CH15 (Coxa), CH16 (Fémur), CH17 (Tibia) | Contacto: GPIO 23 BCM.
+  - **Ensayos Articulares Físicos Ejecutados con Éxito:**
+    1. *Prueba Coxa 2:* Giro controlado de $+20^\circ$ ($1504\,\mu\text{s} \to 1724\,\mu\text{s} \to 1504\,\mu\text{s}$).
+    2. *Prueba de Extensión Amplia Pata 6:* Movimientos independientes y amplios de Fémur 6 ($1700\,\mu\text{s} \to 1200\,\mu\text{s}$) y Tibia 6 ($1300\,\mu\text{s} \to 1850\,\mu\text{s}$) registrando picos de corriente controlados ($0.37\text{ A} - 0.57\text{ A}$).
+    3. *Simulación de Marcha en el Aire Pata 6:* 3 ciclos completos de caminata (Vuelo $\to$ Avance $\to$ Descenso $\to$ Propulsión) con monitoreo en tiempo real a 100 Hz del switch de contacto de pie en **GPIO 23 BCM**.
+    4. *Retracción y Relajación de Pata 6:* Repliegue hacia el chasis y desenergización de PWM (`target = 0`) para evitar esfuerzos y dejarla libre.
+    5. *Simulación de Marcha en el Aire Pata 1:* 3 ciclos completos de caminata en Pata 1 (CH0, CH1, CH2) con supervisión en tiempo real a 100 Hz del switch de contacto de pie en **GPIO 17 BCM** y retorno a neutral.
+  - **Fundamentación Cinemática de la Marcha HOME 3 (Postura Semi-extendida):**
+    - Identificada y documentada la transición de HOME 2 (agachada, brazo de momento de $153\text{ mm}$, torque de $1.89\text{ N}\cdot\text{m}$ sobrecargando los MG996R) a HOME 3 (semi-extendida, brazo reducido a $36 - 37\text{ mm}$, torque pico en fémur aliviado a $0.46\text{ N}\cdot\text{m}$, reducción de $>75\%$ de esfuerzo).
 
 ### 2. Hexápodo Secundario (Unidad Exploradora Ligera - Flavio)
 * **Mecánica y Hardware:**
