@@ -64,6 +64,9 @@ class MQ9Receiver:
             "gas_v": 0.0,
             "gas_raw": 0.0,
             "gas_ratio": 1.0,
+            "rs_r0": 1.0,
+            "ppm_alc": 0.0,
+            "ppm_co": 0.0,
             "gas_alerta": 0,
             "i_amp": 0.0,
             "i_v": 2.500,
@@ -237,19 +240,19 @@ def main():
             draw_header(canvas, W, connected, status_msg, recording)
 
             # Tarjetas de Gas MQ-9
-            draw_card(canvas, 20, 70, 235, 88, "Voltaje de Gas (A0)", f"{data['gas_v']:.3f}", "V", (0, 210, 255), f"ADC: {data['gas_raw']:.0f} / 1023")
+            draw_card(canvas, 20, 70, 235, 88, "Voltaje de Gas (A0)", f"{data['gas_v']:.3f}", "V", (0, 210, 255), f"ADC: {data['gas_raw']:.0f} / 1023 | Rs/R0: {data.get('rs_r0', 1.0):.2f}")
             
-            # Color del Ratio segun intensidad
-            ratio_val = data["gas_ratio"]
-            ratio_color = (0, 230, 100) if ratio_val < 1.3 else ((0, 180, 255) if ratio_val < 2.5 else (0, 50, 255))
-            draw_card(canvas, 270, 70, 245, 88, "Ratio de Etanol (R0/Rs)", f"{ratio_val:.2f}x", "", ratio_color, "1.00x = Aire Limpio Ref.")
+            # Tarjeta de PPM de Etanol (Alcohol)
+            ppm_alc = data.get("ppm_alc", 0.0)
+            alc_color = (0, 230, 100) if ppm_alc < 100.0 else ((0, 180, 255) if ppm_alc < 500.0 else (0, 50, 255))
+            draw_card(canvas, 270, 70, 245, 88, "Concentracion Etanol", f"{ppm_alc:.1f}", "ppm", alc_color, f"Modelo MQ-9 (7630*(Rs/R0)^-2.32)")
 
-            # Tarjeta de Alarma Digital
+            # Tarjeta de PPM de CO / Alarma Digital
+            ppm_co = data.get("ppm_co", 0.0)
             alerta = data["gas_alerta"]
             alert_color = (0, 0, 230) if alerta == 1 else (0, 200, 80)
-            alert_text = "!ALERTA ETANOL!" if alerta == 1 else "NORMAL (D0 OFF)"
-            sub_alert = "Umbral D0 excedido" if alerta == 1 else "Bajo el umbral LM393"
-            draw_card(canvas, 530, 70, 245, 88, "Alarma Digital D0", alert_text, "", alert_color, sub_alert)
+            alert_text = "!ALERTA!" if alerta == 1 else "NORMAL"
+            draw_card(canvas, 530, 70, 245, 88, "CO Estimado / Alarma", f"{ppm_co:.1f}", "ppm", alert_color, f"D0: {alert_text} | CO ref. Mineria")
 
             # Tarjeta de Corriente ACS758
             draw_card(canvas, 790, 70, 240, 88, "Corriente Bateria", f"{data['i_amp']:.2f}", "A", (255, 180, 50), f"P: {data['pot_w']:.1f} W (LiPo 3S)")
@@ -268,7 +271,7 @@ def main():
             if fill_w > 0:
                 cv2.rectangle(canvas, (bar_x + 1, bar_y + 1), (bar_x + fill_w, bar_y + bar_h - 1), bar_color, -1)
 
-            pct_text = f"Intensidad de Gas / Etanol: {int(pct_gas * 100)}%   (Voltaje: {data['gas_v']:.2f} V / 5.0 V)"
+            pct_text = f"Etanol: {ppm_alc:.1f} ppm | CO: {ppm_co:.1f} ppm | Intensidad: {int(pct_gas * 100)}% ({data['gas_v']:.2f} V)"
             cv2.putText(canvas, pct_text, (bar_x + 15, bar_y + 21),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1, cv2.LINE_AA)
 

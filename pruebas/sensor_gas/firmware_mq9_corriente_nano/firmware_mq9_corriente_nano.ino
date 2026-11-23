@@ -26,10 +26,17 @@ const int PIN_CORRIENTE_A1 = A1;
 const float VCC_REF = 5.000;              // Tension de alimentacion nominal (5.00 V)
 const float SENSIBILIDAD_ACS = 0.040;     // 40 mV/A para ACS758LCB-050B
 const float V_BAT_NOMINAL = 11.1;         // LiPo 3S nominal (11.1 V)
-const float RL_GAS = 10.0;                // Resistencia de carga estimada (10 kOhms)
+const float RL_GAS = 10.0;                // Resistencia de carga en modulo (10 kOhms)
+const float RATIO_AIRE_LIMPIO = 9.80;     // Rs/R0 en aire limpio segun datasheet MQ-9
+
+// Constantes de regresion potencial ppm = a * (Rs/R0)^b (Datasheet MQ-9 Hanwei/Winsen)
+const float A_ALCOHOL = 7630.0;
+const float B_ALCOHOL = -2.32;
+const float A_CO = 599.65;
+const float B_CO = -2.244;
 
 float v_offset_corriente = 2.500;         // Offset de reposo del sensor de corriente (0 A)
-float r0_gas = 10.0;                      // Resistencia base de gas en aire limpio (kOhms)
+float r0_gas = 1.02;                      // Resistencia base R0 calibrada en aire limpio (kOhms)
 float v0_gas = 0.800;                     // Voltaje base en aire limpio
 
 unsigned long ultimo_envio = 0;
@@ -62,12 +69,19 @@ void calibrarSensores() {
   v0_gas = (adc_gas_prom * VCC_REF) / 1023.0;
   if (v0_gas < 0.05) v0_gas = 0.05; // Evitar division por cero
   if (v0_gas > 4.95) v0_gas = 4.95;
-  r0_gas = RL_GAS * (VCC_REF - v0_gas) / v0_gas;
+  
+  // Rs en aire limpio
+  float rs_aire = RL_GAS * (VCC_REF - v0_gas) / v0_gas;
+  // Segun datasheet de MQ-9: Rs(aire) / R0 = 9.80 => R0 = Rs(aire) / 9.80
+  r0_gas = rs_aire / RATIO_AIRE_LIMPIO;
+  if (r0_gas < 0.01) r0_gas = 0.01;
 
   Serial.print(F("{\"status\":\"calibrado\",\"v_off_i\":"));
   Serial.print(v_offset_corriente, 4);
   Serial.print(F(",\"v0_gas\":"));
   Serial.print(v0_gas, 4);
+  Serial.print(F(",\"rs_aire\":"));
+  Serial.print(rs_aire, 3);
   Serial.print(F(",\"r0_gas\":"));
   Serial.print(r0_gas, 3);
   Serial.println(F("}"));
@@ -113,10 +127,24 @@ void loop() {
     if (v_gas < 0.05) v_gas = 0.05;
     if (v_gas > 4.95) v_gas = 4.95;
 
-    // Calculo de resistencia Rs y Ratio R0/Rs (Escala ascendente ante etanol)
+    // Calculo de resistencia Rs y Ratio estandar Rs/R0 (Datasheet MQ-9)
     float rs_gas = RL_GAS * (VCC_REF - v_gas) / v_gas;
-    float ratio_gas = (rs_gas > 0.001) ? (r0_gas / rs_gas) : 1.0;
-    if (ratio_gas < 0.1) ratio_gas = 0.1;
+    float ratio_rs_r0 = (r0_gas > 0.001) ? (rs_gas / r0_gas) : 1.0;
+    if (ratio_rs_r0 < 0.05) ratio_rs_r0 = 0.05;
+    if (ratio_rs_r0 > 25.0) ratio_rs_r0 = 25.0;
+
+    // Calculo de concentracion en PPM usando la ley potencial del datasheet
+    // ppm = a * (Rs/R0)^b
+    float ppm_alcohol = A_ALCOHOL * pow(ratio_rs_r0, B_ALCOHOL);
+    if (ppm_alcohol < 0.0) ppm_alcohol = 0.0;
+    if (ppm_alcohol > 10000.0) ppm_alcohol = 10000.0;
+
+    float ppm_co = A_CO * pow(ratio_rs_r0, B_CO);
+    if (ppm_co < 0.0) ppm_co = 0.0;
+    if (ppm_co > 2000.0) ppm_co = 2000.0;
+
+    // Ratio ascendente visual (R0_aire / Rs) para monitoreo
+    float ratio_visual = (rs_gas > 0.001) ? ((r0_gas * RATIO_AIRE_LIMPIO) / rs_gas) : 1.0;
 
     // Estado digital (D0 es active LOW cuando el gas supera el umbral del potenciometro)
     int alerta_gas = (digitalRead(PIN_GAS_D0) == LOW) ? 1 : 0;
@@ -147,7 +175,13 @@ void loop() {
     Serial.print(F(",\"gas_raw\":"));
     Serial.print(adc_gas, 1);
     Serial.print(F(",\"gas_ratio\":"));
-    Serial.print(ratio_gas, 3);
+    Serial.print(ratio_visual, 3);
+    Serial.print(F(",\"rs_r0\":"));
+    Serial.print(ratio_rs_r0, 3);
+    Serial.print(F(",\"ppm_alc\":"));
+    Serial.print(ppm_alcohol, 1);
+    Serial.print(F(",\"ppm_co\":"));
+    Serial.print(ppm_co, 1);
     Serial.print(F(",\"gas_alerta\":"));
     Serial.print(alerta_gas);
     Serial.print(F(",\"i_amp\":"));

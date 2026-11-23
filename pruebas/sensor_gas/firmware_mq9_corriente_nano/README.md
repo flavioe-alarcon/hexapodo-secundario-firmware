@@ -37,7 +37,62 @@ Este directorio contiene el firmware y la documentación técnica para la adquis
 
 ---
 
-## ⚡ 2. Especificaciones del Firmware (`firmware_mq9_corriente_nano.ino`)
+## 📐 2. Modelo Físico-Matemático: Transducción de Voltaje a Concentración (PPM)
+
+Para convertir la señal de voltaje leída en el pin analógico `A0` a concentración real en **partes por millón ($\text{ppm}$)**, se implementó el modelo de quimisorción sobre óxidos metálicos semiconductores ($\text{SnO}_2$) basado en la **Ley de Potencias de Wolkenstein-Clifford** y las curvas de sensibilidad de la **Figura 3 del Datasheet oficial de Hanwei Electronics / Winsen MQ-9**.
+
+### 2.1 Cadena de Transducción Eléctrica
+
+1. **Lectura y Conversión Analógica-Digital (ADC):**
+   $$V_{out} = \text{ADC} \times \left(\frac{V_{CC}}{1023}\right) = \text{ADC} \times \left(\frac{5.000\text{ V}}{1023}\right)$$
+
+2. **Cálculo de la Resistencia del Sensor ($R_s$):**
+   El módulo breakout integra un divisor de tensión resistivo con resistencia de carga $R_L = 10.0\text{ k}\Omega$ conectada a tierra:
+   $$V_{out} = V_{CC} \cdot \frac{R_L}{R_s + R_L} \implies R_s = R_L \cdot \left(\frac{V_{CC} - V_{out}}{V_{out}}\right)$$
+
+3. **Calibración Metrológica de la Resistencia Base ($R_0$):**
+   En el datasheet del MQ-9, la resistencia base $R_0$ está normalizada respecto a una concentración de referencia (1000 ppm GLP o 100 ppm CO). En aire limpio libre de gases reductores, el fabricante especifica un ratio nominal:
+   $$\left(\frac{R_s}{R_0}\right)_{\text{aire limpio}} \approx 9.80 \implies R_0 = \frac{R_{s,\text{aire}}}{9.80}$$
+   Al inicializar el sistema (o presionar la tecla `[C]`), el firmware promedia 250 lecturas en reposo para fijar $R_{s,\text{aire}}$ y deduce automáticamente el valor de $R_0$.
+
+4. **Ratio Adimensional de Sensibilidad:**
+   $$\text{Ratio} = \frac{R_s}{R_0}$$
+   * En aire limpio: $\text{Ratio} \approx 9.80$.
+   * Ante presencia de gas reductor (Etanol, CO, GLP): los iones de oxígeno adsorbidos reaccionan, liberando electrones al $\text{SnO}_2 \implies R_s$ desciende bruscamente $\implies \text{Ratio}$ cae por debajo de $2.0\dots 0.5$.
+
+---
+
+### 2.2 Derivación de la Ecuación de Concentración ($\text{ppm}$)
+
+En escala doblemente logarítmica ($\log_{10}(\text{Ratio})$ vs $\log_{10}(\text{ppm})$), las curvas de respuesta del MQ-9 son líneas rectas descritas por:
+$$\log_{10}\left(\frac{R_s}{R_0}\right) = \log_{10}(A) + B \cdot \log_{10}(\text{ppm})$$
+
+Invirtiendo algebraicamente la función:
+$$\log_{10}(\text{ppm}) = \frac{\log_{10}(R_s/R_0) - \log_{10}(A)}{B} = \frac{1}{B} \log_{10}\left(\frac{R_s}{R_0}\right) - \frac{\log_{10}(A)}{B}$$
+$$\text{ppm} = a \cdot \left(\frac{R_s}{R_0}\right)^b$$
+
+donde:
+$$b = \frac{1}{B}, \quad a = 10^{-\frac{\log_{10}(A)}{B}} = A^{-1/B}$$
+
+### 2.3 Matriz de Coeficientes según el Datasheet del MQ-9
+
+A partir de la digitalización de los pares de coordenadas de la curva de sensibilidad (Fig. 3 del Datasheet):
+
+| Gas Analito | Coordenada 1 $(\text{ppm}_1, \text{Ratio}_1)$ | Coordenada 2 $(\text{ppm}_2, \text{Ratio}_2)$ | Pendiente $B$ | Exponente $b = 1/B$ | Escala $a$ | Ecuación de Concentración |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Alcohol / Etanol** | $(1000\text{ ppm}, 2.40)$ | $(5000\text{ ppm}, 1.20)$ | $-0.4307$ | **$-2.322$** | **$7630.0$** | $\text{ppm} = 7630 \cdot \left(\frac{R_s}{R_0}\right)^{-2.32}$ |
+| **Monóxido de Carbono ($\text{CO}$)** | $(100\text{ ppm}, 1.70)$ | $(1000\text{ ppm}, 0.58)$ | $-0.4456$ | **$-2.244$** | **$599.65$** | $\text{ppm} = 599.65 \cdot \left(\frac{R_s}{R_0}\right)^{-2.244}$ |
+| **Gas Licuado (GLP / LPG)** | $(1000\text{ ppm}, 1.00)$ | $(5000\text{ ppm}, 0.30)$ | $-0.4574$ | **$-2.186$** | **$1000.5$** | $\text{ppm} = 1000.5 \cdot \left(\frac{R_s}{R_0}\right)^{-2.186}$ |
+| **Metano ($\text{CH}_4$)** | $(1000\text{ ppm}, 1.40)$ | $(5000\text{ ppm}, 0.20)$ | $-0.3776$ | **$-2.648$** | **$4269.6$** | $\text{ppm} = 4269.6 \cdot \left(\frac{R_s}{R_0}\right)^{-2.648}$ |
+
+> **Sustento para la Tesis de Minería Subterránea (D.S. N° 024-2016-EM):**
+> * El límite máximo permisible (TLV-TWA) de monóxido de carbono ($\text{CO}$) en minería subterránea es de **$25\text{ ppm}$** en jornadas de 8 horas, y **$100\text{ ppm}$** como límite de exposición a corto plazo (STEL / Techo).
+> * El modelo implementado para $\text{CO}$ cubre el rango de $10\text{ a }1000\text{ ppm}$, permitiendo disparar alertas de evacuación tempranas.
+> * El vapor de etanol se utiliza en laboratorio como gas sucedáneo seguro (*surrogate gas*) para verificar la dinámica transitoria del sensor sin poner en riesgo la salud de los investigadores.
+
+---
+
+## ⚡ 3. Especificaciones del Firmware (`firmware_mq9_corriente_nano.ino`)
 
 * **Microcontrolador:** ATmega328P @ 16 MHz (Arduino Nano).
 * **Velocidad Serial:** `115200` baudios.
@@ -47,13 +102,16 @@ Este directorio contiene el firmware y la documentación técnica para la adquis
 
 ### Estructura de la Trama JSON Emitida
 ```json
-{"t":1227,"gas_v":0.850,"gas_raw":174.0,"gas_ratio":1.000,"gas_alerta":0,"i_amp":0.00,"i_v":2.500,"pot_w":0.00}
+{"t":1227,"gas_v":0.850,"gas_raw":174.0,"gas_ratio":1.000,"rs_r0":9.800,"ppm_alc":38.2,"ppm_co":0.0,"gas_alerta":0,"i_amp":0.00,"i_v":2.500,"pot_w":0.00}
 ```
 
 * `t`: Tiempo transcurrido en milisegundos (`millis()`).
 * `gas_v`: Voltaje analógico leído en A0 ($0.0\text{ V} - 5.0\text{ V}$).
 * `gas_raw`: Valor directo del convertidor ADC ($0 - 1023$).
-* `gas_ratio`: Razón de concentración relativa $R_0 / R_s$ (1.00x en aire limpio; $> 2.0\text{x}$ ante presencia de etanol/gases).
+* `gas_ratio`: Razón de concentración relativa $R_0(\text{aire}) / R_s$ para visualización ascendente.
+* `rs_r0`: Ratio estándar $R_s / R_0$ del datasheet (9.8 en aire limpio, desciende ante gas).
+* `ppm_alc`: Concentración calculada de Etanol / Alcohol en partes por millón ($\text{ppm}$).
+* `ppm_co`: Concentración estimada de Monóxido de Carbono en partes por millón ($\text{ppm}$).
 * `gas_alerta`: Estado digital del pin D2 (1 = umbral superado, 0 = normal).
 * `i_amp`: Corriente calculada en Amperios.
 * `i_v`: Voltaje analógico medido en A1 ($V$).
@@ -61,7 +119,7 @@ Este directorio contiene el firmware y la documentación técnica para la adquis
 
 ---
 
-## 🍓 3. Integración en Raspberry Pi 5 (Robot Primario Chipo)
+## 🍓 4. Integración en Raspberry Pi 5 (Robot Primario Chipo)
 
 ### A. Detección y Permisos
 Al conectar el Arduino Nano al puerto USB de la Raspberry Pi:

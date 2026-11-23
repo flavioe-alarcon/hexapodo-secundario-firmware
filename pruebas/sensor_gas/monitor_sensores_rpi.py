@@ -44,9 +44,9 @@ def main():
         print("    O de forma temporal: sudo chmod 666 " + puerto)
         sys.exit(1)
 
-    print("-" * 78)
-    print(f"{'Tiempo (s)':<12} | {'Gas (V)':<9} | {'Ratio R0/Rs':<12} | {'Alerta D0':<15} | {'Corriente (A)':<12}")
-    print("-" * 78)
+    print("-" * 92)
+    print(f"{'Tiempo (s)':<11} | {'Gas (V)':<8} | {'Rs/R0':<8} | {'PPM Etanol':<11} | {'PPM CO':<9} | {'Alerta D0':<12} | {'Corriente (A)':<13}")
+    print("-" * 92)
 
     try:
         while True:
@@ -58,18 +58,20 @@ def main():
                 try:
                     data = json.loads(line)
                     if "status" in data and data["status"] == "calibrado":
-                        print(f"[*] Calibracion recibida: V_off_i={data.get('v_off_i')}V, V0_gas={data.get('v0_gas')}V")
+                        print(f"[*] Calibracion recibida: V_off_i={data.get('v_off_i')}V, V0_gas={data.get('v0_gas')}V, R0={data.get('r0_gas')}k")
                         continue
 
                     if "gas_v" in data:
                         t_sec = data.get("t", 0) / 1000.0
                         gas_v = data.get("gas_v", 0.0)
-                        ratio = data.get("gas_ratio", 1.0)
+                        rs_r0 = data.get("rs_r0", 1.0)
+                        ppm_alc = data.get("ppm_alc", 0.0)
+                        ppm_co = data.get("ppm_co", 0.0)
                         alerta_num = data.get("gas_alerta", 0)
                         alerta_str = "[!ETANOL!]" if alerta_num == 1 else "[NORMAL]"
                         i_amp = data.get("i_amp", 0.0)
 
-                        print(f"{t_sec:<12.1f} | {gas_v:<9.3f} | {ratio:<11.2f}x | {alerta_str:<15} | {i_amp:<12.2f}")
+                        print(f"{t_sec:<11.1f} | {gas_v:<8.3f} | {rs_r0:<8.2f} | {ppm_alc:<11.1f} | {ppm_co:<9.1f} | {alerta_str:<12} | {i_amp:<13.2f}")
                 except json.JSONDecodeError:
                     pass
     except KeyboardInterrupt:

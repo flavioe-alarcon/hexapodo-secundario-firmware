@@ -15,9 +15,14 @@ Este archivo (`AGENTS.md`) define el contexto maestro y las directrices obligato
 
 ---
 
-## 🤖 Arquitectura del Sistema Cooperativo (A2)
+## 🤖 Arquitectura del Sistema Cooperativo (A2) y Ámbito de Aplicación
 
-El sistema opera bajo el concepto de **inspección sin ingreso (no-entry)** en minería subterránea y zonas colapsadas (mitigando riesgos de gases letales $CO$, $CO_2$, $NO_x$, $H_2S$, y deficiencia de $O_2$ bajo la normativa **D.S. N° 024-2016-EM** y directivas internacionales):
+El sistema opera bajo el concepto de **inspección sin ingreso (no-entry)** en una gama amplia de **entornos confinados y de difícil acceso**:
+1. **Minería subterránea:** Galerías ciegas, chimeneas, tajos y zonas de ventilación restringida.
+2. **Zonas de derrumbe y colapso estructural:** Estructuras colapsadas por sismos, fallas geológicas o deslizamientos donde el terreno es inestable para cuadrillas de rescate.
+3. **Escenarios post-incendio y siniestros industriales:** Espacios confinados con acumulación de gases tóxicos y combustibles, humo residual y pérdida de soporte estructural.
+
+En estos entornos, el sistema mitiga la exposición humana a atmósferas peligrosas (gases letales $CO$, $CO_2$, $NO_x$, $H_2S$, vapores combustibles y deficiencia de $O_2$) bajo la normativa **D.S. N° 024-2016-EM**, estándares NFPA y directivas internacionales de seguridad y rescate:
 
 1. **Hexápodo Primario (Unidad Central de Mapeo y Supervisión):**
    - **Mecánica:** Arquitectura bioinspirada de código abierto (*Chipo / MakeYourPet*), 18 servomotores metálicos **MG996R** ($\approx 10\text{ kg}\cdot\text{cm}$ a 6V), tornillería M3, sensor de contacto en pata con pulsador y goma elastomérica.
@@ -600,11 +605,18 @@ Esta sección documenta la arquitectura integrada para la adquisición concurren
 - **ACS758 (Corriente):** VCC a 5V, GND común, OUT a **Pin A1** ($40\text{ mV/A}$).
 - **Regla Eléctrica en Estrella:** Conectar VCC y GND de ambos sensores de forma independiente desde los pines 5V y GND del Arduino para evitar que la corriente del calefactor genere caídas de tensión parásitas sobre la medición ratiométrica del ACS758.
 
-### 2. Software y Herramientas del Módulo
+### 2. Modelo Matemático de Transducción a PPM (Wolkenstein-Clifford)
+- **Divisor y Resistencia:** $V_{out} = \text{ADC} \times \frac{5.0\text{V}}{1023} \implies R_s = R_L \left(\frac{V_{CC} - V_{out}}{V_{out}}\right)$ con $R_L = 10\text{ k}\Omega$.
+- **Calibración $R_0$ en Aire Limpio:** Según datasheet MQ-9, $(R_s/R_0)_{\text{aire}} = 9.80 \implies R_0 = R_{s,\text{aire}} / 9.80$.
+- **Ley de Potencias:** $\text{ppm} = a \cdot (R_s / R_0)^b$
+  - **Etanol (Alcohol):** $a = 7630.0$, $b = -2.322 \implies \text{ppm}_{\text{alc}} = 7630 \cdot (R_s/R_0)^{-2.32}$.
+  - **Monóxido de Carbono (CO):** $a = 599.65$, $b = -2.244 \implies \text{ppm}_{\text{CO}} = 599.65 \cdot (R_s/R_0)^{-2.244}$.
+
+### 3. Software y Herramientas del Módulo
 - **Firmware C++ (Arduino Nano):** [`firmware_mq9_corriente_nano.ino`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/firmware_mq9_corriente_nano/firmware_mq9_corriente_nano.ino)
-  - Emite JSON a 115200 baudios (20 Hz): `{"t":1227,"gas_v":0.850,"gas_raw":174.0,"gas_ratio":1.000,"gas_alerta":0,"i_amp":0.00,"i_v":2.500,"pot_w":0.00}`.
+  - Emite JSON a 115200 baudios (20 Hz): `{"t":1227,"gas_v":0.850,"gas_raw":174.0,"gas_ratio":1.000,"rs_r0":9.800,"ppm_alc":38.2,"ppm_co":0.0,"gas_alerta":0,"i_amp":0.00,"i_v":2.500,"pot_w":0.00}`.
 - **Monitor en Consola para Raspberry Pi 5:** [`monitor_sensores_rpi.py`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/monitor_sensores_rpi.py)
-  - Conexión por USB (`/dev/ttyUSB0`) a 115200 baudios, visualización en columnas limpias.
+  - Conexión por USB (`/dev/ttyUSB0`) a 115200 baudios, visualización de PPM Etanol, PPM CO y alertas.
 - **Visor Gráfico en Tiempo Real (OpenCV en PC):** [`visor_gas_mq9.py`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/visor_gas_mq9.py) y lanzador [`iniciar_visor_gas_mq9.bat`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/iniciar_visor_gas_mq9.bat).
 - **Documentación Técnica para el Equipo:** [`README.md`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/firmware_mq9_corriente_nano/README.md).
 
@@ -674,6 +686,21 @@ Esta sección documenta el control físico y la cinemática del robot primario o
        - Propulsión: Coxa empujando hacia atrás ($1650\,\mu\text{s}$).
      - Supervisión de seguridad activa a 100 Hz en el switch de pie en **GPIO 17 BCM**.
      - Retorno suave a neutral ($1504\,\mu\text{s}$). Ejecución 100% exitosa.
+  6. **Extensión Global (Postura Estrella) y Liberación PWM:**
+     - Validación de consigna a 18 canales simultáneos con rampa escalonada ($1504\,\mu\text{s}$) y posterior corte de pulsos (`target = 0`) para desenergización completa ($I = 0.00\text{ A}$, $P = 0.00\text{ W}$).
+  7. **Diagnóstico y Reemplazo de Servomotor en Fémur 3 (Canal 7):**
+     - *Falla identificada:* Pata 3 no mantenía rigidez en prueba de extensión. La inspección física reveló que el servo instalado poseía engranajes internos de nylon/plástico blanco que se habían desgranado/robado bajo carga.
+     - *Solución:* Sustitución por servomotor con piñonería íntegramente metálica.
+     - *Verificación:* Extensión y energización activa de Pata 3 (CH6, CH7, CH8 a $1504\,\mu\text{s}$) para validación táctil de rigidez y par de retención.
+  8. **Ensayo de Marcha Suavizada Anti-Temblor en Pata 3:**
+     - *Ajuste Dinámico:* Rampa trapezoidal por hardware en Pololu Maestro (`accel = 6` en Fémur 7 y Tibia 8; `accel = 8` en Coxa 6; `speed = 22 - 24`), control de jerk y ajuste mecánico de tornillo en cuerno del servo.
+     - *Resultado:* 3 ciclos completos de marcha (vuelo suave $\to$ avance en aire $\to$ descenso $\to$ propulsión) ejecutados sin temblor ni resonancia elástica en voladizo. Corriente basal controlada ($0.00\text{ A}$ a $0.35\text{ A}$, pico transitorio de $1.15\text{ A}$ en despegue).
+  9. **Marcha Bioinspirada con Plegado de Tibia (Tipo Insecto) en Pata 3:**
+     - *Diagnóstico Físico:* El temblor residual en el aire se concentraba al detenerse en la cota de vuelo por caza en la zona muerta del servo debido al par de gravedad ejercido por la pata estirada ($L \approx 180\text{ mm}$).
+     - *Ajustes Combinados:*
+       1. *Recomendación A (Controlador):* Rampa ultra-progresiva con `accel = 3` y `speed = 14` en Fémur y Tibia (`accel = 4`, `speed = 16` en Coxa).
+       2. *Recomendación B (Cinemática):* Plegado pronunciado de tibia a $1240\,\mu\text{s}$ ($\approx -24^\circ$) durante el despegue y avance en el aire, reduciendo el brazo de palanca y la inercia angular ($J \propto m L^2$) en un $75\%$. Extensión coordinada a $1560\,\mu\text{s}$ en la fase de descenso.
+     - *Resultado:* Ejecución de 3 ciclos completos con despegue sedoso, avance en vuelo compacto y aterrizaje amortiguado.
 
 
 
