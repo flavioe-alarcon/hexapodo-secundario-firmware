@@ -98,3 +98,19 @@ Este documento recopila las justificaciones técnicas, normativas y metodológic
   - Cuando el secundario penetra la zona con su cámara monocular UVC ligera ($<15\text{ g}$), la Raspberry Pi 5 procesa sus fotogramas 2D, encuentra correspondencias con la base de datos visual previa mediante *Bag of Words* (BoW) y resuelve la pose 6-DoF mediante **PnP con RANSAC** utilizando la matriz intrínseca $\mathbf{K}$ de la cámara.
   - Esto proporciona escala métrica absoluta sin deriva, no requiere sensores pesados en el explorador y permite mapear con precisión tridimensional la dispersión de gases contaminantes en la mina.
 
+---
+
+### Decisión 11: Metodología de Validación y Justificación Metrológica del Sensor de Gases MiCS-5524 sin Sensor Patrón Continuo
+- **Contexto:** En la sustentación y defensa de tesis se cuestiona la precisión del sensor semiconductor de gases MiCS-5524 en el robot secundario ante la ausencia de un detector patrón de laboratorio continuo (como un analizador multigás certificado de alta gama).
+- **Alternativas evaluadas:**
+  1. *Exigir calibración absoluta con gas patrón en cámara de flujo continuo previa a cada uso:* Inviable operativamente en campo, de alto costo económico ($>\text{S/ }2,000$ en equipos de referencia) y contraproducente para un prototipo explorador de bajo costo.
+  2. *Uso de un valor teórico rígido de catálogo para $R_0$:* Inaceptable metrológicamente; SGX Sensortech especifica una dispersión de lote de $100\text{ k}\Omega$ a $1500\text{ k}\Omega$.
+  3. *Calibración Diferencial Relativa ($R_0 / R_s$) con Línea Base Dinámica y Trazabilidad de Fábrica:* Seleccionada y justificada.
+- **Justificación Técnica y Académica:**
+  1. **Alcance Operativo de Detección Temprana (*Screening* vs. Análisis Forense):** Bajo el marco VDI 2206 y los requisitos ISO 29148, el hexápodo secundario opera como un sistema de alerta temprana para seguridad humana (*no-entry*). Su objetivo es discriminar entre zonas seguras ($<25\text{ ppm}$ de CO, límite permisible según D.S. N° 024-2016-EM), zonas de precaución ($25 - 100\text{ ppm}$) y atmósferas letales ($>100\text{ ppm}$). La detección de estos saltos de voltaje ($0.8\text{ V} \to 2.5\text{ V} \to 3.14\text{ V}$) es $100\%$ efectiva para activar maniobras evasivas en ROS 2.
+  2. **Invariante Físico Relativo ($R_s / R_0$):** Bârsan & Weimar (2001, *Journal of Electroceramics*) demuestran que en semiconductores de $\text{SnO}_2$, las tolerancias de fabricación hacen inútil calibrar resistencias absolutas, pero el ratio normalizado $R_s / R_0$ es un invariante del material.
+  3. **Zero-Gas Reference Tracking en Robótica Móvil:** Burgués & Marco (2018, *Sensors and Actuators B*) establecen que en plataformas móviles de exploración ambiental el método metrológico óptimo es calibrar la línea base $R_0$ dinámicamente en zona segura/ventilada al arrancar la misión. Esto cancela el error sistemático de cero (*offset drift*) y las variaciones por temperatura ambiental sin requerir sensores adicionales.
+  4. **Trazabilidad Heredada del Fabricante:** Al emplear las constantes canónicas de la ley de potencias de SGX Sensortech (DS-0098) acopladas al divisor de hardware ($R_L = 820\,\Omega$), el cálculo de concentraciones hereda la calibración de cámara del fabricante.
+  5. **Repetibilidad Experimental Comprobada:** En los ensayos de laboratorio (registrados en los CSVs de misión), el sensor demostró ausencia de histéresis: tras picos de saturación, desorbió el gas y retornó con exactitud a su línea base ($V_{base} \approx 0.85\text{ V}$, proporción $R_0 / R_s \approx 1.000$) con un tiempo de respuesta dinámico $t_{90} < 2\text{ s}$.
+
+

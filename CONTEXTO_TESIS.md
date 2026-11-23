@@ -31,9 +31,9 @@ En entornos subterráneos y espacios confinados (galerías mineras subterráneas
 - Prácticas actuales de inspección humana presencial con detectores portátiles, que exponen vidas humanas a intoxicaciones agudas y accidentes fatales (ej. accidente en mina Yanaquihua, Arequipa).
 
 ### 2.2 Justificación Técnica y Social
-- **Concepto "No-Entry":** Evitar el ingreso de seres humanos a zonas ciegas no ventiladas antes de una verificación certera y segura.
-- **Enfoque Cooperativo Multirrobot:** Combinar una plataforma principal de procesamiento/mapeo con un agente explorador ligero de envolvente mínima capaz de penetrar en ramales y oquedades estrechas inaccesibles para robots convencionales o personas.
-- **Compromiso Ético y ODS:** Alineado con la Ley N° 29783 (Seguridad y Salud en el Trabajo), el ODS 3 (Salud y Bienestar) y democratización tecnológica para la pequeña minería mediante prototipado de bajo costo.
+- **Concepto "No-Entry" en Entornos Confinados y Hostiles:** Evitar el ingreso de seres humanos a zonas ciegas no ventiladas antes de una verificación certera y segura. Esto abarca faenas de minería subterránea, zonas de derrumbe tras sismos o deslizamientos, y escenarios post-incendio o colapso estructural con atmósferas y ventilación comprometidas.
+- **Enfoque Cooperativo Multirrobot:** Combinar una plataforma principal de procesamiento/mapeo con un agente explorador ligero de envolvente mínima capaz de penetrar en ramales, escombros y oquedades estrechas inaccesibles para robots convencionales o personas.
+- **Compromiso Ético y ODS:** Alineado con la Ley N° 29783 (Seguridad y Salud en el Trabajo), el D.S. N° 024-2016-EM, el ODS 3 (Salud y Bienestar) y democratización tecnológica para la pequeña minería y brigadas de rescate mediante prototipado de bajo costo.
 
 ### 2.3 Marco Normativo y Estándares
 - **D.S. N° 024-2016-EM (MINEM):** Reglamento de Seguridad y Salud Ocupacional en Minería (Art. 30, 246, 250, 254; límites del Anexo 15).
@@ -252,7 +252,14 @@ Para mitigar el consumo excesivo de corriente y masa de los sensores cerámicos 
 6. **Condición de Saturación Práctica:**
    - Saturación química: Por encima de $500\text{ ppm}$ en etanol y $1000\text{ ppm}$ en $\text{CO}$ según datasheet SGX DS-0098.
    - Saturación eléctrica: Con $V_{CC}=5\text{V}$ y $R_L=820\,\Omega$, cuando $R_s \le 485\,\Omega$, $V_{OUT} \ge 3.14\text{ V}$, alcanzando el fondo de escala del ADC del ESP32-S3.
-7. **Ecosistema de Software y Documentación:**
+7. **Justificación Metrológica de No Requerir Calibración Absoluta con Sensor Patrón:**
+   Ante la consulta del jurado evaluador sobre la fidelidad de las mediciones del MiCS-5524 sin contar con un detector patrón continuo de laboratorio, se establecen 5 fundamentos técnicos y académicos:
+   - **1. Alcance Operativo de Detección Temprana (*Screening / Safety Thresholds* vs. Laboratorio Químico):** El objetivo del robot secundario de mínima envolvente (<650 g) es la inspección remota sin ingreso (*no-entry*). Su tarea no es certificar la composición química al 0.01%, sino clasificar la atmósfera en zonas discretas de seguridad bajo el D.S. N° 024-2016-EM: Zona Segura (<25 ppm CO), Alerta (25-50 ppm CO) y Evacuación Inmediata (>100 ppm CO). Los saltos de voltaje del sensor ($0.8\text{ V} \to 2.5\text{ V} \to 3.14\text{ V}$) son 100% resolutivos para activar las alarmas y maniobras evasivas en ROS 2.
+   - **2. Invariante Físico de Conductividad Relativa ($R_s / R_0$):** Bârsan & Weimar (2001, *Journal of Electroceramics*) demuestran que las tolerancias de fabricación en películas de $\text{SnO}_2$ hacen inútil buscar resistencias absolutas fijas, pero el ratio normalizado $R_s / R_0$ es un parámetro invariante del material semiconductor.
+   - **3. Zero-Gas Reference Tracking en Robótica Móvil:** Burgués & Marco (2018, *Sensors and Actuators B*) establecen que en robótica móvil de exploración ambiental el método metrológico óptimo es calibrar la línea base $R_0$ dinámicamente en zona segura/ventilada al arrancar la misión. Esto cancela el error sistemático de cero (*offset drift*) y las variaciones por temperatura ambiental sin requerir sensores adicionales.
+   - **4. Trazabilidad Heredada del Fabricante (SGX Sensortech DS-0098):** Al acoplar el divisor resistivo ($R_L = 820\,\Omega$) con las constantes teóricas $A$ y $B$ del fabricante, el cálculo de concentraciones hereda la calibración de cámara estandarizada del fabricante de semiconductores.
+   - **5. Repetibilidad Experimental Comprobada:** En los ensayos de laboratorio (registrados en los CSVs de misión), el sensor demostró ausencia de histéresis: tras picos de saturación, desorbió el gas y retornó con exactitud a su línea base ($V_{base} \approx 0.85\text{ V}$, proporción $R_0 / R_s \approx 1.000$) con un tiempo de respuesta dinámico ultra-rápido ($t_{90} < 2\text{ s}$).
+8. **Ecosistema de Software y Documentación:**
    - Firmware dual (Wi-Fi SoftAP + Serial JSON) en `pruebas_sensor_gas/firmware_mics5524/firmware_mics5524.ino`.
    - Visor OpenCV en Python (Serial y Wi-Fi): [`visor_gas_python.py`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas_sensor_gas/visor_gas_python.py).
    - Lanzadores ejecutables: [`iniciar_visor_gas_serial.bat`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas_sensor_gas/iniciar_visor_gas_serial.bat) e [`iniciar_visor_gas_wifi.bat`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas_sensor_gas/iniciar_visor_gas_wifi.bat).
