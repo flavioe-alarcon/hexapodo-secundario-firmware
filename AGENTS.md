@@ -707,3 +707,67 @@ Esta sección documenta el control físico y la cinemática del robot primario o
 
 
 
+
+---
+
+## 📐 Análisis Estructural Analítico y Validación FEA de la Extremidad del Hexápodo Secundario (Fémur, Tibia y Coxa)
+
+Esta sección consolida el marco analítico de resistencia de materiales, la evolución morfológica del diseño CAD y la validación por Elementos Finitos (FEA en Autodesk Fusion 360) de la pata del robot secundario:
+
+### 1. Parámetros de Manufactura Aditiva y Criterio de Sólido Continuo (FDM)
+- **Material de Fabricación Real:** PLA ($S_y = 40.0\text{ MPa}$ paralelo a capas, $E = 3500.0\text{ MPa}$).
+- **Configuración de Laminado:** Relleno volumétrico del $8\%$ (*grid infill*) con **3 perímetros sólidos de pared** (boquilla de $0.40\text{ mm}$).
+- **Criterio de Consolidación Maciza:** Tres perímetros por cara aportan $2 \times (3 \times 0.40\text{ mm}) = \mathbf{2.40\text{ mm}}$ de pared sólida continua. En todas las nervaduras críticas del fémur ($t_{\text{pared}} \approx 2.31\text{ mm}$) y de la tibia ($t_{\text{pared}} = 2.00\text{ mm}$ a cada lado de la ventana), las paredes opuestas se fusionan al **$100\%$ como sólido macizo**, validando el uso riguroso de la teoría clásica de vigas continuas de Navier (*Budynas & Nisbett, 2020*; *Beer et al., 2020*).
+
+### 2. Cálculo Analítico de Secciones Críticas (Fémur vs. Tibia)
+- **Solicitaciones de Diseño:** Reacción vertical máxima en punta de pata $F_{\text{pie}} = 10.0\text{ N}$ y par de bloqueo del micromotor N20 1:300 $T_{\text{stall}} = 350.0\text{ N}\cdot\text{mm}$.
+- **Eslabón del Fémur ($L = 60.00\text{ mm}$):**
+  - *Sección crítica gobernante (Pieza central ocre `Femursoporte`):* Ancho total $B = 18.90\text{ mm}$, peralte vertical $H = 9.00\text{ mm}$, $2\times$ taladros transversales $\varnothing 5.975\text{ mm} \implies B_{\text{neto}} = 6.95\text{ mm}$.
+  - *Propiedades resistentes:* $I_v = \frac{6.95 \cdot 9.00^3}{12} = \mathbf{422.21\text{ mm}^4}$, $Z_v = \frac{I_v}{4.50} = \mathbf{93.82\text{ mm}^3}$, factor de concentración elástica $K_t = \mathbf{2.00}$ ($d/B = 0.316$, *Pilkey et al., 2020*).
+  - *Demostración frente a piezas blanca (`Femursup`, $Z = 140.40\text{ mm}^3$) y rosada (`Femurinf`, $Z = 133.65\text{ mm}^3$):* El índice de severidad $\psi = K_t / Z$ en la pieza ocre ($0.0213\text{ mm}^{-3}$) es **$2.6\times$ superior** al de los soportes extremos ($0.0082\text{ mm}^{-3}$).
+  - *Factores de Seguridad y Rigidez:*
+    - Stall motor ($350\text{ N}\cdot\text{mm}$): $\sigma_{\text{max}} = 7.46\text{ MPa} \implies \mathbf{FoS = 5.36}$.
+    - Marcha normal ($M = 500\text{ N}\cdot\text{mm}$): $\sigma_{\text{max}} = 10.66\text{ MPa} \implies \mathbf{FoS = 3.75}$.
+    - Extensión máxima / impacto ($M = 1000\text{ N}\cdot\text{mm}$): $\sigma_{\text{max}} = 21.32\text{ MPa} \implies \mathbf{FoS = 1.88} > 1.50$.
+    - Flecha en voladizo: $\delta_{\text{fémur}} = \mathbf{0.49\text{ mm}}$ ($0.82\%$ de $L$).
+- **Eslabón de la Tibia ($L_{\text{total}} = 114.11\text{ mm}$):**
+  - *Cinemática del codo bioinspirado a $\alpha = 150^\circ$ ($\theta = 30^\circ$):* Tramo proximal $L_1 = 89.00\text{ mm}$, punta distal $L_2 = 29.00\text{ mm}$ (ancho de suela $14.90\text{ mm}$) $\implies L_x = 89 + 29\cos(30^\circ) = \mathbf{114.11\text{ mm}}$, $e_y = 29\sin(30^\circ) = \mathbf{14.50\text{ mm}}$.
+  - *Propiedades de sección (celosía amarilla `Tibiamed`):* Peralte en vista lateral $H = 10.20\text{ mm}$ ($c_v = 5.10\text{ mm}$), ancho sólido neto en vista superior $B_{\text{neto}} = 4.00\text{ mm}$.
+  - *Inercias y concentrador:* $I_{\text{vertical}} = \frac{4.00 \cdot 10.20^3}{12} = \mathbf{353.74\text{ mm}^4}$, $Z_v = \mathbf{69.36\text{ mm}^3}$, inercia mínima lateral (pandeo out-of-plane) $I_{\text{mín}} = \frac{10.20 \cdot 4.00^3}{12} = \mathbf{54.40\text{ mm}^4}$, concentrador en ranura ovalada $K_t \approx \mathbf{1.50}$ (*Pilkey et al., 2020*).
+  - *Factores de Seguridad, Pandeo y Rigidez:*
+    - Marcha normal ($M = 500\text{ N}\cdot\text{mm}$): $\sigma_{\text{max}} = 10.82\text{ MPa} \implies \mathbf{FoS = 3.70}$ (equilibrio estructural armónico con el fémur).
+    - Extensión horizontal máxima ($M = 1141.1\text{ N}\cdot\text{mm}$): $\sigma_{\text{max}} = 24.68\text{ MPa} \implies \mathbf{FoS = 1.62} > 1.50$.
+    - Pandeo elástico de Euler ($L_e = 0.80 L_x = 91.29\text{ mm}$): $P_{\text{cr}} = \frac{\pi^2 E I_{\text{mín}}}{L_e^2} = \mathbf{225.48\text{ N}} \implies \mathbf{FoS_{\text{pandeo}} = 22.55}$.
+    - Flecha elástica: $\delta_{\text{tibia}} = \mathbf{0.40\text{ mm}}$ ($0.35\%$ de $L_x$).
+
+### 3. Validación Numérica por Elementos Finitos (FEA - Autodesk Fusion 360) y Evolución de Diseño
+
+Se ejecutaron tres estudios estáticos lineales con elementos tetraédricos parabólicos de segundo orden para validar la evolución desde el penúltimo prototipo hasta el diseño definitivo en dos posturas extremas:
+
+| Parámetro / Resultado FEA | Penúltimo Diseño (Posición Retraída - Estudio 4) | Último Diseño: Posición Extendida (Estudio 1) | Último Diseño: Posición Retraída (Estudio 2) |
+| :--- | :---: | :---: | :---: |
+| **Archivo CAD / Componentes** | `Analisispata1Alesky` (9 cuerpos) | `AnalisisPata1Alfred` (13 cuerpos) | `AnalisisPata1Alfred` (13 cuerpos) |
+| **Material de Librería Simulado** | ABS ($E = 2240\text{ MPa}$, $S_y = 20.0\text{ MPa}$) | PET ($E = 2757.9\text{ MPa}$, $S_y = 54.4\text{ MPa}$) | PET ($E = 2757.9\text{ MPa}$, $S_y = 54.4\text{ MPa}$) |
+| **Malla (Elementos / Nodos)** | $112\,985$ elem. / $163\,314$ nodos | $116\,115$ elem. / $192\,017$ nodos (2% curvo) | $187\,896$ elem. / $310\,629$ nodos (4% escalado) |
+| **Fuerza Vertical en Punta ($F_z$)** | $6.00\text{ N}$ ($15^\circ$) + Gravedad | $7.00\text{ N}$ ($+Z$) + Gravedad | $5.95\text{ N}$ ($F = 6.00\text{ N}$) + Gravedad |
+| **Estado Estructural de Fémur y Tibia** | Esfuerzos moderados ($8 - 19.7\text{ MPa}$) en `Femur_Med1` y cuello `coxa_femur` | **100% Azul Oscuro ($FoS \ge 4.00 - 8.00$, $\sigma < 13.6\text{ MPa}$)** | **100% Azul Oscuro ($FoS \ge 4.00 - 8.00$, $\sigma < 13.6\text{ MPa}$)** |
+| **Zona de Singularidad Puntual** | Arista de cuello `coxa_femur` ($\sigma_{VM} = 79.18\text{ MPa}$, $\sigma_1 = 19.69\text{ MPa}$) | Borde anular superior `J0sup` $\parallel$ `Coxasup` ($\sigma_{VM} = 833.6\text{ MPa}$, $\sigma_1 = 163.8\text{ MPa}$) | Borde anular superior `J0sup` $\parallel$ `Coxasup` ($\sigma_{VM} = 595.9\text{ MPa}$, $\sigma_1 = 121.9\text{ MPa}$) |
+| **Desplazamiento Total en Punta** | $3.946\text{ mm}$ ($\approx 2.53\text{ mm}$ en PLA) | $14.623\text{ mm}$ (rotación en junta $J_0$) | $22.071\text{ mm}$ (fijación solo en pestaña inferior de $J_0$) |
+
+#### Conclusiones Mecánicas Fundamentales de los Estudios FEA:
+1. **Validación Definitiva de Fémur y Tibia ($FoS > 4.0$ en todo el cuerpo):** En el último diseño (`AnalisisPata1Alfred`), tanto en posición extendida como retraída, el **100% de la Tibia (`Tibiamed`, `Tibiapunta`) y el 100% del Fémur (`Femursup`, `Femursoporte`, `Femurinf`) permanecen en la región azul de máxima seguridad ($FoS \in [4.0, 8.0]$, esfuerzos reales $< 13.6\text{ MPa}$)**, coincidiendo de forma exacta con el cálculo analítico ($\sigma_{\text{max}} \approx 10.7 - 10.8\text{ MPa}$, $FoS \approx 3.70 - 3.75$).
+2. **Impacto de la Postura Extendida vs. Retraída (+39.9% de Momento Flector):** Comparando el Estudio 1 (Extendida, $7\text{ N}$) frente al Estudio 2 (Retraída, $6\text{ N}$), el esfuerzo concentrado en la articulación proximal de la coxa (`Coxasup`) aumenta un **$39.9\%$ en Von Mises** ($833.6\text{ MPa}$ vs. $595.9\text{ MPa}$) y un **$34.3\%$ en tracción principal $\sigma_1$** ($163.8\text{ MPa}$ vs. $121.9\text{ MPa}$), comprobando numéricamente que la postura extendida es el caso crítico de momento flector por el incremento del brazo de palanca horizontal.
+3. **Diagnóstico de la Singularidad en `J0sup` $\parallel$ `Coxasup` e Importancia del Doble Apoyo del Motor N20:**
+   - En el CAD simplificado sin motores, la brida inferior de la horquilla (`J0inf` con 4 pines) queda sin contacto mecánico con `CoxaInf`, dejando a toda la pata suspendida únicamente de un borde anular superior de espesor infinitesimal entre `J0sup` y `Coxasup`.
+   - Esa ausencia del eje pasante inferior provoca: (a) una singularidad numérica puntual de contacto ($596 - 833\text{ MPa}$) en 1–2 elementos de borde sin refinado adaptativo (`pasos = 0`), y (b) un giro angular rígido en la junta $J_0$ que explica los desplazamientos en la punta ($14.6\text{ mm}$ cuando `Fijo1` sujeta el respaldo vertical de `J0sup`, y $22.1\text{ mm}$ cuando `Fijo1` sujeta solo la pestaña horizontal inferior de `J0sup`, haciendo que la horquilla en C flecte como un resorte).
+   - **Justificación de Ingeniería para la Tesis:** Este resultado demuestra por qué en el ensamble físico real es **obligatorio el montaje de doble soporte axial** (eje del motor N20 arriba + pivote/acople inferior en `J0inf`/`CoxaInf`), el cual cierra el circuito de fuerzas en **corte doble**, elimina el voladizo en la horquilla `J0sup` y restituye la rigidez cinemática ($\delta < 0.5\text{ mm}$ por eslabón).
+4. **Evolución del Penúltimo al Último Diseño:**
+   - Se eliminó el cuello en voladizo `coxa_femur` y los tambores tipo bisagra multi-disco del penúltimo diseño (donde se concentraban $19.7\text{ MPa}$ de tracción), reemplazándolos por horquillas simétricas robustas (`Coxamed1`/`Coxamed2` y `Femursup`/`Femurinf`).
+   - Se optimizaron las ventanas de la tibia (`Tibiamed`) pasando de 2 ranuras pequeñas a una celosía aligerada con codo de $150^\circ$ y puntera redondeada (`Tibiapunta`), reduciendo la inercia rotacional distal sin comprometer la resistencia ($FoS > 4.0$).
+
+### 4. Referencias Bibliográficas del Análisis Mecánico
+1. **Budynas, R. G., & Nisbett, J. K. (2020).** *Shigley's Mechanical Engineering Design* (11th ed.). McGraw-Hill.
+2. **Beer, F. P., Johnston, E. R., DeWolf, J. T., & Mazurek, D. F. (2020).** *Mecánica de Materiales* (8.ª ed.). McGraw-Hill.
+3. **Pilkey, W. D., Pilkey, D. F., & Bi, Z. (2020).** *Peterson's Stress Concentration Factors* (4th ed.). John Wiley & Sons.
+4. **Norton, R. L. (2020).** *Diseño de Máquinas: Un enfoque integrado* (5.ª ed.). Pearson.
+5. **Young, W. C., Budynas, R. G., & Sadegh, A. M. (2012).** *Roark's Formulas for Stress and Strain* (8th ed.). McGraw-Hill.
