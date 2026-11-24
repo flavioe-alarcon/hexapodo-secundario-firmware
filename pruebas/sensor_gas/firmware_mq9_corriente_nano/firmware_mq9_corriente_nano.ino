@@ -167,7 +167,7 @@ void loop() {
     }
     float potencia = corriente * V_BAT_NOMINAL;
 
-    // --- Transmision JSON estandar ---
+    // --- Transmision JSON estandar (Opcion B: gas_ratio emite PPM de Etanol para ROS 2) ---
     Serial.print(F("{\"t\":"));
     Serial.print(ahora);
     Serial.print(F(",\"gas_v\":"));
@@ -175,13 +175,13 @@ void loop() {
     Serial.print(F(",\"gas_raw\":"));
     Serial.print(adc_gas, 1);
     Serial.print(F(",\"gas_ratio\":"));
-    Serial.print(ratio_visual, 3);
+    Serial.print(ppm_alcohol, 2);
     Serial.print(F(",\"rs_r0\":"));
     Serial.print(ratio_rs_r0, 3);
     Serial.print(F(",\"ppm_alc\":"));
-    Serial.print(ppm_alcohol, 1);
+    Serial.print(ppm_alcohol, 2);
     Serial.print(F(",\"ppm_co\":"));
-    Serial.print(ppm_co, 1);
+    Serial.print(ppm_co, 2);
     Serial.print(F(",\"gas_alerta\":"));
     Serial.print(alerta_gas);
     Serial.print(F(",\"i_amp\":"));
