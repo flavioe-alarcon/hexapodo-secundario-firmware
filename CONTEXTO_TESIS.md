@@ -513,6 +513,55 @@ Para preservar la integridad de los actuadores y optimizar la autonomía energé
    $$\tau_{\text{tibia, HOME3}} \approx 0.20\text{ N}\cdot\text{m} \quad (2.0\text{ kgf}\cdot\text{cm}) \implies \mathbf{80.8\%\text{ de reducción de par}}$$
 5. **Resultado Operativo:** Los 18 servomotores MG996R operan por debajo del $45\%$ de su capacidad nominal, eliminando sobrecalentamientos y garantizando estabilidad estática con un margen al triángulo de apoyo de $> 72\text{ mm}$.
 
+---
+
+## 15. Modelado Físico-Matemático, Extracción de Constantes ($A, B$) e Intercalibración Cruzada del Sensor de Gas MQ-9 (Robot Primario)
+
+### 15.1 Cadena de Transducción de Voltaje Analógico a Resistencia ($R_s$)
+En el robot primario, el sensor semiconductor **MQ-9** (Hanwei Electronics) se adquiere a través del canal `A0` del co-procesador esclavo **Arduino Nano** ($V_{CC} = 5.000\text{ V}$, ADC de 10 bits, $R_L = 10.0\text{ k}\Omega$):
+1. **Voltaje Analógico:**
+   $$V_{out} = \text{ADC} \times \left(\frac{5.000\text{ V}}{1023}\right)$$
+2. **Resistencia Superficial del Semiconductor ($R_s$):**
+   $$R_s = R_L \cdot \left(\frac{V_{CC} - V_{out}}{V_{out}}\right)$$
+3. **Calibración Basal en Aire Limpio ($R_0$):**
+   De acuerdo con la curva característica del fabricante (**Fig. 1 del Datasheet Hanwei MQ-9**), la relación en aire limpio respecto a la resistencia de referencia $R_0$ (definida a $1000\text{ ppm}$ de GLP) es $\left(R_s / R_0\right)_{\text{aire}} \approx 9.80$. Por tanto:
+   $$R_0 = \frac{R_{s,\text{aire}}}{9.80}, \quad \text{Ratio} = \frac{R_s}{R_0}$$
+
+### 15.2 Significado Físico y Obtención Analítica de las Constantes $A$ y $B$
+La respuesta de quimisorción del $\text{SnO}_2$ sigue la ley de potencias de Wolkenstein-Clifford:
+$$\text{ppm} = A \cdot \left(\frac{R_s}{R_0}\right)^B$$
+Al aplicar logaritmos base 10 en ambos miembros, se obtiene la ecuación de una recta en el plano log-log del datasheet:
+$$\log_{10}(\text{ppm}) = \log_{10}(A) + B \cdot \log_{10}\left(\frac{R_s}{R_0}\right)$$
+
+1. **Constante $B$ (Pendiente Logarítmica / Velocidad Catalítica):**
+   - Representa la inclinación de la recta en la gráfica log-log y cuantifica la sensibilidad con que disminuye la resistencia del $\text{SnO}_2$ al incrementarse la concentración de gas reductor ($B < 0$).
+   - Dados dos puntos $P_1 = (\text{ppm}_1, \text{Ratio}_1)$ y $P_2 = (\text{ppm}_2, \text{Ratio}_2)$ leídos de la curva del datasheet:
+     $$B = \frac{\log_{10}(\text{ppm}_2) - \log_{10}(\text{ppm}_1)}{\log_{10}(\text{Ratio}_2) - \log_{10}(\text{Ratio}_1)}$$
+2. **Constante $A$ (Factor de Escala / Intercepto en $R_s/R_0 = 1$):**
+   - Representa la concentración en $\text{ppm}$ necesaria para que la resistencia del sensor iguale exactamente a la resistencia de referencia ($R_s/R_0 = 1 \implies \text{ppm} = A$):
+     $$A = \frac{\text{ppm}_1}{(\text{Ratio}_1)^B}$$
+
+#### Ejemplo de Cálculo Paso a Paso para Etanol (Alcohol):
+- **Puntos extraídos:** $P_1 = (1000\text{ ppm}, 2.40)$ y $P_2 = (5000\text{ ppm}, 1.20)$.
+- **Cálculo de $B$:**
+  $$B = \frac{\log_{10}(5000) - \log_{10}(1000)}{\log_{10}(1.20) - \log_{10}(2.40)} = \frac{3.69897 - 3.00000}{0.07918 - 0.38021} = \frac{0.69897}{-0.30103} = \mathbf{-2.322}$$
+- **Cálculo de $A$:**
+  $$A = \frac{1000}{(2.40)^{-2.322}} = 1000 \times (2.40)^{2.322} = 1000 \times 7.630 = \mathbf{7630.0}$$
+- **Ecuación resultante:** $\text{ppm}_{\text{etanol}} = 7630.0 \cdot \left(\frac{R_s}{R_0}\right)^{-2.322}$
+
+| Gas Analito | Punto $P_1 (\text{ppm}_1, \text{Ratio}_1)$ | Punto $P_2 (\text{ppm}_2, \text{Ratio}_2)$ | Exponente $B$ | Factor de Escala $A$ | Ecuación de Concentración ($\text{ppm}$) |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **Etanol (Alcohol)** | $(1000\text{ ppm}, 2.40)$ | $(5000\text{ ppm}, 1.20)$ | **$-2.322$** | **$7630.0$** | $\text{ppm} = 7630.0 \cdot (R_s/R_0)^{-2.322}$ |
+| **Monóxido de Carbono ($\text{CO}$)** | $(100\text{ ppm}, 1.70)$ | $(1000\text{ ppm}, 0.58)$ | **$-2.244$** | **$599.65$** | $\text{ppm} = 599.65 \cdot (R_s/R_0)^{-2.244}$ |
+| **Gas Licuado (GLP / LPG)** | $(1000\text{ ppm}, 1.00)$ | $(5000\text{ ppm}, 0.30)$ | **$-2.186$** | **$1000.5$** | $\text{ppm} = 1000.5 \cdot (R_s/R_0)^{-2.186}$ |
+| **Metano ($\text{CH}_4$)** | $(1000\text{ ppm}, 1.40)$ | $(5000\text{ ppm}, 0.20)$ | **$-2.648$** | **$4269.6$** | $\text{ppm} = 4269.6 \cdot (R_s/R_0)^{-2.648}$ |
+
+### 15.3 Estrategia de Validación Metrológica e Intercalibración Cruzada (MQ-9 vs. MiCS-5524)
+Para fundamentar la calibración en la memoria de tesis sin requerir cámaras de dosificación de gases letales:
+1. **Invarianza Estequiométrica de la Pendiente $B$ (Bârsan & Weimar, 2001):** En semiconductores de $\text{SnO}_2$, la pendiente logarítmica $B$ es una propiedad intrínseca de la cinética de reacción superficial y permanece invariante entre sensores del mismo modelo; la dispersión de fabricación ($2\text{ k}\Omega - 20\text{ k}\Omega$) se concentra en el factor basal $R_0$, el cual se corrige mediante calibración unipuntual en aire limpio (*Zero-Gas Reference*, **Burgués & Marco, 2018**).
+2. **Intercalibración Cruzada por Co-localización (*Co-located Inter-Sensor Cross-Calibration*):** El sensor MEMS **MiCS-5524** (del robot secundario, fabricado por fotolitografía de alta repetibilidad) se emplea como transductor de referencia de transferencia colocado a $1-2\text{ cm}$ del **MQ-9** (del robot primario). Ambos se exponen simultáneamente a gradientes de vapor de etanol a distancias controladas ($2\text{ a }20\text{ cm}$), verificando la correlación temporal ($r > 0.90$) y asegurando la homogeneidad metrológica entre los mapas ambientales reportados por ambos hexápodos en ROS 2.
+
+
 
 
 

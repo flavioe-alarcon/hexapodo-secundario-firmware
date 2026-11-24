@@ -62,33 +62,74 @@ Para convertir la señal de voltaje leída en el pin analógico `A0` a concentra
 
 ---
 
-### 2.2 Derivación de la Ecuación de Concentración ($\text{ppm}$)
+### 2.2 Derivación de la Ecuación de Concentración ($\text{ppm}$) y Significado Físico de las Constantes $A$ y $B$
 
-En escala doblemente logarítmica ($\log_{10}(\text{Ratio})$ vs $\log_{10}(\text{ppm})$), las curvas de respuesta del MQ-9 son líneas rectas descritas por:
-$$\log_{10}\left(\frac{R_s}{R_0}\right) = \log_{10}(A) + B \cdot \log_{10}(\text{ppm})$$
+En la gráfica de sensibilidad del datasheet del MQ-9 (**Figura 1 del Datasheet de Hanwei Electronics**), ambos ejes están representados en **escala logarítmica base 10** ($\log_{10}$). Cuando la ecuación potencial:
 
-Invirtiendo algebraicamente la función:
-$$\log_{10}(\text{ppm}) = \frac{\log_{10}(R_s/R_0) - \log_{10}(A)}{B} = \frac{1}{B} \log_{10}\left(\frac{R_s}{R_0}\right) - \frac{\log_{10}(A)}{B}$$
-$$\text{ppm} = a \cdot \left(\frac{R_s}{R_0}\right)^b$$
+$$\text{ppm} = A \cdot \left(\frac{R_s}{R_0}\right)^B$$
 
-donde:
-$$b = \frac{1}{B}, \quad a = 10^{-\frac{\log_{10}(A)}{B}} = A^{-1/B}$$
+se transforma a logaritmos, adopta la forma de una **línea recta** ($y = b + m \cdot x$):
 
-### 2.3 Matriz de Coeficientes según el Datasheet del MQ-9
+$$\log_{10}(\text{ppm}) = \log_{10}(A) + B \cdot \log_{10}\left(\frac{R_s}{R_0}\right)$$
 
-A partir de la digitalización de los pares de coordenadas de la curva de sensibilidad (Fig. 3 del Datasheet):
+![Gráfica de Regresión Potencial y Curva del Datasheet MQ-9](./grafica_regresion_mq9_datasheet.png)
 
-| Gas Analito | Coordenada 1 $(\text{ppm}_1, \text{Ratio}_1)$ | Coordenada 2 $(\text{ppm}_2, \text{Ratio}_2)$ | Pendiente $B$ | Exponente $b = 1/B$ | Escala $a$ | Ecuación de Concentración |
+#### Significado Físico y Geométrico de $A$ y $B$:
+1. **Constante $B$ (Pendiente Logarítmica / Sensibilidad Química):**
+   * **Geométricamente:** Es la **pendiente (inclinación)** de la recta del gas en la gráfica log-log del datasheet.
+   * **Físicamente:** Representa la **velocidad de reacción catalítica** en la superficie del dióxido de estaño ($\text{SnO}_2$). Indica qué tan rápido cae la resistencia eléctrica del sensor a medida que aumenta la concentración del gas reductor.
+   * **¿Por qué siempre es negativa ($B = -2.322$)?** Porque a **mayor** concentración de gas ($\text{ppm} \uparrow$), **menor** es la resistencia del sensor ($R_s/R_0 \downarrow$).
+2. **Constante $A$ (Factor de Escala / Intercepto Unitario):**
+   * **Geométricamente:** Es el valor de corte cuando el ratio vale $1$ ($\frac{R_s}{R_0} = 1$). Al sustituir $\frac{R_s}{R_0} = 1$ en la ecuación:
+     $$\text{ppm} = A \cdot (1)^B \implies \mathbf{\text{ppm} = A}$$
+   * **Físicamente:** Representa **cuántas partes por millón ($\text{ppm}$) de ese gas específico se necesitan para que la resistencia del sensor $R_s$ descienda hasta igualar exactamente a la resistencia de referencia $R_0$**.
+     * Para $\text{CO}$ (alta afinidad en el MQ-9): solo se requieren **$A = 599.65\text{ ppm}$** para alcanzar $R_s/R_0 = 1$.
+     * Para $\text{GLP}$ (gas de referencia del datasheet): a **$A \approx 1000.5\text{ ppm}$** se cumple $R_s/R_0 = 1$.
+     * Para Etanol/Alcohol (sensibilidad cruzada moderada): se requieren **$A = 7630.0\text{ ppm}$** para bajar hasta $R_s/R_0 = 1$.
+
+---
+
+### 2.3 Cálculo Analítico Paso a Paso de $A$ y $B$ (Ejemplo para Etanol)
+
+Se aplica la geometría analítica de una recta que pasa por dos puntos sobre la curva de sensibilidad del datasheet:
+
+1. **Paso 1 — Extracción de 2 puntos $(x, y)$ de la curva:**
+   * **Punto 1 ($P_1$):** $\text{ppm}_1 = 1000\text{ ppm} \longrightarrow \text{Ratio}_1 = \left(\frac{R_s}{R_0}\right)_1 = 2.40$
+   * **Punto 2 ($P_2$):** $\text{ppm}_2 = 5000\text{ ppm} \longrightarrow \text{Ratio}_2 = \left(\frac{R_s}{R_0}\right)_2 = 1.20$
+
+2. **Paso 2 — Cálculo de la pendiente logarítmica $B$:**
+   $$B = \frac{\log_{10}(\text{ppm}_2) - \log_{10}(\text{ppm}_1)}{\log_{10}(\text{Ratio}_2) - \log_{10}(\text{Ratio}_1)}$$
+   $$B = \frac{\log_{10}(5000) - \log_{10}(1000)}{\log_{10}(1.20) - \log_{10}(2.40)} = \frac{3.69897 - 3.00000}{0.07918 - 0.38021} = \frac{0.69897}{-0.30103} = \mathbf{-2.322}$$
+
+3. **Paso 3 — Cálculo del factor de escala $A$ (sustituyendo $P_1$):**
+   $$\text{ppm}_1 = A \cdot (\text{Ratio}_1)^B \implies A = \frac{\text{ppm}_1}{(\text{Ratio}_1)^B}$$
+   $$A = \frac{1000}{(2.40)^{-2.322}} = 1000 \times (2.40)^{2.322} = 1000 \times 7.630 = \mathbf{7630.0}$$
+
+---
+
+### 2.4 Matriz de Coeficientes según el Datasheet del MQ-9
+
+A partir de la digitalización de los pares de coordenadas de la curva de sensibilidad del Datasheet ([`MQ-9_Datasheet.pdf`](./MQ-9_Datasheet.pdf)):
+
+| Gas Analito | Coordenada 1 $(\text{ppm}_1, \text{Ratio}_1)$ | Coordenada 2 $(\text{ppm}_2, \text{Ratio}_2)$ | Pendiente inversa | Exponente $B$ | Escala $A$ | Ecuación de Concentración |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Alcohol / Etanol** | $(1000\text{ ppm}, 2.40)$ | $(5000\text{ ppm}, 1.20)$ | $-0.4307$ | **$-2.322$** | **$7630.0$** | $\text{ppm} = 7630 \cdot \left(\frac{R_s}{R_0}\right)^{-2.32}$ |
+| **Alcohol / Etanol** | $(1000\text{ ppm}, 2.40)$ | $(5000\text{ ppm}, 1.20)$ | $-0.4307$ | **$-2.322$** | **$7630.0$** | $\text{ppm} = 7630 \cdot \left(\frac{R_s}{R_0}\right)^{-2.322}$ |
 | **Monóxido de Carbono ($\text{CO}$)** | $(100\text{ ppm}, 1.70)$ | $(1000\text{ ppm}, 0.58)$ | $-0.4456$ | **$-2.244$** | **$599.65$** | $\text{ppm} = 599.65 \cdot \left(\frac{R_s}{R_0}\right)^{-2.244}$ |
 | **Gas Licuado (GLP / LPG)** | $(1000\text{ ppm}, 1.00)$ | $(5000\text{ ppm}, 0.30)$ | $-0.4574$ | **$-2.186$** | **$1000.5$** | $\text{ppm} = 1000.5 \cdot \left(\frac{R_s}{R_0}\right)^{-2.186}$ |
 | **Metano ($\text{CH}_4$)** | $(1000\text{ ppm}, 1.40)$ | $(5000\text{ ppm}, 0.20)$ | $-0.3776$ | **$-2.648$** | **$4269.6$** | $\text{ppm} = 4269.6 \cdot \left(\frac{R_s}{R_0}\right)^{-2.648}$ |
 
-> **Sustento para la Tesis de Minería Subterránea (D.S. N° 024-2016-EM):**
-> * El límite máximo permisible (TLV-TWA) de monóxido de carbono ($\text{CO}$) en minería subterránea es de **$25\text{ ppm}$** en jornadas de 8 horas, y **$100\text{ ppm}$** como límite de exposición a corto plazo (STEL / Techo).
-> * El modelo implementado para $\text{CO}$ cubre el rango de $10\text{ a }1000\text{ ppm}$, permitiendo disparar alertas de evacuación tempranas.
-> * El vapor de etanol se utiliza en laboratorio como gas sucedáneo seguro (*surrogate gas*) para verificar la dinámica transitoria del sensor sin poner en riesgo la salud de los investigadores.
+---
+
+### 2.5 Metodología de Validación e Intercalibración Cruzada para la Tesis (Sin Cámara de Gas de Laboratorio)
+
+Para fundamentar metrológicamente el sensor MQ-9 en la memoria de tesis sin requerir una cámara hermética de dosificación de gases letales:
+
+1. **Invarianza de la Pendiente $B$ y Calibración Basal Unipuntual ($R_0$):**
+   * *Sustento:* **Bârsan & Weimar (2001, *J. Electroceramics*)** demuestran que la pendiente logarítmica $B$ depende exclusivamente de la cinética estequiométrica superficial del $\text{SnO}_2$ (constante entre sensores del mismo modelo), mientras que la dispersión de fabricación ($2\text{ k}\Omega - 20\text{ k}\Omega$) afecta únicamente a la resistencia base $R_0$.
+   * Por tanto, la calibración en un solo punto en aire limpio (**Zero-Gas Baseline Calibration**, **Burgués & Marco, 2018**) mediante $R_0 = R_{s,\text{aire}} / 9.80$ elimina el error sistemático de lote.
+2. **Intercalibración Cruzada por Co-localización (*Co-located Inter-Sensor Cross-Calibration*, MQ-9 vs. MiCS-5524):**
+   * Se ubica el sensor **MQ-9** (Robot Primario) junto al sensor MEMS **MiCS-5524** (Robot Secundario, fabricado por fotolitografía de alta repetibilidad y usado como referencia de transferencia) a $1-2\text{ cm}$ de separación.
+   * Ambos sensores se someten simultáneamente a una pluma de vapor de etanol a distancias discretas controladas ($20, 15, 10, 5, 2\text{ cm}$), verificando la correlación temporal ($r > 0.90$) y garantizando que ambos robots reporten mapas ambientales coherentes al sistema central ROS 2 bajo la normativa **D.S. N° 024-2016-EM**.
 
 ---
 

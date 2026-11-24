@@ -605,12 +605,29 @@ Esta sección documenta la arquitectura integrada para la adquisición concurren
 - **ACS758 (Corriente):** VCC a 5V, GND común, OUT a **Pin A1** ($40\text{ mV/A}$).
 - **Regla Eléctrica en Estrella:** Conectar VCC y GND de ambos sensores de forma independiente desde los pines 5V y GND del Arduino para evitar que la corriente del calefactor genere caídas de tensión parásitas sobre la medición ratiométrica del ACS758.
 
-### 2. Modelo Matemático de Transducción a PPM (Wolkenstein-Clifford)
+### 2. Modelo Matemático de Transducción a PPM (Wolkenstein-Clifford) y Extracción de Constantes $A$ y $B$
 - **Divisor y Resistencia:** $V_{out} = \text{ADC} \times \frac{5.0\text{V}}{1023} \implies R_s = R_L \left(\frac{V_{CC} - V_{out}}{V_{out}}\right)$ con $R_L = 10\text{ k}\Omega$.
-- **Calibración $R_0$ en Aire Limpio:** Según datasheet MQ-9, $(R_s/R_0)_{\text{aire}} = 9.80 \implies R_0 = R_{s,\text{aire}} / 9.80$.
-- **Ley de Potencias:** $\text{ppm} = a \cdot (R_s / R_0)^b$
-  - **Etanol (Alcohol):** $a = 7630.0$, $b = -2.322 \implies \text{ppm}_{\text{alc}} = 7630 \cdot (R_s/R_0)^{-2.32}$.
-  - **Monóxido de Carbono (CO):** $a = 599.65$, $b = -2.244 \implies \text{ppm}_{\text{CO}} = 599.65 \cdot (R_s/R_0)^{-2.244}$.
+- **Calibración $R_0$ en Aire Limpio:** Según datasheet MQ-9 (Hanwei Electronics), $(R_s/R_0)_{\text{aire}} = 9.80 \implies R_0 = R_{s,\text{aire}} / 9.80$.
+- **Ley de Potencias Linealizada en Escala Log-Log:**
+  $$\text{ppm} = A \cdot \left(\frac{R_s}{R_0}\right)^B \iff \log_{10}(\text{ppm}) = \log_{10}(A) + B \cdot \log_{10}\left(\frac{R_s}{R_0}\right)$$
+  - **Significado de $B$ (Pendiente logarítmica / Velocidad catalítica):** Inclinación de la recta en la gráfica log-log del datasheet; cuantifica la sensibilidad con que cae $R_s$ ante un incremento de gas reductor (negativa porque a mayor ppm, menor $R_s$). Se calcula entre dos puntos $(P_1, P_2)$ de la curva:
+    $$B = \frac{\log_{10}(\text{ppm}_2) - \log_{10}(\text{ppm}_1)}{\log_{10}(\text{Ratio}_2) - \log_{10}(\text{Ratio}_1)}$$
+  - **Significado de $A$ (Factor de escala / Intercepto en $R_s/R_0 = 1$):** Concentración en $\text{ppm}$ necesaria para que la resistencia del sensor iguale a la referencia ($R_s = R_0$):
+    $$A = \frac{\text{ppm}_1}{(\text{Ratio}_1)^B}$$
+  - **Deducción Numérica para Etanol (Alcohol):** Con $P_1 = (1000\text{ ppm}, 2.40)$ y $P_2 = (5000\text{ ppm}, 1.20)$:
+    $$B = \frac{\log_{10}(5000) - \log_{10}(1000)}{\log_{10}(1.20) - \log_{10}(2.40)} = \frac{0.69897}{-0.30103} = \mathbf{-2.322}, \quad A = 1000 \times (2.40)^{2.322} = \mathbf{7630.0}$$
+    $$\implies \text{ppm}_{\text{alc}} = 7630.0 \cdot \left(\frac{R_s}{R_0}\right)^{-2.322}$$
+  - **Otros Gases del Datasheet MQ-9:**
+    - **Monóxido de Carbono ($\text{CO}$):** $A = 599.65$, $B = -2.244 \implies \text{ppm}_{\text{CO}} = 599.65 \cdot (R_s/R_0)^{-2.244}$.
+    - **GLP (LPG):** $A = 1000.5$, $B = -2.186 \implies \text{ppm}_{\text{LPG}} = 1000.5 \cdot (R_s/R_0)^{-2.186}$.
+    - **Metano ($\text{CH}_4$):** $A = 4269.6$, $B = -2.648 \implies \text{ppm}_{\text{CH4}} = 4269.6 \cdot (R_s/R_0)^{-2.648}$.
+- **Estrategia de Calibración para la Tesis (Sin Cámara Hermética):**
+  1. **Calibración Basal Unipuntual ($R_0$):** Sustentada en **Bârsan & Weimar (2001)** (la pendiente $B$ es un invariante estequiométrico del $\text{SnO}_2$ y la dispersión de lote se concentra en $R_0$) y **Burgués & Marco (2018)** (*Zero-Gas In-Situ Reference*).
+  2. **Intercalibración Cruzada por Co-localización (*Co-located Cross-Calibration*):** El sensor MEMS **MiCS-5524** (del robot secundario, fabricado por fotolitografía de alta repetibilidad) se emplea como transductor de referencia de transferencia colocado a $1-2\text{ cm}$ del **MQ-9** (del robot primario) ante gradientes de vapor de etanol ($2\text{ a }20\text{ cm}$), garantizando coherencia escalar entre ambos robots en ROS 2.
+- **Archivos de Gráficas y Datasheet en Repositorio:**
+  - Datasheet oficial Hanwei MQ-9: [`MQ-9_Datasheet.pdf`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/firmware_mq9_corriente_nano/MQ-9_Datasheet.pdf)
+  - Curva original extraída del datasheet (Fig. 1): [`fig1_curva_sensibilidad_mq9_original.png`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/firmware_mq9_corriente_nano/fig1_curva_sensibilidad_mq9_original.png)
+  - Figura compuesta con regresión potencial a 300 DPI: [`grafica_regresion_mq9_datasheet.png`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/firmware_mq9_corriente_nano/grafica_regresion_mq9_datasheet.png)
 
 ### 3. Software y Herramientas del Módulo
 - **Firmware C++ (Arduino Nano):** [`firmware_mq9_corriente_nano.ino`](file:///c:/Users/ASUS/OneDrive/Escritorio/Todo/Propio/Agentes_Antigravity/RedaccionTesis/pruebas/sensor_gas/firmware_mq9_corriente_nano/firmware_mq9_corriente_nano.ino)
