@@ -577,10 +577,15 @@ $$\log_{10}(\text{ppm}) = \log_{10}(A) + B \cdot \log_{10}\left(\frac{R_s}{R_0}\
 | **Gas Licuado (GLP / LPG)** | $(1000\text{ ppm}, 1.00)$ | $(5000\text{ ppm}, 0.30)$ | **$-2.186$** | **$1000.5$** | $\text{ppm} = 1000.5 \cdot (R_s/R_0)^{-2.186}$ |
 | **Metano ($\text{CH}_4$)** | $(1000\text{ ppm}, 1.40)$ | $(5000\text{ ppm}, 0.20)$ | **$-2.648$** | **$4269.6$** | $\text{ppm} = 4269.6 \cdot (R_s/R_0)^{-2.648}$ |
 
-### 15.3 Estrategia de Validación Metrológica e Intercalibración Cruzada (MQ-9 vs. MiCS-5524)
-Para fundamentar la calibración en la memoria de tesis sin requerir cámaras de dosificación de gases letales:
-1. **Invarianza Estequiométrica de la Pendiente $B$ (Bârsan & Weimar, 2001):** En semiconductores de $\text{SnO}_2$, la pendiente logarítmica $B$ es una propiedad intrínseca de la cinética de reacción superficial y permanece invariante entre sensores del mismo modelo; la dispersión de fabricación ($2\text{ k}\Omega - 20\text{ k}\Omega$) se concentra en el factor basal $R_0$, el cual se corrige mediante calibración unipuntual en aire limpio (*Zero-Gas Reference*, **Burgués & Marco, 2018**).
-2. **Intercalibración Cruzada por Co-localización (*Co-located Inter-Sensor Cross-Calibration*):** El sensor MEMS **MiCS-5524** (del robot secundario, fabricado por fotolitografía de alta repetibilidad) se emplea como transductor de referencia de transferencia colocado a $1-2\text{ cm}$ del **MQ-9** (del robot primario). Ambos se exponen simultáneamente a gradientes de vapor de etanol a distancias controladas ($2\text{ a }20\text{ cm}$), verificando la correlación temporal ($r > 0.90$) y asegurando la homogeneidad metrológica entre los mapas ambientales reportados por ambos hexápodos en ROS 2.
+### 15.3 Método Oficial de Calibración Adoptado para el MQ-9 (Calibración Basal In-Situ en Aire Limpio)
+Para el desarrollo y defensa de la tesis, se establece como **método oficial y definitivo de calibración del sensor MQ-9** la **Calibración Basal Unipuntual en Aire Limpio (*Zero-Gas In-Situ Baseline Calibration*)**:
+1. **Procedimiento Operativo:**
+   - Se energiza el sensor MQ-9 a $5.0\text{ V}$ en un ambiente ventilado con **aire limpio** (zona segura previa al ingreso a la labor o área de prueba) hasta alcanzar su equilibrio térmico catalítico.
+   - Se ejecuta la orden de calibración (al arranque del Arduino Nano o presionando la tecla **`[C]`** en el software de monitoreo, que envía el comando `'c'` por puerto serie).
+   - El firmware toma 250 lecturas consecutivas en aire limpio para fijar la tensión de referencia $V_0$, calcula la resistencia en aire limpio $R_{s,\text{aire}} = R_L \left(\frac{V_{CC} - V_0}{V_0}\right)$ y establece ese valor como el **punto de referencia oficial** del sensor: $R_0 = \frac{R_{s,\text{aire}}}{9.80}$ (equivalente a un ratio relativo unitario en aire limpio).
+2. **Sustento Científico para la Memoria de Tesis:**
+   - **Bârsan & Weimar (2001, *Journal of Electroceramics*):** Demuestran que en semiconductores de $\text{SnO}_2$, la pendiente logarítmica $B$ de la ley de potencias depende únicamente de la cinética estequiométrica superficial y permanece invariante entre sensores del mismo modelo; toda la dispersión de fabricación ($2\text{ k}\Omega - 20\text{ k}\Omega$) recae sobre el factor de escala basal $R_0$.
+   - **Burgués & Marco (2018, *Sensors and Actuators B: Chemical*):** Establecen que en robótica móvil de inspección, la calibración de línea base en aire limpio (*Zero-Gas Reference*) al inicio de cada misión cancela la dispersión geométrica del lote y compensa la deriva por temperatura y humedad ambiental del entorno de operación, permitiendo aplicar directamente las curvas características del fabricante sin requerir cámaras herméticas de laboratorio.
 
 
 

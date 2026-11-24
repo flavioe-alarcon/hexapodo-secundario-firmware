@@ -120,16 +120,17 @@ A partir de la digitalización de los pares de coordenadas de la curva de sensib
 
 ---
 
-### 2.5 Metodología de Validación e Intercalibración Cruzada para la Tesis (Sin Cámara de Gas de Laboratorio)
+### 2.5 Método Oficial de Calibración Adoptado para la Tesis (Calibración Basal en Aire Limpio / Tecla `[C]`)
 
-Para fundamentar metrológicamente el sensor MQ-9 en la memoria de tesis sin requerir una cámara hermética de dosificación de gases letales:
+El método oficial adoptado en el proyecto para calibrar el sensor **MQ-9** es la **Calibración Basal Unipuntual en Aire Limpio (*Zero-Gas In-Situ Baseline Calibration*)**:
 
-1. **Invarianza de la Pendiente $B$ y Calibración Basal Unipuntual ($R_0$):**
-   * *Sustento:* **Bârsan & Weimar (2001, *J. Electroceramics*)** demuestran que la pendiente logarítmica $B$ depende exclusivamente de la cinética estequiométrica superficial del $\text{SnO}_2$ (constante entre sensores del mismo modelo), mientras que la dispersión de fabricación ($2\text{ k}\Omega - 20\text{ k}\Omega$) afecta únicamente a la resistencia base $R_0$.
-   * Por tanto, la calibración en un solo punto en aire limpio (**Zero-Gas Baseline Calibration**, **Burgués & Marco, 2018**) mediante $R_0 = R_{s,\text{aire}} / 9.80$ elimina el error sistemático de lote.
-2. **Intercalibración Cruzada por Co-localización (*Co-located Inter-Sensor Cross-Calibration*, MQ-9 vs. MiCS-5524):**
-   * Se ubica el sensor **MQ-9** (Robot Primario) junto al sensor MEMS **MiCS-5524** (Robot Secundario, fabricado por fotolitografía de alta repetibilidad y usado como referencia de transferencia) a $1-2\text{ cm}$ de separación.
-   * Ambos sensores se someten simultáneamente a una pluma de vapor de etanol a distancias discretas controladas ($20, 15, 10, 5, 2\text{ cm}$), verificando la correlación temporal ($r > 0.90$) y garantizando que ambos robots reporten mapas ambientales coherentes al sistema central ROS 2 bajo la normativa **D.S. N° 024-2016-EM**.
+1. **Procedimiento Operativo:**
+   * Encender el sensor y mantenerlo en un **ambiente con aire limpio** hasta que estabilice su temperatura de operación.
+   * Ejecutar la calibración presionando la tecla **`[C]`** en el programa de visualización (o automáticamente al arranque del Arduino Nano).
+   * Ese punto medido en aire limpio se fija como el **punto de referencia oficial** ($V_0 \implies R_{s,\text{aire}} \implies R_0 = R_{s,\text{aire}} / 9.80$), a partir del cual se calculan todas las variaciones relativas $R_s/R_0$ y las concentraciones en $\text{ppm}$.
+2. **Fundamentación Teórica para el Jurado:**
+   * **Bârsan & Weimar (2001, *J. Electroceramics*):** Demuestran que la pendiente logarítmica $B$ depende exclusivamente de la cinética estequiométrica superficial del $\text{SnO}_2$ (constante entre sensores del mismo modelo), mientras que la dispersión de fabricación ($2\text{ k}\Omega - 20\text{ k}\Omega$) afecta únicamente a la resistencia base $R_0$.
+   * **Burgués & Marco (2018, *Sensors & Actuators B*):** Demuestran que en robótica móvil la calibración *in-situ* en aire limpio (*Zero-Gas Reference*) al inicio de cada misión elimina el error sistemático de lote y compensa las condiciones ambientales base sin requerir cámaras herméticas de laboratorio.
 
 ---
 
