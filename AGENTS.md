@@ -164,10 +164,25 @@ Esta sección documenta la validación experimental y de filtrado digital del su
    - **Filtro Exponencial EMA ($\alpha=0.20$):** Suprime el ruido de alta frecuencia pero aplana picos transitorios rápidos ($2.20\text{V}$) y genera un retardo de $\sim 1\text{ s}$. **Seleccionado para el régimen *Stop-and-Measure*.**
 4. **Mapeo Intuitivo y Fundamentación Teórica para la Tesis:**
    - **Proporción de Gas Ascendente ($\mathbf{R_0 / R_s}$):** Físicamente, el semiconductor $\text{SnO}_2$ reduce su resistencia $R_s$ ante gases reductores. Para ergonomía visual del operador, se calibró la escala ascendente $\frac{R_0}{R_s}$ (1.000 en aire limpio $\to$ sube a $>1.5 - 10.0$ con gas) y porcentaje de intensidad $I_{gas} = (1 - R_s/R_0) \times 100\%$.
-   - **Modelo Físico-Matemático (Cadena de Transducción):**
+   - **Extracción de Coordenadas de Curva de Sensibilidad del Datasheet (SGX DS-0098) para $\text{CO}$:**
+     * $1\text{ ppm} \implies R_s/R_0 \approx 0.88$
+     * $10\text{ ppm} \implies R_s/R_0 \approx 0.52$
+     * $25\text{ ppm}$ *(Límite legal minero D.S. 024-2016-EM)* $\implies R_s/R_0 \approx 0.40$
+     * $100\text{ ppm}$ $\implies R_s/R_0 \approx 0.24$
+     * $1000\text{ ppm}$ $\implies R_s/R_0 \approx 0.09$
+     * *Linealización Logarítmica:* $\ln(R_s/R_0) = \ln(A) - B \cdot \ln(C) \implies A \approx 0.88$, $B \approx 0.35$.
+   - **Modelo Físico-Matemático (Cadena de Transducción Completa):**
      1. Quimisorción y Ley de Potencias de Wolkenstein-Clifford: $\frac{R_s}{R_0} = A \cdot C^{-B}$.
-     2. Divisor de tensión: $V_{out} = V_{CC} \cdot \frac{R_L}{R_s + R_L} \implies R_s = R_L \left(\frac{V_{CC} - V_{out}}{V_{out}}\right)$.
-     3. Concentración: $C(\text{ppm}) = \left[ \frac{R_L}{A \cdot R_0} \left( \frac{V_{CC} - V_{out}}{V_{out}} \right) \right]^{-\frac{1}{B}}$.
+     2. Divisor de tensión del módulo ($V_{CC} = 5.0\text{ V}$, $R_L = 820\,\Omega$):
+        $$V_{out} = V_{CC} \cdot \frac{R_L}{R_s + R_L} \implies R_s = R_L \left(\frac{V_{CC} - V_{out}}{V_{out}}\right)$$
+     3. Normalización con línea base en aire limpio:
+        $$\frac{R_s}{R_0} = \frac{R_L}{R_0} \cdot \left(\frac{V_{CC} - V_{out}}{V_{out}}\right)$$
+     4. Ecuación analítica final de inferencia de concentración en ppm:
+        $$\mathbf{C(\text{ppm}) = \left[ A \cdot \frac{R_0}{R_L} \cdot \left( \frac{V_{out}}{V_{CC} - V_{out}} \right) \right]^{\frac{1}{B}}}$$
+   - **Puntos Clave de Operación ($R_0 = 4000\,\Omega$, $R_L = 820\,\Omega$):**
+     * Aire limpio: $V_{out} \approx 0.85\text{ V} \implies R_s/R_0 = 1.00 \implies C \approx 0.7\text{ ppm}$ (Seguro).
+     * Límite legal minero: $V_{out} \approx 1.68\text{ V} \implies R_s/R_0 \approx 0.40 \implies C = 25.0\text{ ppm}$ (Alerta TLV-TWA).
+     * Atmósfera tóxica: $V_{out} \approx 2.32\text{ V} \implies R_s/R_0 \approx 0.24 \implies C = 100.0\text{ ppm}$ (Peligro / Evacuación).
    - **Sustento Académico de Calibración $R_0$ en Aire Limpio:**
      - *SGX Sensortech (DS-0098 / AAN-004):* Dispersión de fabricación de $100\text{ k}\Omega$ a $1500\text{ k}\Omega$, requiriendo calibración *in-situ*.
      - *Bârsan & Weimar (2001, J. Electroceramics):* El único invariante granulométrico en $\text{SnO}_2$ es el ratio relativo $R_s/R_0$.

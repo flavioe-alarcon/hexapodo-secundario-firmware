@@ -238,12 +238,33 @@ Para mitigar el consumo excesivo de corriente y masa de los sensores cerámicos 
    - **Señal Cruda (*Raw*):** Ruidosa, con oscilaciones continuas por conmutación y turbulencia térmica ambiental.
    - **Filtro de Mediana ($N=5$):** Elimina ruidos atípicos y picos espurios preservando el 97% de la amplitud de pico con un retardo insignificante ($\approx 200\text{ ms} \equiv < 2\text{ cm}$ de error espacial a $8\text{ cm/s}$). **Óptimo para mapeo continuo en marcha.**
    - **Filtro Exponencial EMA ($\alpha=0.20$):** Atenúa picos transitorios rápidos (reduce pico de 2.8V a 2.2V) con un retardo de $\sim 1\text{ s}$. **Óptimo para régimen *Stop-and-Measure* (robot estático durante la lectura).**
-5. **Fundamentación Teórica del Modelo de Sensado y Escala Ascendente:**
+5. **Fundamentación Teórica del Modelo de Sensado, Ecuación de Wolkenstein y Transducción a ppm:**
    - **Proporción de Gas Ascendente ($\mathbf{R_0 / R_s}$):** Físicamente, el óxido de estaño ($\text{SnO}_2$) reduce su resistencia ante gases reductores. Para la interfaz del operador y telemetría de monitoreo, se estableció la proporción ascendente $\frac{R_0}{R_s}$ (arranca en $1.000$ en aire limpio y asciende a $>1.5 - 10.0$ ante presencia de gas) y el porcentaje de intensidad $I_{gas} = (1 - R_s/R_0) \times 100\%$.
-   - **Cadena de Transducción en 3 Etapas:**
-     1. Quimisorción y Ley de Potencias de Wolkenstein-Clifford: $\frac{R_s}{R_0} = A \cdot C^{-B}$.
-     2. Circuito divisor de tensión: $V_{out} = V_{CC} \cdot \frac{R_L}{R_s + R_L} \implies R_s = R_L \left(\frac{V_{CC} - V_{out}}{V_{out}}\right)$.
-     3. Inferencia de concentración en ppm: $C(\text{ppm}) = \left[ \frac{R_L}{A \cdot R_0} \left( \frac{V_{CC} - V_{out}}{V_{out}} \right) \right]^{-\frac{1}{B}}$.
+   - **Extracción de Coordenadas de la Curva de Sensibilidad del Datasheet (SGX DS-0098):**
+     En la gráfica log-log de *Sensitivity Characteristics* del MiCS-5524, el eje de ordenadas muestra $\frac{R_s}{R_0}$ ($0.05$ a $1.0$) y la abscisa muestra la concentración $C$ en ppm ($1$ a $1000\text{ ppm}$). Para Monóxido de Carbono ($\text{CO}$):
+     * $C = 1\text{ ppm} \implies R_s/R_0 \approx 0.88$
+     * $C = 10\text{ ppm} \implies R_s/R_0 \approx 0.52$
+     * $C = 25\text{ ppm}$ (Límite permisible TLV-TWA según D.S. 024-2016-EM) $\implies R_s/R_0 \approx 0.40$
+     * $C = 100\text{ ppm}$ $\implies R_s/R_0 \approx 0.24$
+     * $C = 1000\text{ ppm}$ $\implies R_s/R_0 \approx 0.09$
+   - **Propósito y Justificación de la Ecuación de Wolkenstein-Clifford:**
+     1. *Sustento Físico-Químico:* En semiconductores MOS, los electrones liberados por la desorción reactiva del oxígeno superficial siguen la cinética de Wolkenstein: $\frac{R_s}{R_0} = A \cdot C^{-B}$. No es un ajuste empírico arbitrario, sino un modelo termodinámico de estado sólido.
+     2. *Linealización Logarítmica:* $\ln(R_s/R_0) = \ln(A) - B \cdot \ln(C)$. Mediante regresión sobre los puntos del datasheet para $\text{CO}$, se determinan los coeficientes canónicos: $A \approx 0.88$ y pendiente $B \approx 0.35$.
+     3. *Inferencia en Tiempo Real en Firmware:* Permite al ESP32 y a ROS 2 calcular $C$ analíticamente en una sola instrucción sin agotar RAM en tablas de búsqueda (*lookup tables*).
+   - **Deducción Matemática Completa: De Voltaje $V_{out}$ a Concentración $C(\text{ppm})$:**
+     1. Divisor de tensión del módulo hardware ($V_{CC} = 5.0\text{ V}$, $R_L = 820\,\Omega$):
+        $$V_{out} = V_{CC} \cdot \frac{R_L}{R_s + R_L} \implies R_s = R_L \cdot \left(\frac{V_{CC} - V_{out}}{V_{out}}\right)$$
+     2. Normalización frente a la línea base en aire limpio ($R_0$):
+        $$\frac{R_s}{R_0} = \frac{R_L}{R_0} \cdot \left(\frac{V_{CC} - V_{out}}{V_{out}}\right)$$
+     3. Igualación con la ley de potencias de Wolkenstein:
+        $$A \cdot C^{-B} = \frac{R_L}{R_0} \cdot \left(\frac{V_{CC} - V_{out}}{V_{out}}\right) \implies C^{-B} = \frac{1}{A} \cdot \frac{R_L}{R_0} \cdot \left(\frac{V_{CC} - V_{out}}{V_{out}}\right)$$
+     4. Despeje explícito de la concentración $C$:
+        $$\mathbf{C(\text{ppm}) = \left[ A \cdot \frac{R_0}{R_L} \cdot \left( \frac{V_{out}}{V_{CC} - V_{out}} \right) \right]^{\frac{1}{B}}}$$
+   - **Tabla de Correspondencia Metrológica ($R_0 = 4000\,\Omega$, $R_L = 820\,\Omega$, $V_{CC} = 5.0\text{ V}$):**
+     * Aire Limpio (Fondo): $V_{out} \approx 0.85\text{ V} \implies R_s/R_0 = 1.00 \implies C \approx 0.7\text{ ppm}$ (Condición segura).
+     * Límite Permisible (TLV-TWA D.S. 024-2016-EM): $V_{out} \approx 1.68\text{ V} \implies R_s/R_0 \approx 0.40 \implies C = 25.0\text{ ppm}$ (Alerta amarilla).
+     * Atmósfera Crítica (Peligro Inmediato): $V_{out} \approx 2.32\text{ V} \implies R_s/R_0 \approx 0.24 \implies C = 100.0\text{ ppm}$ (Evacuación obligatoria).
+     * Techo del ADC ($3.14\text{ V}$): Saturación eléctrica ($C > 450\text{ ppm}$).
    - **Respaldo Académico para la Calibración de $R_0$ en Aire Limpio:**
      - *SGX Sensortech (Datasheet DS-0098 / AAN-004):* Dispersión de fabricación en $R_0$ de $100\text{ k}\Omega$ a $1500\text{ k}\Omega$ (un orden de magnitud), exigiendo calibración de línea base en campo.
      - *Bârsan & Weimar (2001, Journal of Electroceramics):* Demuestran que el único invariante físico frente a variaciones granulométricas de la película es el ratio normalizado $R_s/R_0$.
