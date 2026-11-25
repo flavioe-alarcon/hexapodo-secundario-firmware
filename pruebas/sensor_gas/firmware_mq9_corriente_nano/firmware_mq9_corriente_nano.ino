@@ -31,9 +31,14 @@ const float RATIO_AIRE_LIMPIO = 9.80;     // Rs/R0 en aire limpio segun datashee
 
 // Constantes de regresion potencial ppm = a * (Rs/R0)^b (Datasheet MQ-9 Hanwei/Winsen)
 const float A_ALCOHOL = 7630.0;
-const float B_ALCOHOL = -2.32;
+const float B_ALCOHOL = -2.322;
 const float A_CO = 599.65;
 const float B_CO = -2.244;
+
+// Limite de Deteccion (LOD) y piso matematico en aire limpio (Rs/R0 >= 9.20 -> 0.0 ppm)
+const float RATIO_LOD_LIMPIO = 9.20;
+const float PPM_BASE_ALCOHOL = 38.28;     // 7630.0 * (9.80)^(-2.322)
+const float PPM_BASE_CO = 3.58;           // 599.65 * (9.80)^(-2.244)
 
 float v_offset_corriente = 2.500;         // Offset de reposo del sensor de corriente (0 A)
 float r0_gas = 1.02;                      // Resistencia base R0 calibrada en aire limpio (kOhms)
@@ -134,14 +139,18 @@ void loop() {
     if (ratio_rs_r0 > 25.0) ratio_rs_r0 = 25.0;
 
     // Calculo de concentracion en PPM usando la ley potencial del datasheet
-    // ppm = a * (Rs/R0)^b
-    float ppm_alcohol = A_ALCOHOL * pow(ratio_rs_r0, B_ALCOHOL);
-    if (ppm_alcohol < 0.0) ppm_alcohol = 0.0;
-    if (ppm_alcohol > 10000.0) ppm_alcohol = 10000.0;
+    // con compensacion por Limite de Deteccion (LOD) y tara de piso en aire limpio
+    float ppm_alcohol = 0.0;
+    float ppm_co = 0.0;
+    if (ratio_rs_r0 < RATIO_LOD_LIMPIO) {
+      ppm_alcohol = A_ALCOHOL * pow(ratio_rs_r0, B_ALCOHOL) - PPM_BASE_ALCOHOL;
+      if (ppm_alcohol < 0.0) ppm_alcohol = 0.0;
+      if (ppm_alcohol > 10000.0) ppm_alcohol = 10000.0;
 
-    float ppm_co = A_CO * pow(ratio_rs_r0, B_CO);
-    if (ppm_co < 0.0) ppm_co = 0.0;
-    if (ppm_co > 2000.0) ppm_co = 2000.0;
+      ppm_co = A_CO * pow(ratio_rs_r0, B_CO) - PPM_BASE_CO;
+      if (ppm_co < 0.0) ppm_co = 0.0;
+      if (ppm_co > 2000.0) ppm_co = 2000.0;
+    }
 
     // Ratio ascendente visual (R0_aire / Rs) para monitoreo
     float ratio_visual = (rs_gas > 0.001) ? ((r0_gas * RATIO_AIRE_LIMPIO) / rs_gas) : 1.0;
