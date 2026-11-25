@@ -18,9 +18,18 @@
  * ======================================================================================
  */
 
+#include <EEPROM.h>
+
 const int PIN_GAS_A0 = A0;
 const int PIN_GAS_D0 = 2;
 const int PIN_CORRIENTE_A1 = A1;
+
+const uint32_t EEPROM_MAGIC = 0x4D513931UL; // "MQ91"
+struct CalibracionEEPROM {
+  uint32_t magic;
+  float r0_gas;
+  float v0_gas;
+};
 
 // Parametros electricos y de calibracion
 const float VCC_REF = 5.000;              // Tension de alimentacion nominal (5.00 V)
@@ -47,13 +56,9 @@ float v0_gas = 0.800;                     // Voltaje base en aire limpio
 unsigned long ultimo_envio = 0;
 const unsigned long INTERVALO_MS = 50;    // 20 Hz de transmision hacia Python
 
-// Rutina de calibracion conjunta en aire limpio y sin carga
-void calibrarSensores() {
-  // Descartar lectura inicial para estabilizar multiplexor ADC
+void calibrarCorriente() {
   analogRead(PIN_CORRIENTE_A1);
   delay(10);
-
-  // 1. Calibracion de corriente (Promedio de 250 muestras)
   long suma_i = 0;
   for (int i = 0; i < 250; i++) {
     suma_i += analogRead(PIN_CORRIENTE_A1);
@@ -61,8 +66,9 @@ void calibrarSensores() {
   }
   float adc_i_prom = suma_i / 250.0;
   v_offset_corriente = (adc_i_prom * VCC_REF) / 1023.0;
+}
 
-  // 2. Calibracion de gas R0 en aire limpio (Promedio de 250 muestras)
+void calibrarGasYGuardarEEPROM() {
   analogRead(PIN_GAS_A0); // Dummy read tras conmutar canal ADC
   delay(10);
   long suma_gas = 0;
@@ -74,14 +80,19 @@ void calibrarSensores() {
   v0_gas = (adc_gas_prom * VCC_REF) / 1023.0;
   if (v0_gas < 0.05) v0_gas = 0.05; // Evitar division por cero
   if (v0_gas > 4.95) v0_gas = 4.95;
-  
-  // Rs en aire limpio
+
   float rs_aire = RL_GAS * (VCC_REF - v0_gas) / v0_gas;
   // Segun datasheet de MQ-9: Rs(aire) / R0 = 9.80 => R0 = Rs(aire) / 9.80
   r0_gas = rs_aire / RATIO_AIRE_LIMPIO;
   if (r0_gas < 0.01) r0_gas = 0.01;
 
-  Serial.print(F("{\"status\":\"calibrado\",\"v_off_i\":"));
+  CalibracionEEPROM cal;
+  cal.magic = EEPROM_MAGIC;
+  cal.r0_gas = r0_gas;
+  cal.v0_gas = v0_gas;
+  EEPROM.put(0, cal);
+
+  Serial.print(F("{\"status\":\"calibrado\",\"source\":\"eeprom_saved\",\"v_off_i\":"));
   Serial.print(v_offset_corriente, 4);
   Serial.print(F(",\"v0_gas\":"));
   Serial.print(v0_gas, 4);
@@ -90,6 +101,12 @@ void calibrarSensores() {
   Serial.print(F(",\"r0_gas\":"));
   Serial.print(r0_gas, 3);
   Serial.println(F("}"));
+}
+
+// Rutina de calibracion conjunta en aire limpio y sin carga
+void calibrarSensores() {
+  calibrarCorriente();
+  calibrarGasYGuardarEEPROM();
 }
 
 void setup() {
@@ -101,16 +118,35 @@ void setup() {
   // Retardo para estabilizacion de tensiones
   delay(400);
 
-  // Calibracion inicial de linea base
-  calibrarSensores();
+  calibrarCorriente();
+
+  CalibracionEEPROM cal;
+  EEPROM.get(0, cal);
+  if (cal.magic == EEPROM_MAGIC && isfinite(cal.r0_gas) && cal.r0_gas >= 0.01 && cal.r0_gas < 5000.0) {
+    r0_gas = cal.r0_gas;
+    v0_gas = cal.v0_gas;
+    Serial.print(F("{\"status\":\"calibrado\",\"source\":\"eeprom\",\"v_off_i\":"));
+    Serial.print(v_offset_corriente, 4);
+    Serial.print(F(",\"v0_gas\":"));
+    Serial.print(v0_gas, 4);
+    Serial.print(F(",\"r0_gas\":"));
+    Serial.print(r0_gas, 3);
+    Serial.println(F("}"));
+  } else {
+    calibrarGasYGuardarEEPROM();
+  }
 }
 
 void loop() {
-  // Comandos por puerto serie ('c' o 'C' para recalibrar en caliente)
+  // Comandos por puerto serie:
+  // 'c'/'C' -> recalibrar corriente + gas y guardar en EEPROM
+  // 'g'/'G' -> recalibrar solo gas y guardar en EEPROM
   if (Serial.available() > 0) {
     char cmd = Serial.read();
     if (cmd == 'c' || cmd == 'C') {
       calibrarSensores();
+    } else if (cmd == 'g' || cmd == 'G') {
+      calibrarGasYGuardarEEPROM();
     }
   }
 

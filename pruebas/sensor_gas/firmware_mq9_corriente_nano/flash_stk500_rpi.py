@@ -105,16 +105,17 @@ def flash_nano(port, hex_path, baud=115200):
                 time.sleep(0.22)
                 ser.reset_input_buffer()
 
-                for _ in range(5):
+                for _ in range(3):
                     ser.reset_input_buffer()
                     ser.write(b'\x30\x20')  # STK_GET_SYNC
                     resp = read_exact(ser, 2)
                     if resp == b'\x14\x10':
-                        time.sleep(0.03)
+                        time.sleep(0.08)
+                        ser.read(ser.in_waiting or 0)
                         ser.reset_input_buffer()
                         synced = True
                         break
-                    time.sleep(0.04)
+                    time.sleep(0.05)
                 if synced:
                     print(f"[+] Sincronizado con Optiboot en {port} (intento {attempt})")
                     break
