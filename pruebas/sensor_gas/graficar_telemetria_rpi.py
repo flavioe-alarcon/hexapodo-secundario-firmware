@@ -108,6 +108,25 @@ def load_current_csv(csv_path):
     }
 
 
+def find_top_peaks(ppm, freq, k=3):
+    """Selecciona los k puntos mas altos evitando solapamiento temporal."""
+    n = len(ppm)
+    if n == 0 or np.max(ppm) <= 0.0:
+        return []
+    order = np.argsort(ppm)[::-1]
+    for sep_s in (1.5, 0.4, 0.0):
+        min_sep = max(1, int(round(freq * sep_s))) if sep_s > 0 else 1
+        selected = []
+        for idx in order:
+            if ppm[idx] <= 0.0:
+                continue
+            if all(abs(int(idx) - int(s)) >= min_sep for s in selected):
+                selected.append(int(idx))
+                if len(selected) == k:
+                    return selected
+    return selected
+
+
 def plot_gas(data, folder_path):
     t = data['t_s']
     n = len(t)
@@ -125,6 +144,7 @@ def plot_gas(data, folder_path):
     ppm_base = np.percentile(ppm, 10)
     ppm_max = np.max(ppm)
     v_max = np.max(v)
+    top_peaks = find_top_peaks(ppm, freq, k=3)
 
     print('=' * 68)
     print(f' RESUMEN DE GAS MQ-9 ({folder_path.name}/gas.csv)')
@@ -132,6 +152,13 @@ def plot_gas(data, folder_path):
     print(f' - Concentracion base:{ppm_base:8.2f} ppm')
     print(f' - Pico maximo:       {ppm_max:8.2f} ppm ({v_max:.3f} V)')
     print(f' - Muestras en alerta:{int(np.sum(alerta == 1))} puntos')
+    if top_peaks:
+        print(' - Top 3 picos detectados:')
+        for rank, idx in enumerate(top_peaks, start=1):
+            print(
+                f'     #{rank}: {ppm[idx]:8.2f} ppm | {v[idx]:.3f} V '
+                f'| Rs/R0={rs_r0[idx]:.2f} | t={t[idx]:.2f} s'
+            )
     print('=' * 68)
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 7.2), sharex=True)
@@ -147,17 +174,57 @@ def plot_gas(data, folder_path):
         )
     ax1.axhline(ppm_base, color='#64748b', linestyle='--', linewidth=0.9,
                 label=f'Linea base ({ppm_base:.1f} ppm)')
+
+    peak_colors = ['#dc2626', '#ea580c', '#9333ea']
+    y_offsets_ppm = [(0, 12), (-38, 16), (12, 14)]
+    y_offsets_v = [(0, 12), (-38, 14), (12, 14)]
+
+    if top_peaks:
+        y_top_pad = max(ppm_max * 1.18, 10.0)
+        ax1.set_ylim(-0.04 * y_top_pad, y_top_pad)
+        for rank, idx in enumerate(top_peaks, start=1):
+            col = peak_colors[rank - 1]
+            ax1.axvline(t[idx], color=col, linestyle=':', linewidth=1.0, alpha=0.65)
+            ax1.scatter([t[idx]], [ppm[idx]], color=col, s=55, zorder=6, edgecolors='#ffffff',
+                        linewidths=0.9, label=f'Pico #{rank}: {ppm[idx]:.1f} ppm ({v[idx]:.3f} V)')
+            ox, oy = y_offsets_ppm[rank - 1]
+            ax1.annotate(
+                f'#{rank}: {ppm[idx]:.1f} ppm\n(t={t[idx]:.1f}s)',
+                xy=(t[idx], ppm[idx]), xytext=(ox, oy), textcoords='offset points',
+                ha='center', fontsize=8.2, fontweight='bold', color=col,
+                bbox=dict(boxstyle='round,pad=0.2', fc='#ffffff', ec=col, alpha=0.88),
+                arrowprops=dict(arrowstyle='->', color=col, lw=1.0),
+            )
+
     ax1.set_ylabel('Concentracion (ppm)', fontsize=11, fontweight='bold', color='#1e293b')
     ax1.set_title(
         f'Monitoreo de Gas MQ-9 (Modelo Datasheet Wolkenstein) - Carpeta: {folder_path.name}',
         fontsize=12, fontweight='bold', pad=10,
     )
     ax1.grid(True, linestyle=':', alpha=0.65)
-    ax1.legend(loc='upper right', fontsize=9)
+    ax1.legend(loc='upper right', fontsize=8.5)
 
     # Panel 2: Voltaje A0 y Ratio Rs/R0
     ax2.set_facecolor('#f8fafc')
     l1 = ax2.plot(t, v, color='#0284c7', linewidth=1.6, label='Voltaje A0 (V)')
+    if top_peaks:
+        v_min_p, v_max_p = np.min(v), np.max(v)
+        v_span = max(v_max_p - v_min_p, 0.05)
+        ax2.set_ylim(v_min_p - 0.10 * v_span, v_max_p + 0.28 * v_span)
+        for rank, idx in enumerate(top_peaks, start=1):
+            col = peak_colors[rank - 1]
+            ax2.axvline(t[idx], color=col, linestyle=':', linewidth=1.0, alpha=0.65)
+            ax2.scatter([t[idx]], [v[idx]], color=col, s=55, zorder=6, edgecolors='#ffffff',
+                        linewidths=0.9)
+            ox, oy = y_offsets_v[rank - 1]
+            ax2.annotate(
+                f'#{rank}: {v[idx]:.3f} V',
+                xy=(t[idx], v[idx]), xytext=(ox, oy), textcoords='offset points',
+                ha='center', fontsize=8.2, fontweight='bold', color=col,
+                bbox=dict(boxstyle='round,pad=0.2', fc='#ffffff', ec=col, alpha=0.88),
+                arrowprops=dict(arrowstyle='->', color=col, lw=1.0),
+            )
+
     ax2.set_xlabel('Tiempo de Medicion (segundos)', fontsize=11, fontweight='bold', color='#1e293b')
     ax2.set_ylabel('Voltaje Sensor (V)', fontsize=11, fontweight='bold', color='#0284c7')
     ax2.grid(True, linestyle=':', alpha=0.65)
@@ -169,7 +236,7 @@ def plot_gas(data, folder_path):
 
     lines = l1 + l2
     labels = [ln.get_label() for ln in lines]
-    ax2.legend(lines, labels, loc='upper right', fontsize=9)
+    ax2.legend(lines, labels, loc='upper right', fontsize=8.5)
 
     plt.tight_layout()
     out_png = folder_path / 'grafica_gas_mq9.png'
