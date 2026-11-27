@@ -53,8 +53,37 @@ float v_offset_corriente = 2.500;         // Offset de reposo del sensor de corr
 float r0_gas = 1.02;                      // Resistencia base R0 calibrada en aire limpio (kOhms)
 float v0_gas = 0.800;                     // Voltaje base en aire limpio
 
+// Filtro digital hibrido: Mediana (N=5) + EMA (alpha=0.20) para MQ-9
+const float EMA_ALPHA_GAS = 0.20f;
+float gas_med_buf[5] = {0.15f, 0.15f, 0.15f, 0.15f, 0.15f};
+uint8_t gas_med_idx = 0;
+float v_gas_ema = 0.15f;
+bool gas_filtro_init = false;
+
 unsigned long ultimo_envio = 0;
 const unsigned long INTERVALO_MS = 50;    // 20 Hz de transmision hacia Python
+
+float mediana5(const float *buf) {
+  float tmp[5];
+  for (int i = 0; i < 5; i++) tmp[i] = buf[i];
+  for (int i = 0; i < 4; i++) {
+    for (int j = i + 1; j < 5; j++) {
+      if (tmp[j] < tmp[i]) {
+        float t = tmp[i];
+        tmp[i] = tmp[j];
+        tmp[j] = t;
+      }
+    }
+  }
+  return tmp[2];
+}
+
+void inicializarFiltroGas(float v_init) {
+  for (int i = 0; i < 5; i++) gas_med_buf[i] = v_init;
+  gas_med_idx = 0;
+  v_gas_ema = v_init;
+  gas_filtro_init = true;
+}
 
 void calibrarCorriente() {
   analogRead(PIN_CORRIENTE_A1);
@@ -91,6 +120,7 @@ void calibrarGasYGuardarEEPROM() {
   cal.r0_gas = r0_gas;
   cal.v0_gas = v0_gas;
   EEPROM.put(0, cal);
+  inicializarFiltroGas(v0_gas);
 
   Serial.print(F("{\"status\":\"calibrado\",\"source\":\"eeprom_saved\",\"v_off_i\":"));
   Serial.print(v_offset_corriente, 4);
@@ -125,6 +155,7 @@ void setup() {
   if (cal.magic == EEPROM_MAGIC && isfinite(cal.r0_gas) && cal.r0_gas >= 0.01 && cal.r0_gas < 5000.0) {
     r0_gas = cal.r0_gas;
     v0_gas = cal.v0_gas;
+    inicializarFiltroGas(v0_gas);
     Serial.print(F("{\"status\":\"calibrado\",\"source\":\"eeprom\",\"v_off_i\":"));
     Serial.print(v_offset_corriente, 4);
     Serial.print(F(",\"v0_gas\":"));
@@ -164,9 +195,20 @@ void loop() {
       delayMicroseconds(80);
     }
     float adc_gas = suma_gas / 20.0;
-    float v_gas = (adc_gas * VCC_REF) / 1023.0;
-    if (v_gas < 0.05) v_gas = 0.05;
-    if (v_gas > 4.95) v_gas = 4.95;
+    float v_gas_raw = (adc_gas * VCC_REF) / 1023.0;
+    if (v_gas_raw < 0.05) v_gas_raw = 0.05;
+    if (v_gas_raw > 4.95) v_gas_raw = 4.95;
+
+    // Filtro Mediana (N=5) + EMA (alpha=0.20) para eliminar picos transitorios y suavizar curva
+    if (!gas_filtro_init) {
+      inicializarFiltroGas(v_gas_raw);
+    } else {
+      gas_med_buf[gas_med_idx] = v_gas_raw;
+      gas_med_idx = (gas_med_idx + 1) % 5;
+      float v_gas_med = mediana5(gas_med_buf);
+      v_gas_ema = EMA_ALPHA_GAS * v_gas_med + (1.0f - EMA_ALPHA_GAS) * v_gas_ema;
+    }
+    float v_gas = v_gas_ema;
 
     // Calculo de resistencia Rs y Ratio estandar Rs/R0 (Datasheet MQ-9)
     float rs_gas = RL_GAS * (VCC_REF - v_gas) / v_gas;
